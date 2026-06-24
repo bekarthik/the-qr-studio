@@ -1,0 +1,26 @@
+name = "qr-studio-service"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+# Buffer/process polyfills the `qrcode` encoder relies on.
+compatibility_flags = ["nodejs_compat"]
+
+# Allow importing the resvg .wasm as a WebAssembly module.
+rules = [
+  { type = "CompiledWasm", globs = ["**/*.wasm"], fallthrough = true },
+]
+
+# Per-IP rate limit. period must be 10 or 60 (seconds). Tune the limit to taste;
+# 60 req / 60 s is comfortable for humans, throttles scripted abuse, and stays
+# well inside the free tier (100k requests/day).
+[[unsafe.bindings]]
+name = "RATE_LIMITER"
+type = "ratelimit"
+namespace_id = "1001"
+simple = { limit = 60, period = 60 }
+
+[vars]
+# Set to your site's origin to lock CORS down; defaults to "*" (public API).
+ALLOW_ORIGIN = "*"
+
+[observability]
+enabled = true

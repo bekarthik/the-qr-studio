@@ -1,0 +1,24 @@
+{
+  "name": "qr-studio-service",
+  "version": "1.0.0",
+  "description": "Cloudflare Worker microservice for image-styled, server-verified scannable QR codes (PNG + SVG).",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "dependencies": {
+    "@resvg/resvg-wasm": "^2.6.2",
+    "jsqr": "^1.4.0",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241106.0",
+    "@types/qrcode": "^1.5.6",
+    "typescript": "^6.0.3",
+    "wrangler": "^3.84.0"
+  }
+}
