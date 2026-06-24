@@ -33,6 +33,13 @@ Generate a correctly-formatted QR for any of:
    *carved out* (cleared to the background) and the logo is drawn into that
    empty space — embedded inside the code, not pasted on top of live modules.
 
+**Image colours (optional, with halftone).** Tick *Use image colours* and each
+sub-cell takes the image's hue instead of plain black/white. Scannability is
+preserved by clamping every colour into a dark or light **luminance band** (a
+scanner reads brightness, not hue), and by keeping the centre sub-cell — the one
+a scanner samples — plus all function patterns at full fg/bg contrast. Only the
+eight surrounding sub-cells are tinted.
+
 Either mode can be used alone or together. Whenever an image mode is on, the
 encoder is forced to **error-correction level H (30% redundancy)** so the image
 "noise" and the carved centre don't break scanning. Finder, timing and
@@ -75,8 +82,8 @@ decode for the check to pass.
 src/
 ├── qr/
 │   ├── matrix.ts     # QR encoding + function-pattern map (uses `qrcode`)
-│   ├── halftone.ts   # image → binary sub-cell sampler
-│   ├── grid.ts       # shared sub-cell geometry + dark/light decision
+│   ├── halftone.ts   # image → sub-cell sampler (brightness + colour)
+│   ├── grid.ts       # shared sub-cell geometry + dark/light + colour fill
 │   ├── render.ts     # canvas (PNG) rendering
 │   └── svg.ts        # vector (SVG) rendering
 ├── content/payloads.ts  # source-type → QR payload string

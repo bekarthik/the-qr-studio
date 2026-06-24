@@ -1,6 +1,6 @@
 import type { QrMatrix } from './matrix';
 import type { ImageSampler } from './halftone';
-import { computeGrid, subCellDark } from './grid';
+import { computeGrid, subCellFill } from './grid';
 
 export interface CenterImage {
   source: CanvasImageSource;
@@ -24,6 +24,8 @@ export interface RenderOptions {
   sampler?: ImageSampler | null;
   /** Keep finder/timing/alignment patterns fully solid (recommended). */
   protectPatterns: boolean;
+  /** Paint data cells with the image's clamped colours instead of fg/bg. */
+  colorMode: boolean;
   /** Optional logo embedded into carved-out center space. */
   centerImage?: CenterImage | null;
 }
@@ -38,8 +40,9 @@ export interface RenderOptions {
  * makes the finished code resemble the picture while staying scannable.
  */
 export function renderQR(opts: RenderOptions): HTMLCanvasElement {
-  const { matrix, quietModules, fg, bg, sampler, protectPatterns, centerImage } = opts;
+  const { matrix, quietModules, fg, bg, sampler, protectPatterns, colorMode, centerImage } = opts;
   const { n, sub, quietSub, gridSide } = computeGrid(matrix.size, quietModules);
+  const fillOpts = { colorMode, fg, bg, protectPatterns };
 
   const cellPx = Math.max(1, Math.floor(opts.targetPx / gridSide));
   const dim = gridSide * cellPx;
@@ -53,19 +56,14 @@ export function renderQR(opts: RenderOptions): HTMLCanvasElement {
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, dim, dim);
 
-  const paint = (subRow: number, subCol: number, dark: boolean) => {
-    ctx.fillStyle = dark ? fg : bg;
-    ctx.fillRect(subCol * cellPx, subRow * cellPx, cellPx, cellPx);
-  };
-
   for (let r = 0; r < n; r++) {
     for (let c = 0; c < n; c++) {
       const baseSubRow = quietSub + r * sub;
       const baseSubCol = quietSub + c * sub;
       for (let dr = 0; dr < sub; dr++) {
         for (let dc = 0; dc < sub; dc++) {
-          const dark = subCellDark(matrix, sampler, protectPatterns, r, c, dr, dc);
-          paint(baseSubRow + dr, baseSubCol + dc, dark);
+          ctx.fillStyle = subCellFill(matrix, sampler, fillOpts, r, c, dr, dc);
+          ctx.fillRect((baseSubCol + dc) * cellPx, (baseSubRow + dr) * cellPx, cellPx, cellPx);
         }
       }
     }

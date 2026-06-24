@@ -6,6 +6,8 @@
 export interface ImageSampler {
   /** True when the image is dark at sub-cell (subRow, subCol) of a gridSize grid. */
   dark(subRow: number, subCol: number): boolean;
+  /** The image's RGB colour at that sub-cell (transparent → white). */
+  colorAt(subRow: number, subCol: number): [number, number, number];
 }
 
 export interface SampleOptions {
@@ -55,6 +57,11 @@ export function sampleImage(
       const lum = a < 16 ? 255 : 0.299 * r + 0.587 * g + 0.114 * b;
       const isDark = lum < cut;
       return invert ? !isDark : isDark;
+    },
+    colorAt(subRow: number, subCol: number): [number, number, number] {
+      const idx = (subRow * gridSize + subCol) * 4;
+      if (data[idx + 3] < 16) return [255, 255, 255]; // transparent → white
+      return [data[idx], data[idx + 1], data[idx + 2]];
     },
   };
 }

@@ -1,6 +1,6 @@
 import type { QrMatrix } from './matrix';
 import type { ImageSampler } from './halftone';
-import { computeGrid, subCellDark } from './grid';
+import { computeGrid, subCellFill } from './grid';
 
 export interface SvgCenterImage {
   /** Data URL (or any URL) of the logo to embed. */
@@ -18,43 +18,50 @@ export interface SvgOptions {
   bg: string;
   sampler?: ImageSampler | null;
   protectPatterns: boolean;
+  /** Paint data cells with the image's clamped colours instead of fg/bg. */
+  colorMode: boolean;
   centerImage?: SvgCenterImage | null;
   /** Pixel size written to the width/height attributes (the SVG stays vector). */
   pixelSize: number;
 }
 
 /**
- * Renders the QR as a vector SVG. Geometry comes from the same `subCellDark`
- * decision as the canvas renderer, so the SVG is exactly as scannable. Dark
- * sub-cells are merged into horizontal runs to keep the file compact, and an
+ * Renders the QR as a vector SVG. Colours come from the same `subCellFill`
+ * decision as the canvas renderer, so the SVG is exactly as scannable.
+ * Horizontally adjacent sub-cells of the same colour are merged into one rect
+ * (cells equal to the background are skipped) to keep the file compact, and an
  * optional centre logo is embedded as an <image>.
  */
 export function renderSVG(opts: SvgOptions): string {
-  const { matrix, quietModules, fg, bg, sampler, protectPatterns, centerImage, pixelSize } = opts;
+  const { matrix, quietModules, fg, bg, sampler, protectPatterns, colorMode, centerImage, pixelSize } = opts;
   const { n, sub, quietSub, gridSide } = computeGrid(matrix.size, quietModules);
+  const fillOpts = { colorMode, fg, bg, protectPatterns };
 
-  // Dark/light value for every sub-cell, indexed [subRow][subCol] in module space.
-  const dark = (sr: number, sc: number): boolean => {
-    const r = Math.floor(sr / sub);
-    const c = Math.floor(sc / sub);
-    return subCellDark(matrix, sampler, protectPatterns, r, c, sr % sub, sc % sub);
-  };
+  // Paint colour for every sub-cell, indexed by sub-row/col in module space.
+  const fillAt = (sr: number, sc: number): string =>
+    subCellFill(matrix, sampler, fillOpts, Math.floor(sr / sub), Math.floor(sc / sub), sr % sub, sc % sub);
 
   const rects: string[] = [];
   const total = n * sub;
   for (let sr = 0; sr < total; sr++) {
     let runStart = -1;
-    for (let sc = 0; sc <= total; sc++) {
-      const on = sc < total && dark(sr, sc);
-      if (on && runStart === -1) {
+    let runFill = '';
+    const flush = (end: number) => {
+      if (runStart !== -1 && runFill !== bg) {
+        rects.push(
+          `<rect x="${quietSub + runStart}" y="${quietSub + sr}" width="${end - runStart}" height="1" fill="${runFill}"/>`,
+        );
+      }
+    };
+    for (let sc = 0; sc < total; sc++) {
+      const f = fillAt(sr, sc);
+      if (f !== runFill) {
+        flush(sc);
         runStart = sc;
-      } else if (!on && runStart !== -1) {
-        const x = quietSub + runStart;
-        const y = quietSub + sr;
-        rects.push(`<rect x="${x}" y="${y}" width="${sc - runStart}" height="1" fill="${fg}"/>`);
-        runStart = -1;
+        runFill = f;
       }
     }
+    flush(total);
   }
 
   let center = '';

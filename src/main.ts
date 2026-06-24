@@ -20,6 +20,7 @@ const state = {
   errorLevel: 'H' as ErrorLevel,
   threshold: 0.5,
   invert: false,
+  colorMode: false,
   logoRatio: 0.22,
   plate: true,
   protectPatterns: true,
@@ -41,6 +42,7 @@ interface RenderSnapshot {
   fg: string;
   bg: string;
   protectPatterns: boolean;
+  colorMode: boolean;
   centerHref: string | null;
 }
 let currentRender: RenderSnapshot | null = null;
@@ -153,6 +155,10 @@ $('#invert').addEventListener('change', (e) => {
   state.invert = (e.target as HTMLInputElement).checked;
   update();
 });
+$('#colorMode').addEventListener('change', (e) => {
+  state.colorMode = (e.target as HTMLInputElement).checked;
+  update();
+});
 $('#logoRatio').addEventListener('input', (e) => {
   state.logoRatio = Number((e.target as HTMLInputElement).value) / 100;
   update();
@@ -231,6 +237,7 @@ $('#downloadSvg').addEventListener('click', () => {
     bg: currentRender.bg,
     sampler: currentRender.sampler,
     protectPatterns: currentRender.protectPatterns,
+    colorMode: currentRender.colorMode,
     centerImage: currentRender.centerHref
       ? { href: currentRender.centerHref, ratio: state.logoRatio, plate: state.plate }
       : null,
@@ -301,6 +308,7 @@ function update() {
     bg: state.bg,
     sampler,
     protectPatterns: state.protectPatterns,
+    colorMode: state.colorMode,
     centerImage,
   });
 
@@ -311,6 +319,7 @@ function update() {
     fg: state.fg,
     bg: state.bg,
     protectPatterns: state.protectPatterns,
+    colorMode: state.colorMode,
     centerHref: centerImage && state.image ? state.image.src : null,
   };
   previewEl.innerHTML = '';
