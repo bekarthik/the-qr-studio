@@ -52,6 +52,7 @@ npm install
 npm run dev        # local dev server (Vite)
 npm run build      # typecheck + production build to dist/
 npm run verify     # headless scannability check (renders + decodes with jsQR)
+npm run example    # write sample halftone PNGs (OUT=dir) and decode-check them
 ```
 
 ## How scannability is verified
