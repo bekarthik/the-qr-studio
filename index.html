@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QR Studio — image-styled QR code generator</title>
+    <meta
+      name="description"
+      content="Generate scannable QR codes for links, email, WhatsApp, Wi-Fi, visiting cards and more — styled to resemble your logo or with an image embedded in the centre."
+    />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand"><span class="logo">▣</span> QR Studio</div>
+      <p class="tagline">Scannable QR codes that look like your image</p>
+    </header>
+
+    <main class="app">
+      <!-- ----------------------------------------------------- controls -->
+      <section class="controls">
+        <h2 class="h">1 · Choose a source</h2>
+        <div id="sourceTabs" class="tabs"></div>
+
+        <h2 class="h">2 · Enter the details</h2>
+        <div id="formFields" class="form"></div>
+
+        <h2 class="h">3 · Make it yours</h2>
+
+        <div class="image-block">
+          <label class="upload">
+            <input type="file" id="imageInput" accept="image/*" hidden />
+            <span class="upload__btn">Upload image / logo</span>
+            <img id="imgThumb" class="thumb" alt="" />
+          </label>
+
+          <label class="field field--check">
+            <input type="checkbox" id="optResemble" />
+            <span class="field__label">Make the QR <b>resemble</b> the image (halftone)</span>
+          </label>
+          <label class="field field--check">
+            <input type="checkbox" id="optEmbed" />
+            <span class="field__label">Embed the image in the <b>centre</b></span>
+          </label>
+        </div>
+
+        <details class="advanced">
+          <summary>Style &amp; advanced options</summary>
+          <div class="grid2">
+            <label class="field">
+              <span class="field__label">Foreground</span>
+              <input type="color" id="fgColor" value="#101418" />
+            </label>
+            <label class="field">
+              <span class="field__label">Background</span>
+              <input type="color" id="bgColor" value="#ffffff" />
+            </label>
+            <label class="field">
+              <span class="field__label">Error correction</span>
+              <select id="errLevel">
+                <option value="L">L · 7%</option>
+                <option value="M">M · 15%</option>
+                <option value="Q">Q · 25%</option>
+                <option value="H" selected>H · 30%</option>
+              </select>
+            </label>
+            <label class="field opt-resemble">
+              <span class="field__label">Image detail (threshold)</span>
+              <input type="range" id="threshold" min="20" max="80" value="50" />
+            </label>
+            <label class="field field--check opt-resemble">
+              <input type="checkbox" id="invert" />
+              <span class="field__label">Invert image</span>
+            </label>
+            <label class="field field--check opt-resemble">
+              <input type="checkbox" id="protectPatterns" checked />
+              <span class="field__label">Protect alignment &amp; timing patterns</span>
+            </label>
+            <label class="field opt-embed">
+              <span class="field__label">Logo size</span>
+              <input type="range" id="logoRatio" min="12" max="30" value="22" />
+            </label>
+            <label class="field field--check opt-embed">
+              <input type="checkbox" id="plate" checked />
+              <span class="field__label">Background plate behind logo</span>
+            </label>
+          </div>
+        </details>
+      </section>
+
+      <!-- ------------------------------------------------------ preview -->
+      <section class="output">
+        <div id="preview" class="preview">
+          <div class="empty">Fill in the details to generate a QR code.</div>
+        </div>
+        <p id="hint" class="hint"></p>
+        <button id="downloadPng" class="download" disabled>Download PNG</button>
+      </section>
+    </main>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

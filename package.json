@@ -1,0 +1,29 @@
+{
+  "name": "qr-studio",
+  "version": "1.0.0",
+  "description": "Image-styled, scannable QR code generator (links, email, WhatsApp, Wi-Fi, vCard and more).",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "verify": "node scripts/verify.mjs"
+  },
+  "keywords": [
+    "qr",
+    "qrcode",
+    "halftone",
+    "generator"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@types/qrcode": "^1.5.6",
+    "jsqr": "^1.4.0",
+    "typescript": "^6.0.3",
+    "vite": "^8.1.0"
+  }
+}
