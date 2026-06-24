@@ -178,16 +178,6 @@ $('#invert').addEventListener('change', (e) => {
 $('#colorStyle').addEventListener('change', (e) => {
   state.colorStyle = (e.target as HTMLSelectElement).value as typeof state.colorStyle;
   document.body.classList.toggle('brand-on', state.colorStyle === 'brand');
-  // Image-colours runs at Standard detail only; reflect that in the selector.
-  const imageMode = state.colorStyle === 'image';
-  const detailSel = $('#detail') as HTMLSelectElement;
-  Array.from(detailSel.options).forEach((o) => {
-    if (o.value !== '3') o.disabled = imageMode;
-  });
-  if (imageMode) {
-    detailSel.value = '3';
-    state.detail = 3;
-  }
   update();
 });
 $('#brandColor').addEventListener('input', (e) => {
@@ -324,17 +314,18 @@ function update() {
     ($('#brandColor') as HTMLInputElement).value = state.brandColor;
   }
 
-  // High detail is safe for mono/brand; image-colours stays at Standard because
-  // its compressed contrast can't absorb fine texture noise at high detail.
-  const effSub = state.colorStyle === 'image' ? Math.min(state.detail, 3) : state.detail;
+  // At High detail, low-pass the source so background texture doesn't alias
+  // into speckle (which image-colours' compressed contrast can't absorb).
+  const smooth = state.detail >= 5 ? 1 : 0;
 
   const sampler =
     state.resemble && state.image
       ? sampleImage(state.image, state.image.naturalWidth, state.image.naturalHeight, {
-          gridSize: matrix.size * effSub,
+          gridSize: matrix.size * state.detail,
           threshold: state.threshold,
           invert: state.invert,
           auto: state.autoThreshold,
+          smooth,
         })
       : null;
 
@@ -359,7 +350,7 @@ function update() {
     protectPatterns: state.protectPatterns,
     colorStyle: state.colorStyle,
     brandColor: state.brandColor,
-    sub: effSub,
+    sub: state.detail,
     centerImage,
   });
 
@@ -372,7 +363,7 @@ function update() {
     protectPatterns: state.protectPatterns,
     colorStyle: state.colorStyle,
     brandColor: state.brandColor,
-    sub: effSub,
+    sub: state.detail,
     centerHref: centerImage && state.image ? state.image.src : null,
   };
   previewEl.innerHTML = '';

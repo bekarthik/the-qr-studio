@@ -17,6 +17,7 @@ import jsQR from 'jsqr';
 register('./ts-loader.mjs', import.meta.url);
 const { buildMatrix } = await import('../src/qr/matrix.ts');
 const { subCellFill, brandDarkHex } = await import('../src/qr/grid.ts');
+const { boxBlurRGBA } = await import('../src/qr/halftone.ts');
 
 const CELL = 9; // px per sub-cell
 const QUIET = 4;
@@ -40,21 +41,34 @@ function loadImage(path) {
 }
 
 // Cover-fit sampler over a g x g grid with an Otsu threshold for dark/light.
-function imageSampler(img, g) {
+// `smooth` low-pass-filters the grid first to stop texture aliasing into speckle.
+function imageSampler(img, g, smooth = 0) {
   const { width: iw, height: ih, data } = img;
   const scale = Math.max(g / iw, g / ih);
   const dw = iw * scale, dh = ih * scale;
-  const px = new Array(g * g); // [r,g,b]
-  const L = new Uint8Array(g * g);
+  // Cover-fit into a g x g RGBA buffer, then optionally blur.
+  let rgba = new Uint8ClampedArray(g * g * 4);
   for (let sr = 0; sr < g; sr++)
     for (let sc = 0; sc < g; sc++) {
       const sx = Math.min(iw - 1, Math.max(0, Math.floor((sc - (g - dw) / 2) / scale)));
       const sy = Math.min(ih - 1, Math.max(0, Math.floor((sr - (g - dh) / 2) / scale)));
       const i = (sy * iw + sx) * 4;
-      const rgb = data[i + 3] < 16 ? [255, 255, 255] : [data[i], data[i + 1], data[i + 2]];
-      px[sr * g + sc] = rgb;
-      L[sr * g + sc] = lum(rgb[0], rgb[1], rgb[2]) | 0;
+      const o = (sr * g + sc) * 4;
+      const t = data[i + 3] < 16;
+      rgba[o] = t ? 255 : data[i];
+      rgba[o + 1] = t ? 255 : data[i + 1];
+      rgba[o + 2] = t ? 255 : data[i + 2];
+      rgba[o + 3] = 255;
     }
+  rgba = boxBlurRGBA(rgba, g, g, smooth);
+
+  const px = new Array(g * g);
+  const L = new Uint8Array(g * g);
+  for (let i = 0; i < g * g; i++) {
+    const rgb = [rgba[i * 4], rgba[i * 4 + 1], rgba[i * 4 + 2]];
+    px[i] = rgb;
+    L[i] = lum(rgb[0], rgb[1], rgb[2]) | 0;
+  }
 
   // Otsu threshold over the grid luminance histogram.
   const hist = new Array(256).fill(0);
@@ -202,19 +216,18 @@ let outputs;
 if (IMAGE) {
   const img = loadImage(IMAGE);
   // Build one sampler sized to the QR we will generate (version is stable for this URL).
+  // Mirror the app: low-pass at High detail to stop texture aliasing.
+  const SMOOTH = process.env.SMOOTH !== undefined ? Number(process.env.SMOOTH) : SUB >= 5 ? 1 : 0;
   const sizeN = buildMatrix(URL, 'H').size;
-  // Mono/brand use the requested detail; image-colours is capped to Standard (3),
-  // mirroring the app — so build a matching sampler for each.
-  const hi = imageSampler(img, sizeN * SUB);
-  const lo = imageSampler(img, sizeN * 3);
-  console.log(`Loaded ${IMAGE} (${img.width}x${img.height}); brand colour ${hi.brand}; detail ${SUB}`);
+  const hi = imageSampler(img, sizeN * SUB, SMOOTH);
+  console.log(`Loaded ${IMAGE} (${img.width}x${img.height}); brand ${hi.brand}; detail ${SUB}; smooth ${SMOOTH}`);
   const mono = { dark: hi.dark, colorAt: () => [0, 0, 0] };
-  const col = { dark: lo.dark, colorAt: lo.colorAt };
+  const col = { dark: hi.dark, colorAt: hi.colorAt };
   outputs = {
     'img-1-halftone.png': render(URL, { sampler: mono, sub: SUB }),
     'img-2-halftone-embed.png': render(URL, { sampler: mono, sub: SUB, embed: true, embedImg: img }),
-    'img-3-image-colours.png': render(URL, { sampler: col, color: true, sub: 3 }),
-    'img-4-image-colours-embed.png': render(URL, { sampler: col, color: true, sub: 3, embed: true, embedImg: img }),
+    'img-3-image-colours.png': render(URL, { sampler: col, color: true, sub: SUB }),
+    'img-4-image-colours-embed.png': render(URL, { sampler: col, color: true, sub: SUB, embed: true, embedImg: img }),
     'img-5-brand.png': render(URL, { sampler: mono, sub: SUB, brand: hi.brand }),
   };
 } else {

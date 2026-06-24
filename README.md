@@ -35,12 +35,12 @@ Generate a correctly-formatted QR for any of:
 
 **Detail & contrast (clarity).**
 
-- **Halftone detail** — sub-cells per module: Standard (3×3), High (5×5) or
-  Ultra (7×7). Higher detail renders the image at a finer resolution so fine
-  logo lines stay crisp. A central data *core* scales with detail so the code
-  stays scannable. High/Ultra apply to mono & brand styles; **Image colours is
-  capped at Standard** (its compressed contrast can't absorb fine texture noise
-  at high detail).
+- **Halftone detail** — sub-cells per module: Standard (3×3) or High (5×5).
+  High renders the image at a finer resolution so fine logo lines stay crisp,
+  and works across all colour styles. A central data *core* scales with detail,
+  and at High detail the source is **low-pass filtered** (box blur) before
+  sampling so background texture doesn't alias into scannability-breaking
+  speckle.
 - **Auto contrast** — picks the dark/light cut-off automatically (Otsu) so a
   mid-tone logo separates correctly without fiddling the threshold slider.
 

@@ -19,6 +19,54 @@ export interface SampleOptions {
   invert: boolean;
   /** Pick the dark/light cut-off automatically (Otsu) instead of `threshold`. */
   auto: boolean;
+  /** Box-blur radius (in sub-cells) applied before sampling to kill texture
+   *  aliasing/speckle at high detail. 0 = no blur. */
+  smooth: number;
+}
+
+/**
+ * Separable-free box blur over an RGBA buffer. Used to low-pass the source
+ * before it is sampled into the (fine) sub-cell grid, so background texture
+ * doesn't alias into scannability-breaking speckle. Edges average whatever
+ * neighbours are in bounds.
+ */
+export function boxBlurRGBA(
+  src: Uint8ClampedArray,
+  w: number,
+  h: number,
+  radius: number,
+): Uint8ClampedArray {
+  if (radius < 1) return src;
+  const out = new Uint8ClampedArray(src.length);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      let r = 0;
+      let g = 0;
+      let b = 0;
+      let a = 0;
+      let n = 0;
+      for (let dy = -radius; dy <= radius; dy++) {
+        const yy = y + dy;
+        if (yy < 0 || yy >= h) continue;
+        for (let dx = -radius; dx <= radius; dx++) {
+          const xx = x + dx;
+          if (xx < 0 || xx >= w) continue;
+          const i = (yy * w + xx) * 4;
+          r += src[i];
+          g += src[i + 1];
+          b += src[i + 2];
+          a += src[i + 3];
+          n++;
+        }
+      }
+      const o = (y * w + x) * 4;
+      out[o] = r / n;
+      out[o + 1] = g / n;
+      out[o + 2] = b / n;
+      out[o + 3] = a / n;
+    }
+  }
+  return out;
 }
 
 /** Otsu's method: the luminance cut-off that best separates dark from light. */
@@ -59,7 +107,7 @@ export function sampleImage(
   height: number,
   opts: SampleOptions,
 ): ImageSampler {
-  const { gridSize, threshold, invert, auto } = opts;
+  const { gridSize, threshold, invert, auto, smooth } = opts;
   const canvas = document.createElement('canvas');
   canvas.width = gridSize;
   canvas.height = gridSize;
@@ -73,7 +121,8 @@ export function sampleImage(
   ctx.fillRect(0, 0, gridSize, gridSize);
   ctx.drawImage(source, (gridSize - dw) / 2, (gridSize - dh) / 2, dw, dh);
 
-  const { data } = ctx.getImageData(0, 0, gridSize, gridSize);
+  const raw = ctx.getImageData(0, 0, gridSize, gridSize).data;
+  const data = boxBlurRGBA(raw, gridSize, gridSize, smooth);
 
   // Choose the dark/light cut-off: Otsu auto, or the manual threshold slider.
   let cut = threshold * 255;
