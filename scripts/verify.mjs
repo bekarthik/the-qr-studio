@@ -52,9 +52,9 @@ function makeSampler(g, kind = 'sweep') {
 
 /* --------------------------------------------------- shared paint geometry */
 
-function paintGrid(text, { halftone = false, embed = false, style = 'solid', samplerKind = 'sweep' }, emit) {
+function paintGrid(text, { halftone = false, embed = false, style = 'solid', samplerKind = 'sweep', sub = 3 }, emit) {
   const m = buildMatrix(text, 'H');
-  const n = m.size, sub = 3;
+  const n = m.size;
   const sampler = halftone ? makeSampler(n * sub, samplerKind) : null;
   const fillOpts = { style, fg: '#000000', bg: '#ffffff', brand: '#1d4ed8', protectPatterns: true };
 
@@ -67,7 +67,7 @@ function paintGrid(text, { halftone = false, embed = false, style = 'solid', sam
       const inEmbed = embed && r >= start && r < end && c >= start && c < end;
       for (let dr = 0; dr < sub; dr++)
         for (let dc = 0; dc < sub; dc++) {
-          const fill = inEmbed ? '#ffffff' : subCellFill(m, sampler, fillOpts, r, c, dr, dc);
+          const fill = inEmbed ? '#ffffff' : subCellFill(m, sampler, fillOpts, r, c, dr, dc, sub);
           emit(r * sub + dr, c * sub + dc, fill);
         }
     }
@@ -99,7 +99,7 @@ function renderRaster(text, opts) {
 
 function rasterizeSVG(svg) {
   const G = Number(svg.match(/viewBox="0 0 ([\d.]+)/)[1]);
-  const S = 8;
+  const S = 12;
   const dim = Math.round(G * S);
   const data = new Uint8ClampedArray(dim * dim * 4).fill(255);
   const re = /<rect x="([-\d.]+)" y="([-\d.]+)" width="([-\d.]+)" height="([-\d.]+)"(?: rx="[-\d.]+")? fill="(#[0-9a-fA-F]{6})"\/>/g;
@@ -119,7 +119,8 @@ function rasterizeSVG(svg) {
 
 function svgFor(text, opts) {
   const m = buildMatrix(text, 'H');
-  const sampler = opts.halftone ? makeSampler(m.size * 3, opts.samplerKind || 'sweep') : null;
+  const sub = opts.sub || 3;
+  const sampler = opts.halftone ? makeSampler(m.size * sub, opts.samplerKind || 'sweep') : null;
   return renderSVG({
     matrix: m,
     quietModules: QUIET,
@@ -129,6 +130,7 @@ function svgFor(text, opts) {
     protectPatterns: true,
     colorStyle: opts.style || 'solid',
     brandColor: '#1d4ed8',
+    sub,
     centerImage: opts.embed ? { href: 'x', ratio: 0.22, plate: true } : null,
     pixelSize: 1024,
   });
@@ -151,6 +153,13 @@ const cases = [
   { name: 'image+embed url', text: 'https://chores.app/r/AB12CD', opts: { halftone: true, style: 'image', embed: true } },
   { name: 'image vcard', text: VCARD, opts: { halftone: true, style: 'image' } },
   { name: 'brand+embed wifi', text: 'WIFI:T:WPA;S:MyNetwork;P:s3cr3t-pass;H:false;;', opts: { halftone: true, style: 'brand', embed: true } },
+  // High-detail (more sub-cells per module) across mono / image / embed.
+  { name: 'detail5 halftone', text: 'https://chores.app/r/AB12CD', opts: { halftone: true, sub: 5 } },
+  { name: 'detail5 image', text: 'https://chores.app/r/AB12CD', opts: { halftone: true, style: 'image', sub: 5 } },
+  { name: 'detail5 image+embed', text: 'https://chores.app/r/AB12CD', opts: { halftone: true, style: 'image', sub: 5, embed: true } },
+  { name: 'detail7 halftone', text: 'https://chores.app/r/AB12CD', opts: { halftone: true, sub: 7 } },
+  { name: 'detail7 image', text: 'https://chores.app/r/AB12CD', opts: { halftone: true, style: 'image', sub: 7 } },
+  { name: 'detail5 vcard image', text: VCARD, opts: { halftone: true, style: 'image', sub: 5 } },
 ];
 
 let pass = 0, total = 0;

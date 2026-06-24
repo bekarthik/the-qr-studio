@@ -33,13 +33,25 @@ Generate a correctly-formatted QR for any of:
    *carved out* (cleared to the background) and the logo is drawn into that
    empty space — embedded inside the code, not pasted on top of live modules.
 
+**Detail & contrast (clarity).**
+
+- **Halftone detail** — sub-cells per module: Standard (3×3), High (5×5) or
+  Ultra (7×7). Higher detail renders the image at a finer resolution so fine
+  logo lines stay crisp. A central data *core* scales with detail so the code
+  stays scannable. High/Ultra apply to mono & brand styles; **Image colours is
+  capped at Standard** (its compressed contrast can't absorb fine texture noise
+  at high detail).
+- **Auto contrast** — picks the dark/light cut-off automatically (Otsu) so a
+  mid-tone logo separates correctly without fiddling the threshold slider.
+
 **Colour style.** A selector picks how data cells are coloured:
 
 - **Solid** — the foreground/background pickers (default).
 - **Brand colour** — the whole code in one chosen colour, light cells white.
   The colour is **auto-darkened** into the safe luminance band, so even a light
   brand colour (yellow, cyan…) still scans. Small SVGs (one colour merges into
-  runs). Best for logos.
+  runs). Best for logos. Tick **Auto-detect from image** to pull the brand
+  colour straight from the uploaded logo.
 - **Image colours** — every cell takes the image's actual hue, so the code
   resembles the picture's colours, not just its brightness. This includes the
   identifier (finder/alignment/timing) patterns; their dark cells are clamped

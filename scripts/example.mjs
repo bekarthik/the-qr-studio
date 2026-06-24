@@ -22,6 +22,7 @@ const CELL = 9; // px per sub-cell
 const QUIET = 4;
 const OUT = process.env.OUT || '.';
 const IMAGE = process.env.IMAGE || '';
+const SUB = Number(process.env.DETAIL || 3); // sub-cells per module (3/5/7)
 
 const hexToRgb = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
 const lum = (r, g, b) => 0.299 * r + 0.587 * g + 0.114 * b;
@@ -109,9 +110,9 @@ function smileyMask(r, c, g) {
 
 /* --------------------------------------------------------------- rendering */
 
-function render(text, { mask = null, color = null, brand = null, embed = false, sampler = null, embedImg = null } = {}) {
+function render(text, { mask = null, color = null, brand = null, embed = false, sampler = null, embedImg = null, sub = SUB } = {}) {
   const m = buildMatrix(text, 'H');
-  const n = m.size, sub = 3, qs = QUIET * sub;
+  const n = m.size, qs = QUIET * sub;
   const g = n * sub;
   const dim = (g + 2 * qs) * CELL;
   const px = new Uint8ClampedArray(dim * dim * 4).fill(255);
@@ -131,7 +132,7 @@ function render(text, { mask = null, color = null, brand = null, embed = false, 
     for (let c = 0; c < n; c++)
       for (let dr = 0; dr < sub; dr++)
         for (let dc = 0; dc < sub; dc++)
-          set(r * sub + dr, c * sub + dc, hexToRgb(subCellFill(m, smp, fillOpts, r, c, dr, dc)));
+          set(r * sub + dr, c * sub + dc, hexToRgb(subCellFill(m, smp, fillOpts, r, c, dr, dc, sub)));
 
   if (embed) {
     const bm = Math.round(n * 0.24);
@@ -201,17 +202,20 @@ let outputs;
 if (IMAGE) {
   const img = loadImage(IMAGE);
   // Build one sampler sized to the QR we will generate (version is stable for this URL).
-  const g = buildMatrix(URL, 'H').size * 3;
-  const smp = imageSampler(img, g);
-  console.log(`Loaded ${IMAGE} (${img.width}x${img.height}); brand colour ${smp.brand}`);
-  const monoSmp = { dark: smp.dark, colorAt: () => [0, 0, 0] };
-  const colSmp = { dark: smp.dark, colorAt: smp.colorAt };
+  const sizeN = buildMatrix(URL, 'H').size;
+  // Mono/brand use the requested detail; image-colours is capped to Standard (3),
+  // mirroring the app — so build a matching sampler for each.
+  const hi = imageSampler(img, sizeN * SUB);
+  const lo = imageSampler(img, sizeN * 3);
+  console.log(`Loaded ${IMAGE} (${img.width}x${img.height}); brand colour ${hi.brand}; detail ${SUB}`);
+  const mono = { dark: hi.dark, colorAt: () => [0, 0, 0] };
+  const col = { dark: lo.dark, colorAt: lo.colorAt };
   outputs = {
-    'img-1-halftone.png': render(URL, { sampler: monoSmp }),
-    'img-2-halftone-embed.png': render(URL, { sampler: monoSmp, embed: true, embedImg: img }),
-    'img-3-image-colours.png': render(URL, { sampler: colSmp, color: true }),
-    'img-4-image-colours-embed.png': render(URL, { sampler: colSmp, color: true, embed: true, embedImg: img }),
-    'img-5-brand.png': render(URL, { sampler: monoSmp, brand: smp.brand }),
+    'img-1-halftone.png': render(URL, { sampler: mono, sub: SUB }),
+    'img-2-halftone-embed.png': render(URL, { sampler: mono, sub: SUB, embed: true, embedImg: img }),
+    'img-3-image-colours.png': render(URL, { sampler: col, color: true, sub: 3 }),
+    'img-4-image-colours-embed.png': render(URL, { sampler: col, color: true, sub: 3, embed: true, embedImg: img }),
+    'img-5-brand.png': render(URL, { sampler: mono, sub: SUB, brand: hi.brand }),
   };
 } else {
   outputs = {

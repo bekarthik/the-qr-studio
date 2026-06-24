@@ -3,7 +3,7 @@ import { SOURCES } from './ui/forms';
 import type { SourceDef } from './ui/forms';
 import { buildPayload, type SourceType, type PayloadInput } from './content/payloads';
 import { buildMatrix, type ErrorLevel } from './qr/matrix';
-import { sampleImage, type ImageSampler } from './qr/halftone';
+import { sampleImage, extractBrandColor, type ImageSampler } from './qr/halftone';
 import { renderQR, type CenterImage } from './qr/render';
 import { renderSVG } from './qr/svg';
 
@@ -19,9 +19,12 @@ const state = {
   bg: '#ffffff',
   errorLevel: 'H' as ErrorLevel,
   threshold: 0.5,
+  autoThreshold: true,
   invert: false,
+  detail: 3, // sub-cells per module (3 standard, 5/7 = finer)
   colorStyle: 'solid' as 'solid' | 'brand' | 'image',
   brandColor: '#2563eb',
+  autoBrand: false,
   logoRatio: 0.22,
   plate: true,
   protectPatterns: true,
@@ -45,6 +48,7 @@ interface RenderSnapshot {
   protectPatterns: boolean;
   colorStyle: 'solid' | 'brand' | 'image';
   brandColor: string;
+  sub: number;
   centerHref: string | null;
 }
 let currentRender: RenderSnapshot | null = null;
@@ -153,6 +157,20 @@ $('#threshold').addEventListener('input', (e) => {
   state.threshold = Number((e.target as HTMLInputElement).value) / 100;
   update();
 });
+$('#autoThreshold').addEventListener('change', (e) => {
+  state.autoThreshold = (e.target as HTMLInputElement).checked;
+  ($('#threshold') as HTMLInputElement).disabled = state.autoThreshold;
+  update();
+});
+$('#detail').addEventListener('change', (e) => {
+  state.detail = Number((e.target as HTMLSelectElement).value);
+  update();
+});
+$('#autoBrand').addEventListener('change', (e) => {
+  state.autoBrand = (e.target as HTMLInputElement).checked;
+  ($('#brandColor') as HTMLInputElement).disabled = state.autoBrand;
+  update();
+});
 $('#invert').addEventListener('change', (e) => {
   state.invert = (e.target as HTMLInputElement).checked;
   update();
@@ -160,6 +178,16 @@ $('#invert').addEventListener('change', (e) => {
 $('#colorStyle').addEventListener('change', (e) => {
   state.colorStyle = (e.target as HTMLSelectElement).value as typeof state.colorStyle;
   document.body.classList.toggle('brand-on', state.colorStyle === 'brand');
+  // Image-colours runs at Standard detail only; reflect that in the selector.
+  const imageMode = state.colorStyle === 'image';
+  const detailSel = $('#detail') as HTMLSelectElement;
+  Array.from(detailSel.options).forEach((o) => {
+    if (o.value !== '3') o.disabled = imageMode;
+  });
+  if (imageMode) {
+    detailSel.value = '3';
+    state.detail = 3;
+  }
   update();
 });
 $('#brandColor').addEventListener('input', (e) => {
@@ -246,6 +274,7 @@ $('#downloadSvg').addEventListener('click', () => {
     protectPatterns: currentRender.protectPatterns,
     colorStyle: currentRender.colorStyle,
     brandColor: currentRender.brandColor,
+    sub: currentRender.sub,
     centerImage: currentRender.centerHref
       ? { href: currentRender.centerHref, ratio: state.logoRatio, plate: state.plate }
       : null,
@@ -288,12 +317,24 @@ function update() {
   }
 
   const useImage = state.image && (state.resemble || state.embed);
+
+  // Auto-detect brand colour from the uploaded image when requested.
+  if (state.autoBrand && state.image && state.colorStyle === 'brand') {
+    state.brandColor = extractBrandColor(state.image, state.image.naturalWidth, state.image.naturalHeight);
+    ($('#brandColor') as HTMLInputElement).value = state.brandColor;
+  }
+
+  // High detail is safe for mono/brand; image-colours stays at Standard because
+  // its compressed contrast can't absorb fine texture noise at high detail.
+  const effSub = state.colorStyle === 'image' ? Math.min(state.detail, 3) : state.detail;
+
   const sampler =
     state.resemble && state.image
       ? sampleImage(state.image, state.image.naturalWidth, state.image.naturalHeight, {
-          gridSize: matrix.size * 3,
+          gridSize: matrix.size * effSub,
           threshold: state.threshold,
           invert: state.invert,
+          auto: state.autoThreshold,
         })
       : null;
 
@@ -318,6 +359,7 @@ function update() {
     protectPatterns: state.protectPatterns,
     colorStyle: state.colorStyle,
     brandColor: state.brandColor,
+    sub: effSub,
     centerImage,
   });
 
@@ -330,6 +372,7 @@ function update() {
     protectPatterns: state.protectPatterns,
     colorStyle: state.colorStyle,
     brandColor: state.brandColor,
+    sub: effSub,
     centerHref: centerImage && state.image ? state.image.src : null,
   };
   previewEl.innerHTML = '';
@@ -356,4 +399,6 @@ function update() {
 renderTabs();
 renderForm();
 syncErrorLevel();
+($('#threshold') as HTMLInputElement).disabled = state.autoThreshold;
+($('#brandColor') as HTMLInputElement).disabled = state.autoBrand;
 update();

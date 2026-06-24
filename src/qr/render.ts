@@ -28,6 +28,8 @@ export interface RenderOptions {
   colorStyle: ColorStyle;
   /** Brand colour (raw hex) used when colorStyle === 'brand'. */
   brandColor: string;
+  /** Sub-cells per module (odd: 3 standard, 5/7 = finer image detail). */
+  sub: number;
   /** Optional logo embedded into carved-out center space. */
   centerImage?: CenterImage | null;
 }
@@ -43,7 +45,7 @@ export interface RenderOptions {
  */
 export function renderQR(opts: RenderOptions): HTMLCanvasElement {
   const { matrix, quietModules, fg, bg, sampler, protectPatterns, colorStyle, centerImage } = opts;
-  const { n, sub, quietSub, gridSide } = computeGrid(matrix.size, quietModules);
+  const { n, sub, quietSub, gridSide } = computeGrid(matrix.size, quietModules, opts.sub);
   const fillOpts = { style: colorStyle, fg, bg, brand: brandDarkHex(opts.brandColor), protectPatterns };
 
   const cellPx = Math.max(1, Math.floor(opts.targetPx / gridSide));
@@ -64,7 +66,7 @@ export function renderQR(opts: RenderOptions): HTMLCanvasElement {
       const baseSubCol = quietSub + c * sub;
       for (let dr = 0; dr < sub; dr++) {
         for (let dc = 0; dc < sub; dc++) {
-          ctx.fillStyle = subCellFill(matrix, sampler, fillOpts, r, c, dr, dc);
+          ctx.fillStyle = subCellFill(matrix, sampler, fillOpts, r, c, dr, dc, sub);
           ctx.fillRect((baseSubCol + dc) * cellPx, (baseSubRow + dr) * cellPx, cellPx, cellPx);
         }
       }

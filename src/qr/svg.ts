@@ -22,6 +22,8 @@ export interface SvgOptions {
   colorStyle: ColorStyle;
   /** Brand colour (raw hex) used when colorStyle === 'brand'. */
   brandColor: string;
+  /** Sub-cells per module (odd: 3 standard, 5/7 = finer image detail). */
+  sub: number;
   centerImage?: SvgCenterImage | null;
   /** Pixel size written to the width/height attributes (the SVG stays vector). */
   pixelSize: number;
@@ -36,12 +38,12 @@ export interface SvgOptions {
  */
 export function renderSVG(opts: SvgOptions): string {
   const { matrix, quietModules, fg, bg, sampler, protectPatterns, colorStyle, centerImage, pixelSize } = opts;
-  const { n, sub, quietSub, gridSide } = computeGrid(matrix.size, quietModules);
+  const { n, sub, quietSub, gridSide } = computeGrid(matrix.size, quietModules, opts.sub);
   const fillOpts = { style: colorStyle, fg, bg, brand: brandDarkHex(opts.brandColor), protectPatterns };
 
   // Paint colour for every sub-cell, indexed by sub-row/col in module space.
   const fillAt = (sr: number, sc: number): string =>
-    subCellFill(matrix, sampler, fillOpts, Math.floor(sr / sub), Math.floor(sc / sub), sr % sub, sc % sub);
+    subCellFill(matrix, sampler, fillOpts, Math.floor(sr / sub), Math.floor(sc / sub), sr % sub, sc % sub, sub);
 
   const rects: string[] = [];
   const total = n * sub;

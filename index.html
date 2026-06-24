@@ -75,6 +75,22 @@
               <span class="field__label">Brand colour</span>
               <input type="color" id="brandColor" value="#2563eb" />
             </label>
+            <label class="field field--check opt-brand">
+              <input type="checkbox" id="autoBrand" />
+              <span class="field__label">Auto-detect from image</span>
+            </label>
+            <label class="field opt-resemble">
+              <span class="field__label">Halftone detail</span>
+              <select id="detail">
+                <option value="3" selected>Standard</option>
+                <option value="5">High</option>
+                <option value="7">Ultra</option>
+              </select>
+            </label>
+            <label class="field field--check opt-resemble">
+              <input type="checkbox" id="autoThreshold" checked />
+              <span class="field__label">Auto contrast (threshold)</span>
+            </label>
             <label class="field opt-resemble">
               <span class="field__label">Image detail (threshold)</span>
               <input type="range" id="threshold" min="20" max="80" value="50" />

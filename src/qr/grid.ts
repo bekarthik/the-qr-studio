@@ -1,22 +1,41 @@
 import type { QrMatrix } from './matrix';
 import type { ImageSampler } from './halftone';
 
-/** Geometry shared by every renderer. One module === 3x3 sub-cells. */
+/**
+ * Geometry shared by every renderer. Each module is expanded into a `sub` x
+ * `sub` grid of sub-cells (odd number; 3 = standard, higher = finer image).
+ */
 export interface GridSpec {
   /** Modules per side (no quiet zone). */
   n: number;
-  /** Sub-cells per module side (always 3). */
+  /** Sub-cells per module side (odd: 3, 5, 7…). */
   sub: number;
+  /** Index of the centre sub-cell ((sub-1)/2). */
+  mid: number;
   /** Quiet-zone width in sub-cells. */
   quietSub: number;
   /** Total sub-cells per side including the quiet zone. */
   gridSide: number;
 }
 
-export function computeGrid(size: number, quietModules: number): GridSpec {
-  const sub = 3;
+export function computeGrid(size: number, quietModules: number, sub = 3): GridSpec {
   const quietSub = quietModules * sub;
-  return { n: size, sub, quietSub, gridSide: size * sub + 2 * quietSub };
+  return { n: size, sub, mid: (sub - 1) / 2, quietSub, gridSide: size * sub + 2 * quietSub };
+}
+
+/**
+ * Half-width of the central "data core" that carries the true module value
+ * (the rest of the module follows the image). At the standard 3x3 detail this
+ * is a single centre cell; at higher detail we keep a 3x3 core so a data module
+ * over a same-brightness image area still reads correctly.
+ */
+const coreRadius = (sub: number) => (sub <= 3 ? 0 : 1);
+
+/** True when (dr, dc) is inside the central data core for a given detail. */
+function inCore(dr: number, dc: number, sub: number): boolean {
+  const mid = (sub - 1) / 2;
+  const cr = coreRadius(sub);
+  return Math.abs(dr - mid) <= cr && Math.abs(dc - mid) <= cr;
 }
 
 /**
@@ -24,9 +43,9 @@ export function computeGrid(size: number, quietModules: number): GridSpec {
  * renderers both call this so their geometry — and therefore scannability — is
  * guaranteed identical.
  *
- * The centre sub-cell (dr==1, dc==1) always carries the true module value. The
- * eight surrounding sub-cells follow the image when halftoning, except over
- * protected function patterns which stay solid.
+ * The centre sub-cell always carries the true module value. The surrounding
+ * sub-cells follow the image when halftoning, except over protected function
+ * patterns which stay solid.
  */
 export function subCellDark(
   matrix: QrMatrix,
@@ -36,10 +55,10 @@ export function subCellDark(
   c: number,
   dr: number,
   dc: number,
+  sub = 3,
 ): boolean {
-  const isCenter = dr === 1 && dc === 1;
-  if (sampler && !isCenter && !(protectPatterns && matrix.isFunction(r, c))) {
-    return sampler.dark(r * 3 + dr, c * 3 + dc);
+  if (sampler && !inCore(dr, dc, sub) && !(protectPatterns && matrix.isFunction(r, c))) {
+    return sampler.dark(r * sub + dr, c * sub + dc);
   }
   return matrix.get(r, c);
 }
@@ -124,18 +143,18 @@ export function subCellFill(
   c: number,
   dr: number,
   dc: number,
+  sub = 3,
 ): string {
-  const dark = subCellDark(matrix, sampler, opts.protectPatterns, r, c, dr, dc);
+  const dark = subCellDark(matrix, sampler, opts.protectPatterns, r, c, dr, dc, sub);
 
   if (opts.style === 'brand') {
     return dark ? opts.brand : opts.bg;
   }
 
   if (opts.style === 'image' && sampler?.colorAt) {
-    const isCenter = dr === 1 && dc === 1;
     const isFn = matrix.isFunction(r, c);
-    if (isFn || !isCenter) {
-      const rgb = sampler.colorAt(r * 3 + dr, c * 3 + dc);
+    if (isFn || !inCore(dr, dc, sub)) {
+      const rgb = sampler.colorAt(r * sub + dr, c * sub + dc);
       // Identifier patterns get a stronger dark clamp for reliable detection.
       return rgbToHex(dark ? clampDark(rgb, isFn ? IDENTIFIER_DARK_MAX : DARK_MAX) : clampLight(rgb));
     }
