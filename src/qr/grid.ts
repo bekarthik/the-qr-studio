@@ -55,6 +55,8 @@ export type RGB = [number, number, number];
  */
 const DARK_MAX = 95;
 const LIGHT_MIN = 175;
+/** Identifier (finder/alignment/timing) dark cells clamp harder than data. */
+const IDENTIFIER_DARK_MAX = 35;
 /** Quantise channels so smooth image regions merge into runs (smaller SVGs). */
 const QUANT = 12;
 
@@ -62,9 +64,9 @@ const lum = (r: number, g: number, b: number) => 0.299 * r + 0.587 * g + 0.114 *
 const q = (v: number) => Math.max(0, Math.min(255, Math.round(v / QUANT) * QUANT));
 
 /** Darken an image colour while keeping its hue — result reads as "dark". */
-export function clampDark([r, g, b]: RGB): RGB {
+export function clampDark([r, g, b]: RGB, maxLum = DARK_MAX): RGB {
   const l = lum(r, g, b);
-  const f = l > DARK_MAX ? DARK_MAX / Math.max(l, 1) : 1;
+  const f = l > maxLum ? maxLum / Math.max(l, 1) : 1;
   return [q(r * f), q(g * f), q(b * f)];
 }
 
@@ -107,9 +109,12 @@ export interface FillOpts {
  * canvas and SVG renderers.
  *  - solid : plain fg / bg.
  *  - brand : every dark cell → the (clamped) brand colour, light cells → bg.
- *  - image : the eight surrounding sub-cells take the image's hue clamped into
- *            the dark/light band; the centre sub-cell (which scanners sample)
- *            and function patterns stay at full fg/bg contrast.
+ *  - image : everything takes the image's hue, clamped into the dark/light band
+ *            so it still scans — including the identifier (finder/alignment/
+ *            timing) patterns. The only exception is the centre sub-cell of a
+ *            *data* module (the point a scanner samples), kept at full fg/bg
+ *            contrast for margin. Identifier patterns are darkened harder so a
+ *            dark identifier cell over a light image area stays detectable.
  */
 export function subCellFill(
   matrix: QrMatrix,
@@ -128,10 +133,11 @@ export function subCellFill(
 
   if (opts.style === 'image' && sampler?.colorAt) {
     const isCenter = dr === 1 && dc === 1;
-    const isImageCell = !isCenter && !(opts.protectPatterns && matrix.isFunction(r, c));
-    if (isImageCell) {
+    const isFn = matrix.isFunction(r, c);
+    if (isFn || !isCenter) {
       const rgb = sampler.colorAt(r * 3 + dr, c * 3 + dc);
-      return rgbToHex(dark ? clampDark(rgb) : clampLight(rgb));
+      // Identifier patterns get a stronger dark clamp for reliable detection.
+      return rgbToHex(dark ? clampDark(rgb, isFn ? IDENTIFIER_DARK_MAX : DARK_MAX) : clampLight(rgb));
     }
   }
 

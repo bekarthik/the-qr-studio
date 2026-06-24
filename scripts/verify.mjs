@@ -28,8 +28,19 @@ const hexToRgb = (h) => [
 const lum = ([r, g, b]) => 0.299 * r + 0.587 * g + 0.114 * b;
 
 // A synthetic source: dark disc on light ground, with a red→blue colour sweep.
-function makeSampler(g) {
+function makeSampler(g, kind = 'sweep') {
   const cx = g / 2;
+  if (kind === 'lightcorner') {
+    // Worst case for identifier blocks: near-white in the corners, where the
+    // finder patterns live — so dark finder cells must be clamped from white.
+    return {
+      dark: (sr, sc) => Math.hypot(sr - cx, sc - cx) < g * 0.34,
+      colorAt: (sr, sc) => {
+        const t = Math.min(1, Math.hypot(sr - cx, sc - cx) / (g * 0.71));
+        return [220 + (255 - 220) * t, 40 + (255 - 40) * t, 120 + (255 - 120) * t];
+      },
+    };
+  }
   return {
     dark: (sr, sc) => Math.hypot(sr - cx, sc - cx) < g * 0.34,
     colorAt: (sr, sc) => {
@@ -41,10 +52,10 @@ function makeSampler(g) {
 
 /* --------------------------------------------------- shared paint geometry */
 
-function paintGrid(text, { halftone = false, embed = false, style = 'solid' }, emit) {
+function paintGrid(text, { halftone = false, embed = false, style = 'solid', samplerKind = 'sweep' }, emit) {
   const m = buildMatrix(text, 'H');
   const n = m.size, sub = 3;
-  const sampler = halftone ? makeSampler(n * sub) : null;
+  const sampler = halftone ? makeSampler(n * sub, samplerKind) : null;
   const fillOpts = { style, fg: '#000000', bg: '#ffffff', brand: '#1d4ed8', protectPatterns: true };
 
   const bm = Math.round(n * 0.22);
@@ -108,7 +119,7 @@ function rasterizeSVG(svg) {
 
 function svgFor(text, opts) {
   const m = buildMatrix(text, 'H');
-  const sampler = opts.halftone ? makeSampler(m.size * 3) : null;
+  const sampler = opts.halftone ? makeSampler(m.size * 3, opts.samplerKind || 'sweep') : null;
   return renderSVG({
     matrix: m,
     quietModules: QUIET,
@@ -134,6 +145,7 @@ const cases = [
   { name: 'halftone url', text: 'https://example.com/welcome', opts: { halftone: true } },
   { name: 'halftone brand url', text: 'https://example.com/welcome', opts: { halftone: true, style: 'brand' } },
   { name: 'halftone image url', text: 'https://example.com/welcome', opts: { halftone: true, style: 'image' } },
+  { name: 'image lightcorner', text: 'https://example.com/welcome', opts: { halftone: true, style: 'image', samplerKind: 'lightcorner' } },
   { name: 'halftone+embed url', text: 'https://chores.app/r/AB12CD', opts: { halftone: true, embed: true } },
   { name: 'brand+embed url', text: 'https://chores.app/r/AB12CD', opts: { halftone: true, style: 'brand', embed: true } },
   { name: 'image+embed url', text: 'https://chores.app/r/AB12CD', opts: { halftone: true, style: 'image', embed: true } },

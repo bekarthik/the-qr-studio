@@ -40,8 +40,11 @@ Generate a correctly-formatted QR for any of:
   The colour is **auto-darkened** into the safe luminance band, so even a light
   brand colour (yellow, cyan…) still scans. Small SVGs (one colour merges into
   runs). Best for logos.
-- **Image colours** — each surrounding sub-cell takes the image's actual hue, so
-  the code resembles the picture's colours, not just its brightness.
+- **Image colours** — every cell takes the image's actual hue, so the code
+  resembles the picture's colours, not just its brightness. This includes the
+  identifier (finder/alignment/timing) patterns; their dark cells are clamped
+  harder so a dark identifier cell over a light image area stays detectable
+  (falling back toward near-black where the image is white).
 
 Scannability is preserved across all styles by clamping colours into a dark
 (≤95) or light (≥175) **luminance band** — a scanner reads brightness, not hue —
