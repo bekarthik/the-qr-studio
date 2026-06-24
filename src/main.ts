@@ -20,7 +20,8 @@ const state = {
   errorLevel: 'H' as ErrorLevel,
   threshold: 0.5,
   invert: false,
-  colorMode: false,
+  colorStyle: 'solid' as 'solid' | 'brand' | 'image',
+  brandColor: '#2563eb',
   logoRatio: 0.22,
   plate: true,
   protectPatterns: true,
@@ -42,7 +43,8 @@ interface RenderSnapshot {
   fg: string;
   bg: string;
   protectPatterns: boolean;
-  colorMode: boolean;
+  colorStyle: 'solid' | 'brand' | 'image';
+  brandColor: string;
   centerHref: string | null;
 }
 let currentRender: RenderSnapshot | null = null;
@@ -155,8 +157,13 @@ $('#invert').addEventListener('change', (e) => {
   state.invert = (e.target as HTMLInputElement).checked;
   update();
 });
-$('#colorMode').addEventListener('change', (e) => {
-  state.colorMode = (e.target as HTMLInputElement).checked;
+$('#colorStyle').addEventListener('change', (e) => {
+  state.colorStyle = (e.target as HTMLSelectElement).value as typeof state.colorStyle;
+  document.body.classList.toggle('brand-on', state.colorStyle === 'brand');
+  update();
+});
+$('#brandColor').addEventListener('input', (e) => {
+  state.brandColor = (e.target as HTMLInputElement).value;
   update();
 });
 $('#logoRatio').addEventListener('input', (e) => {
@@ -237,7 +244,8 @@ $('#downloadSvg').addEventListener('click', () => {
     bg: currentRender.bg,
     sampler: currentRender.sampler,
     protectPatterns: currentRender.protectPatterns,
-    colorMode: currentRender.colorMode,
+    colorStyle: currentRender.colorStyle,
+    brandColor: currentRender.brandColor,
     centerImage: currentRender.centerHref
       ? { href: currentRender.centerHref, ratio: state.logoRatio, plate: state.plate }
       : null,
@@ -308,7 +316,8 @@ function update() {
     bg: state.bg,
     sampler,
     protectPatterns: state.protectPatterns,
-    colorMode: state.colorMode,
+    colorStyle: state.colorStyle,
+    brandColor: state.brandColor,
     centerImage,
   });
 
@@ -319,7 +328,8 @@ function update() {
     fg: state.fg,
     bg: state.bg,
     protectPatterns: state.protectPatterns,
-    colorMode: state.colorMode,
+    colorStyle: state.colorStyle,
+    brandColor: state.brandColor,
     centerHref: centerImage && state.image ? state.image.src : null,
   };
   previewEl.innerHTML = '';

@@ -79,19 +79,37 @@ export function clampLight([r, g, b]: RGB): RGB {
 export const rgbToHex = ([r, g, b]: RGB): string =>
   '#' + [r, g, b].map((v) => Math.round(v).toString(16).padStart(2, '0')).join('');
 
+export function hexToRgb(hex: string): RGB {
+  const h = hex.replace('#', '');
+  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+}
+
+/**
+ * Brand mode's dark colour: the chosen brand colour darkened just enough to
+ * read as "dark", so even a light brand colour (yellow, cyan…) stays scannable.
+ */
+export const brandDarkHex = (hex: string): string => rgbToHex(clampDark(hexToRgb(hex)));
+
+/** How data cells are coloured. */
+export type ColorStyle = 'solid' | 'brand' | 'image';
+
 export interface FillOpts {
-  /** Use the image's colours (clamped) instead of solid fg/bg. */
-  colorMode: boolean;
+  style: ColorStyle;
   fg: string;
   bg: string;
+  /** Pre-clamped dark colour used by brand mode (see brandDarkHex). */
+  brand: string;
   protectPatterns: boolean;
 }
 
 /**
  * The single source of truth for a sub-cell's paint colour, shared by the
- * canvas and SVG renderers. In colour mode each data sub-cell takes the image's
- * hue clamped into the dark or light luminance band; function patterns stay
- * solid for robustness. Without colour mode it returns plain fg/bg.
+ * canvas and SVG renderers.
+ *  - solid : plain fg / bg.
+ *  - brand : every dark cell → the (clamped) brand colour, light cells → bg.
+ *  - image : the eight surrounding sub-cells take the image's hue clamped into
+ *            the dark/light band; the centre sub-cell (which scanners sample)
+ *            and function patterns stay at full fg/bg contrast.
  */
 export function subCellFill(
   matrix: QrMatrix,
@@ -103,14 +121,19 @@ export function subCellFill(
   dc: number,
 ): string {
   const dark = subCellDark(matrix, sampler, opts.protectPatterns, r, c, dr, dc);
-  // Only the eight surrounding sub-cells take the image's colour. The centre
-  // sub-cell (which scanners sample) and protected function patterns stay at
-  // full fg/bg contrast so colour never costs us a decode.
-  const isCenter = dr === 1 && dc === 1;
-  const isImageCell = !isCenter && !(opts.protectPatterns && matrix.isFunction(r, c));
-  if (opts.colorMode && sampler?.colorAt && isImageCell) {
-    const rgb = sampler.colorAt(r * 3 + dr, c * 3 + dc);
-    return rgbToHex(dark ? clampDark(rgb) : clampLight(rgb));
+
+  if (opts.style === 'brand') {
+    return dark ? opts.brand : opts.bg;
   }
+
+  if (opts.style === 'image' && sampler?.colorAt) {
+    const isCenter = dr === 1 && dc === 1;
+    const isImageCell = !isCenter && !(opts.protectPatterns && matrix.isFunction(r, c));
+    if (isImageCell) {
+      const rgb = sampler.colorAt(r * 3 + dr, c * 3 + dc);
+      return rgbToHex(dark ? clampDark(rgb) : clampLight(rgb));
+    }
+  }
+
   return dark ? opts.fg : opts.bg;
 }

@@ -212,15 +212,19 @@ body {
   color: var(--muted);
   font-size: 13px;
 }
-/* hide image-only options until the relevant feature is on */
+/* hide conditional options until the relevant feature is on */
 .opt-resemble,
-.opt-embed {
+.opt-embed,
+.opt-brand {
   display: none;
 }
 body.resemble-on .opt-resemble {
   display: flex;
 }
 body.embed-on .opt-embed {
+  display: flex;
+}
+body.brand-on .opt-brand {
   display: flex;
 }
 

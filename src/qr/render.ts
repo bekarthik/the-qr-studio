@@ -1,6 +1,6 @@
 import type { QrMatrix } from './matrix';
 import type { ImageSampler } from './halftone';
-import { computeGrid, subCellFill } from './grid';
+import { computeGrid, subCellFill, brandDarkHex, type ColorStyle } from './grid';
 
 export interface CenterImage {
   source: CanvasImageSource;
@@ -24,8 +24,10 @@ export interface RenderOptions {
   sampler?: ImageSampler | null;
   /** Keep finder/timing/alignment patterns fully solid (recommended). */
   protectPatterns: boolean;
-  /** Paint data cells with the image's clamped colours instead of fg/bg. */
-  colorMode: boolean;
+  /** How data cells are coloured: solid fg/bg, a brand colour, or image hues. */
+  colorStyle: ColorStyle;
+  /** Brand colour (raw hex) used when colorStyle === 'brand'. */
+  brandColor: string;
   /** Optional logo embedded into carved-out center space. */
   centerImage?: CenterImage | null;
 }
@@ -40,9 +42,9 @@ export interface RenderOptions {
  * makes the finished code resemble the picture while staying scannable.
  */
 export function renderQR(opts: RenderOptions): HTMLCanvasElement {
-  const { matrix, quietModules, fg, bg, sampler, protectPatterns, colorMode, centerImage } = opts;
+  const { matrix, quietModules, fg, bg, sampler, protectPatterns, colorStyle, centerImage } = opts;
   const { n, sub, quietSub, gridSide } = computeGrid(matrix.size, quietModules);
-  const fillOpts = { colorMode, fg, bg, protectPatterns };
+  const fillOpts = { style: colorStyle, fg, bg, brand: brandDarkHex(opts.brandColor), protectPatterns };
 
   const cellPx = Math.max(1, Math.floor(opts.targetPx / gridSide));
   const dim = gridSide * cellPx;

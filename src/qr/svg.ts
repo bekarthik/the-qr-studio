@@ -1,6 +1,6 @@
 import type { QrMatrix } from './matrix';
 import type { ImageSampler } from './halftone';
-import { computeGrid, subCellFill } from './grid';
+import { computeGrid, subCellFill, brandDarkHex, type ColorStyle } from './grid';
 
 export interface SvgCenterImage {
   /** Data URL (or any URL) of the logo to embed. */
@@ -18,8 +18,10 @@ export interface SvgOptions {
   bg: string;
   sampler?: ImageSampler | null;
   protectPatterns: boolean;
-  /** Paint data cells with the image's clamped colours instead of fg/bg. */
-  colorMode: boolean;
+  /** How data cells are coloured: solid fg/bg, a brand colour, or image hues. */
+  colorStyle: ColorStyle;
+  /** Brand colour (raw hex) used when colorStyle === 'brand'. */
+  brandColor: string;
   centerImage?: SvgCenterImage | null;
   /** Pixel size written to the width/height attributes (the SVG stays vector). */
   pixelSize: number;
@@ -33,9 +35,9 @@ export interface SvgOptions {
  * optional centre logo is embedded as an <image>.
  */
 export function renderSVG(opts: SvgOptions): string {
-  const { matrix, quietModules, fg, bg, sampler, protectPatterns, colorMode, centerImage, pixelSize } = opts;
+  const { matrix, quietModules, fg, bg, sampler, protectPatterns, colorStyle, centerImage, pixelSize } = opts;
   const { n, sub, quietSub, gridSide } = computeGrid(matrix.size, quietModules);
-  const fillOpts = { colorMode, fg, bg, protectPatterns };
+  const fillOpts = { style: colorStyle, fg, bg, brand: brandDarkHex(opts.brandColor), protectPatterns };
 
   // Paint colour for every sub-cell, indexed by sub-row/col in module space.
   const fillAt = (sr: number, sc: number): string =>

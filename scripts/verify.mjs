@@ -41,11 +41,11 @@ function makeSampler(g) {
 
 /* --------------------------------------------------- shared paint geometry */
 
-function paintGrid(text, { halftone = false, embed = false, colorMode = false }, emit) {
+function paintGrid(text, { halftone = false, embed = false, style = 'solid' }, emit) {
   const m = buildMatrix(text, 'H');
   const n = m.size, sub = 3;
   const sampler = halftone ? makeSampler(n * sub) : null;
-  const fillOpts = { colorMode, fg: '#000000', bg: '#ffffff', protectPatterns: true };
+  const fillOpts = { style, fg: '#000000', bg: '#ffffff', brand: '#1d4ed8', protectPatterns: true };
 
   const bm = Math.round(n * 0.22);
   const start = Math.floor((n - bm) / 2);
@@ -116,7 +116,8 @@ function svgFor(text, opts) {
     bg: '#ffffff',
     sampler,
     protectPatterns: true,
-    colorMode: Boolean(opts.colorMode),
+    colorStyle: opts.style || 'solid',
+    brandColor: '#1d4ed8',
     centerImage: opts.embed ? { href: 'x', ratio: 0.22, plate: true } : null,
     pixelSize: 1024,
   });
@@ -129,13 +130,15 @@ const VCARD =
 
 const cases = [
   { name: 'plain url', text: 'https://example.com/welcome', opts: {} },
+  { name: 'brand url', text: 'https://example.com/welcome', opts: { style: 'brand' } },
   { name: 'halftone url', text: 'https://example.com/welcome', opts: { halftone: true } },
-  { name: 'halftone+colour url', text: 'https://example.com/welcome', opts: { halftone: true, colorMode: true } },
+  { name: 'halftone brand url', text: 'https://example.com/welcome', opts: { halftone: true, style: 'brand' } },
+  { name: 'halftone image url', text: 'https://example.com/welcome', opts: { halftone: true, style: 'image' } },
   { name: 'halftone+embed url', text: 'https://chores.app/r/AB12CD', opts: { halftone: true, embed: true } },
-  { name: 'colour+embed url', text: 'https://chores.app/r/AB12CD', opts: { halftone: true, colorMode: true, embed: true } },
-  { name: 'halftone vcard', text: VCARD, opts: { halftone: true } },
-  { name: 'colour vcard', text: VCARD, opts: { halftone: true, colorMode: true } },
-  { name: 'colour+embed wifi', text: 'WIFI:T:WPA;S:MyNetwork;P:s3cr3t-pass;H:false;;', opts: { halftone: true, colorMode: true, embed: true } },
+  { name: 'brand+embed url', text: 'https://chores.app/r/AB12CD', opts: { halftone: true, style: 'brand', embed: true } },
+  { name: 'image+embed url', text: 'https://chores.app/r/AB12CD', opts: { halftone: true, style: 'image', embed: true } },
+  { name: 'image vcard', text: VCARD, opts: { halftone: true, style: 'image' } },
+  { name: 'brand+embed wifi', text: 'WIFI:T:WPA;S:MyNetwork;P:s3cr3t-pass;H:false;;', opts: { halftone: true, style: 'brand', embed: true } },
 ];
 
 let pass = 0, total = 0;

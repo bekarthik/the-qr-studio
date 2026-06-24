@@ -63,6 +63,18 @@
                 <option value="H" selected>H · 30%</option>
               </select>
             </label>
+            <label class="field">
+              <span class="field__label">Colour style</span>
+              <select id="colorStyle">
+                <option value="solid" selected>Solid (foreground)</option>
+                <option value="brand">Brand colour</option>
+                <option value="image">Image colours</option>
+              </select>
+            </label>
+            <label class="field opt-brand">
+              <span class="field__label">Brand colour</span>
+              <input type="color" id="brandColor" value="#2563eb" />
+            </label>
             <label class="field opt-resemble">
               <span class="field__label">Image detail (threshold)</span>
               <input type="range" id="threshold" min="20" max="80" value="50" />
@@ -70,10 +82,6 @@
             <label class="field field--check opt-resemble">
               <input type="checkbox" id="invert" />
               <span class="field__label">Invert image</span>
-            </label>
-            <label class="field field--check opt-resemble">
-              <input type="checkbox" id="colorMode" />
-              <span class="field__label">Use image <b>colours</b></span>
             </label>
             <label class="field field--check opt-resemble">
               <input type="checkbox" id="protectPatterns" checked />

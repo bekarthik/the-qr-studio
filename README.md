@@ -33,14 +33,22 @@ Generate a correctly-formatted QR for any of:
    *carved out* (cleared to the background) and the logo is drawn into that
    empty space — embedded inside the code, not pasted on top of live modules.
 
-**Image colours (optional, with halftone).** Tick *Use image colours* and each
-sub-cell takes the image's hue instead of plain black/white. Scannability is
-preserved by clamping every colour into a dark or light **luminance band** (a
-scanner reads brightness, not hue), and by keeping the centre sub-cell — the one
-a scanner samples — plus all function patterns at full fg/bg contrast. Only the
-eight surrounding sub-cells are tinted.
+**Colour style.** A selector picks how data cells are coloured:
 
-Either mode can be used alone or together. Whenever an image mode is on, the
+- **Solid** — the foreground/background pickers (default).
+- **Brand colour** — the whole code in one chosen colour, light cells white.
+  The colour is **auto-darkened** into the safe luminance band, so even a light
+  brand colour (yellow, cyan…) still scans. Small SVGs (one colour merges into
+  runs). Best for logos.
+- **Image colours** — each surrounding sub-cell takes the image's actual hue, so
+  the code resembles the picture's colours, not just its brightness.
+
+Scannability is preserved across all styles by clamping colours into a dark
+(≤95) or light (≥175) **luminance band** — a scanner reads brightness, not hue —
+and by keeping the centre sub-cell (the one a scanner samples) plus all function
+patterns at full contrast.
+
+Either image mode can be used alone or together with a colour style. Whenever an image mode is on, the
 encoder is forced to **error-correction level H (30% redundancy)** so the image
 "noise" and the carved centre don't break scanning. Finder, timing and
 alignment patterns are kept solid so scanners can always lock onto the symbol.

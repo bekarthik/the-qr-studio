@@ -13,7 +13,7 @@ import jsQR from 'jsqr';
 
 register('./ts-loader.mjs', import.meta.url);
 const { buildMatrix } = await import('../src/qr/matrix.ts');
-const { subCellFill } = await import('../src/qr/grid.ts');
+const { subCellFill, brandDarkHex } = await import('../src/qr/grid.ts');
 
 const CELL = 9; // px per sub-cell
 const QUIET = 4;
@@ -57,14 +57,15 @@ function preview(mask, g) {
 
 /* --------------------------------------------------------------- rendering */
 
-function render(text, { mask = null, color = null, embed = false } = {}) {
+function render(text, { mask = null, color = null, brand = null, embed = false } = {}) {
   const m = buildMatrix(text, 'H');
   const n = m.size, sub = 3, qs = QUIET * sub;
   const g = n * sub;
   const dim = (g + 2 * qs) * CELL;
   const px = new Uint8ClampedArray(dim * dim * 4).fill(255);
   const sampler = mask ? { dark: (sr, sc) => mask(sr, sc, g), colorAt: (sr, sc) => color(sr, sc, g) } : null;
-  const fillOpts = { colorMode: Boolean(color), fg: '#101418', bg: '#ffffff', protectPatterns: true };
+  const style = brand ? 'brand' : color ? 'image' : 'solid';
+  const fillOpts = { style, fg: '#101418', bg: '#ffffff', brand: brandDarkHex(brand || '#101418'), protectPatterns: true };
 
   const set = (sr, sc, rgb) => {
     for (let y = 0; y < CELL; y++)
@@ -136,6 +137,8 @@ const outputs = {
   '04-halftone-heart-embed.png': render(URL, { mask: heartMask, embed: true }),
   '05-colour-heart.png': render(URL, { mask: heartMask, color: heartColor }),
   '06-colour-heart-embed.png': render(URL, { mask: heartMask, color: heartColor, embed: true }),
+  '07-brand-heart.png': render(URL, { mask: heartMask, brand: '#7c3aed' }),
+  '08-brand-heart-embed.png': render(URL, { mask: heartMask, brand: '#7c3aed', embed: true }),
 };
 
 console.log('Scannability:');
