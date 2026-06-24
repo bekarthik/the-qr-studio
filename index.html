@@ -12,7 +12,8 @@
   <body>
     <header class="topbar">
       <div class="brand"><span class="logo">▣</span> QR Studio</div>
-      <p class="tagline">Scannable QR codes that look like your image</p>
+      <p class="tagline">QR codes that look like your logo — and actually scan</p>
+      <p class="trust">Free forever · No sign-up · Runs 100% in your browser — nothing is uploaded</p>
     </header>
 
     <main class="app">
@@ -119,13 +120,23 @@
         <div id="preview" class="preview">
           <div class="empty">Fill in the details to generate a QR code.</div>
         </div>
+        <div id="verifyBadge" class="badge badge--hidden"></div>
         <p id="hint" class="hint"></p>
         <div class="downloads">
           <button id="downloadPng" class="download" disabled>Download PNG</button>
           <button id="downloadSvg" class="download download--alt" disabled>Download SVG</button>
         </div>
+        <p class="finehint">
+          PNG is 1600&nbsp;px — crisp for print up to ~13&nbsp;cm at 300&nbsp;dpi. Use SVG for
+          larger or vector print. Always test-scan with a real phone before mass printing.
+        </p>
       </section>
     </main>
+
+    <footer class="foot">
+      You're responsible for where your codes lead — don't create QR codes for phishing,
+      scams or anything you wouldn't put your name to.
+    </footer>
 
     <script type="module" src="/src/main.ts"></script>
   </body>

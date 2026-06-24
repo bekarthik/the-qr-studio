@@ -64,6 +64,17 @@ export const SOURCES: SourceDef[] = [
     ],
   },
   {
+    type: 'upi',
+    label: 'UPI Pay',
+    icon: '₹',
+    fields: [
+      { key: 'vpa', label: 'UPI ID (VPA)', type: 'text', placeholder: 'name@bank' },
+      { key: 'name', label: 'Payee name', type: 'text', placeholder: 'Acme Store' },
+      { key: 'amount', label: 'Amount ₹ (optional)', type: 'number', placeholder: 'Blank = payer enters' },
+      { key: 'note', label: 'Note (optional)', type: 'text', placeholder: 'Order #123' },
+    ],
+  },
+  {
     type: 'wifi',
     label: 'Wi-Fi',
     icon: '📶',

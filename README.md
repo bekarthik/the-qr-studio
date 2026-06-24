@@ -17,6 +17,7 @@ Generate a correctly-formatted QR for any of:
 | Phone | `tel:` |
 | SMS | `SMSTO:` |
 | WhatsApp | `https://wa.me/<number>?text=…` |
+| UPI Pay | `upi://pay?pa=…&pn=…&am=…&cu=INR` (India) |
 | Wi-Fi | `WIFI:` (WPA/WEP/open, hidden) |
 | Visiting card | vCard 3.0 |
 | Location | `geo:lat,lng` |
@@ -74,6 +75,13 @@ Download as **PNG** (raster, 1600 px) or **SVG** (vector, infinitely scalable �
 ideal for print). Both are produced from the same sub-cell geometry, so they are
 equally scannable. The SVG merges dark sub-cells into horizontal runs to stay
 compact and embeds a centre logo as an `<image>` element.
+
+### Verified scannable (live)
+
+Every rendered code is **decoded in-browser with jsQR** and the result shown as a
+badge — ✓ *Verified scannable*, or a ⚠ warning to dial back detail / logo size /
+contrast. The same check runs headlessly in `npm run verify`. This turns "does my
+styled QR actually scan?" from a gamble into a shown guarantee.
 
 ## Develop
 

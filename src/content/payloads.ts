@@ -7,6 +7,7 @@ export type SourceType =
   | 'phone'
   | 'sms'
   | 'whatsapp'
+  | 'upi'
   | 'wifi'
   | 'vcard'
   | 'geo';
@@ -62,6 +63,21 @@ export function buildPayload(type: SourceType, f: PayloadInput): string {
       const text = String(f.message || '');
       const q = text ? `?text=${encodeURIComponent(text)}` : '';
       return num ? `https://wa.me/${num}${q}` : '';
+    }
+
+    case 'upi': {
+      // BHIM-UPI deep link: upi://pay?pa=<vpa>&pn=<name>&am=<amount>&cu=INR&tn=<note>
+      // Keep the VPA's "@" literal (query-safe and most compatible) and encode
+      // other values with %20 for spaces, which UPI apps parse most reliably.
+      const pa = String(f.vpa || '').trim();
+      if (!pa) return '';
+      const parts = [`pa=${pa}`];
+      if (f.name) parts.push(`pn=${encodeURIComponent(String(f.name))}`);
+      const amount = String(f.amount || '').trim();
+      if (amount) parts.push(`am=${encodeURIComponent(amount)}`);
+      parts.push('cu=INR');
+      if (f.note) parts.push(`tn=${encodeURIComponent(String(f.note))}`);
+      return `upi://pay?${parts.join('&')}`;
     }
 
     case 'wifi': {

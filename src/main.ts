@@ -6,6 +6,7 @@ import { buildMatrix, type ErrorLevel } from './qr/matrix';
 import { sampleImage, extractBrandColor, type ImageSampler } from './qr/halftone';
 import { renderQR, type CenterImage } from './qr/render';
 import { renderSVG } from './qr/svg';
+import jsQR from 'jsqr';
 
 /* ------------------------------------------------------------------ state */
 
@@ -61,6 +62,46 @@ const tabsEl = $('#sourceTabs');
 const formEl = $('#formFields');
 const previewEl = $('#preview');
 const hintEl = $('#hint');
+const badgeEl = $('#verifyBadge');
+
+/* ----------------------------------------------------- scannability badge */
+
+/** Decode the rendered canvas with jsQR to prove it actually scans. */
+function isScannable(canvas: HTMLCanvasElement, payload: string): boolean {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return false;
+  const { width, height } = canvas;
+  const { data } = ctx.getImageData(0, 0, width, height);
+  const res = jsQR(data, width, height);
+  return Boolean(res) && res!.data === payload;
+}
+
+type Badge = 'hidden' | 'checking' | 'ok' | 'fail';
+function setBadge(state: Badge, note = '') {
+  badgeEl.className = `badge badge--${state}`;
+  if (state === 'hidden') badgeEl.textContent = '';
+  else if (state === 'checking') badgeEl.textContent = 'Checking scannability…';
+  else if (state === 'ok') badgeEl.textContent = '✓ Verified scannable';
+  else badgeEl.textContent = note || '⚠ May not scan — lower detail/logo size or raise contrast';
+}
+
+let verifyToken = 0;
+/** Verify off the critical path so typing stays smooth; ignore stale runs. */
+function scheduleVerify(canvas: HTMLCanvasElement, payload: string) {
+  const token = ++verifyToken;
+  setBadge('checking');
+  setTimeout(() => {
+    if (token !== verifyToken) return;
+    let ok = false;
+    try {
+      ok = isScannable(canvas, payload);
+    } catch {
+      ok = false;
+    }
+    if (token !== verifyToken) return;
+    setBadge(ok ? 'ok' : 'fail');
+  }, 200);
+}
 
 /* ------------------------------------------------------------- build tabs */
 
@@ -289,6 +330,7 @@ function update() {
     currentCanvas = null;
     currentRender = null;
     hintEl.textContent = '';
+    setBadge('hidden');
     setDownloadsEnabled(false);
     return;
   }
@@ -302,6 +344,7 @@ function update() {
     }</small></div>`;
     currentCanvas = null;
     currentRender = null;
+    setBadge('hidden');
     setDownloadsEnabled(false);
     return;
   }
@@ -370,6 +413,7 @@ function update() {
   canvas.className = 'qr';
   previewEl.appendChild(canvas);
   setDownloadsEnabled(true);
+  scheduleVerify(canvas, payload);
 
   // Scannability guidance.
   if (useImage) {
