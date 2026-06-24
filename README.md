@@ -38,6 +38,13 @@ encoder is forced to **error-correction level H (30% redundancy)** so the image
 "noise" and the carved centre don't break scanning. Finder, timing and
 alignment patterns are kept solid so scanners can always lock onto the symbol.
 
+### Export
+
+Download as **PNG** (raster, 1600 px) or **SVG** (vector, infinitely scalable —
+ideal for print). Both are produced from the same sub-cell geometry, so they are
+equally scannable. The SVG merges dark sub-cells into horizontal runs to stay
+compact and embeds a centre logo as an `<image>` element.
+
 ## Develop
 
 ```bash
@@ -52,8 +59,10 @@ npm run verify     # headless scannability check (renders + decodes with jsQR)
 `npm run verify` renders representative payloads (plain, halftone, halftone +
 centre-embed, long vCard, Wi-Fi) using the same function-pattern mask the app
 uses, then decodes each one with [`jsQR`](https://github.com/cozmo/jsQR) and
-asserts the decoded text matches the input. All cases must decode for the check
-to pass.
+asserts the decoded text matches the input. It checks **both** export paths —
+the canvas/PNG raster and the SVG vector output (rasterised by replaying its
+rects) — so a regression in either renderer fails the build. All cases must
+decode for the check to pass.
 
 > Always test-scan a printed code with a real phone before mass-printing. If a
 > phone struggles with a heavily-styled code, lower the **Image detail** or
@@ -66,7 +75,9 @@ src/
 ├── qr/
 │   ├── matrix.ts     # QR encoding + function-pattern map (uses `qrcode`)
 │   ├── halftone.ts   # image → binary sub-cell sampler
-│   └── render.ts     # canvas rendering (plain / halftone / centre-embed)
+│   ├── grid.ts       # shared sub-cell geometry + dark/light decision
+│   ├── render.ts     # canvas (PNG) rendering
+│   └── svg.ts        # vector (SVG) rendering
 ├── content/payloads.ts  # source-type → QR payload string
 ├── ui/forms.ts          # per-source form field definitions
 └── main.ts              # UI wiring + render loop

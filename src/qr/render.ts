@@ -1,5 +1,6 @@
 import type { QrMatrix } from './matrix';
 import type { ImageSampler } from './halftone';
+import { computeGrid, subCellDark } from './grid';
 
 export interface CenterImage {
   source: CanvasImageSource;
@@ -38,10 +39,7 @@ export interface RenderOptions {
  */
 export function renderQR(opts: RenderOptions): HTMLCanvasElement {
   const { matrix, quietModules, fg, bg, sampler, protectPatterns, centerImage } = opts;
-  const n = matrix.size;
-  const sub = 3; // sub-cells per module side
-  const quietSub = quietModules * sub;
-  const gridSide = n * sub + 2 * quietSub; // total sub-cells per side incl. quiet zone
+  const { n, sub, quietSub, gridSide } = computeGrid(matrix.size, quietModules);
 
   const cellPx = Math.max(1, Math.floor(opts.targetPx / gridSide));
   const dim = gridSide * cellPx;
@@ -62,20 +60,11 @@ export function renderQR(opts: RenderOptions): HTMLCanvasElement {
 
   for (let r = 0; r < n; r++) {
     for (let c = 0; c < n; c++) {
-      const moduleDark = matrix.get(r, c);
-      const fn = matrix.isFunction(r, c);
       const baseSubRow = quietSub + r * sub;
       const baseSubCol = quietSub + c * sub;
-
       for (let dr = 0; dr < sub; dr++) {
         for (let dc = 0; dc < sub; dc++) {
-          const isCenter = dr === 1 && dc === 1;
-          let dark = moduleDark;
-
-          if (sampler && !isCenter && !(fn && protectPatterns)) {
-            // Surrounding sub-cells follow the image.
-            dark = sampler.dark(r * sub + dr, c * sub + dc);
-          }
+          const dark = subCellDark(matrix, sampler, protectPatterns, r, c, dr, dc);
           paint(baseSubRow + dr, baseSubCol + dc, dark);
         }
       }

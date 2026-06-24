@@ -255,8 +255,12 @@ body.embed-on .opt-embed {
   margin: 12px 2px;
   min-height: 18px;
 }
+.downloads {
+  display: flex;
+  gap: 10px;
+}
 .download {
-  width: 100%;
+  flex: 1;
   background: var(--accent);
   color: #fff;
   border: none;
@@ -269,6 +273,13 @@ body.embed-on .opt-embed {
 }
 .download:hover:not(:disabled) {
   background: var(--accent-2);
+}
+.download--alt {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+}
+.download--alt:hover:not(:disabled) {
+  background: #232c37;
 }
 .download:disabled {
   opacity: 0.45;

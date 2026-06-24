@@ -3,8 +3,9 @@ import { SOURCES } from './ui/forms';
 import type { SourceDef } from './ui/forms';
 import { buildPayload, type SourceType, type PayloadInput } from './content/payloads';
 import { buildMatrix, type ErrorLevel } from './qr/matrix';
-import { sampleImage } from './qr/halftone';
+import { sampleImage, type ImageSampler } from './qr/halftone';
 import { renderQR, type CenterImage } from './qr/render';
+import { renderSVG } from './qr/svg';
 
 /* ------------------------------------------------------------------ state */
 
@@ -32,6 +33,17 @@ SOURCES.forEach((s) => {
 });
 
 let currentCanvas: HTMLCanvasElement | null = null;
+
+/** Inputs of the latest successful render, reused for vector (SVG) export. */
+interface RenderSnapshot {
+  matrix: ReturnType<typeof buildMatrix>;
+  sampler: ImageSampler | null;
+  fg: string;
+  bg: string;
+  protectPatterns: boolean;
+  centerHref: string | null;
+}
+let currentRender: RenderSnapshot | null = null;
 
 /* -------------------------------------------------------------------- dom */
 
@@ -197,29 +209,53 @@ $('#imageInput').addEventListener('change', (e) => {
 
 /* -------------------------------------------------------------- download */
 
+function saveBlob(blob: Blob, ext: string) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `qr-${state.type}.${ext}`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
 $('#downloadPng').addEventListener('click', () => {
   if (!currentCanvas) return;
-  currentCanvas.toBlob((blob) => {
-    if (!blob) return;
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `qr-${state.type}.png`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-  }, 'image/png');
+  currentCanvas.toBlob((blob) => blob && saveBlob(blob, 'png'), 'image/png');
+});
+
+$('#downloadSvg').addEventListener('click', () => {
+  if (!currentRender) return;
+  const svg = renderSVG({
+    matrix: currentRender.matrix,
+    quietModules: 4,
+    fg: currentRender.fg,
+    bg: currentRender.bg,
+    sampler: currentRender.sampler,
+    protectPatterns: currentRender.protectPatterns,
+    centerImage: currentRender.centerHref
+      ? { href: currentRender.centerHref, ratio: state.logoRatio, plate: state.plate }
+      : null,
+    pixelSize: RES,
+  });
+  saveBlob(new Blob([svg], { type: 'image/svg+xml' }), 'svg');
 });
 
 /* ---------------------------------------------------------- render cycle */
 
 const RES = 1600;
 
+function setDownloadsEnabled(on: boolean) {
+  ($('#downloadPng') as HTMLButtonElement).disabled = !on;
+  ($('#downloadSvg') as HTMLButtonElement).disabled = !on;
+}
+
 function update() {
   const payload = buildPayload(state.type, state.values[state.type]);
   if (!payload) {
     previewEl.innerHTML = '<div class="empty">Fill in the details to generate a QR code.</div>';
     currentCanvas = null;
+    currentRender = null;
     hintEl.textContent = '';
-    ($('#downloadPng') as HTMLButtonElement).disabled = true;
+    setDownloadsEnabled(false);
     return;
   }
 
@@ -231,7 +267,8 @@ function update() {
       (err as Error).message
     }</small></div>`;
     currentCanvas = null;
-    ($('#downloadPng') as HTMLButtonElement).disabled = true;
+    currentRender = null;
+    setDownloadsEnabled(false);
     return;
   }
 
@@ -268,10 +305,18 @@ function update() {
   });
 
   currentCanvas = canvas;
+  currentRender = {
+    matrix,
+    sampler,
+    fg: state.fg,
+    bg: state.bg,
+    protectPatterns: state.protectPatterns,
+    centerHref: centerImage && state.image ? state.image.src : null,
+  };
   previewEl.innerHTML = '';
   canvas.className = 'qr';
   previewEl.appendChild(canvas);
-  ($('#downloadPng') as HTMLButtonElement).disabled = false;
+  setDownloadsEnabled(true);
 
   // Scannability guidance.
   if (useImage) {
