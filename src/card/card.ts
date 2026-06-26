@@ -236,7 +236,10 @@ function qrBlock(g: Geo, qrSvg: string, d: CardData, theme: CardTheme, pal: Pale
   const panel = theme.qrPanel
     ? `<rect x="${qx - 16}" y="${qy - 16}" width="${g.QR + 32}" height="${g.QR + 32}" rx="18" fill="${d.qrBg}" stroke="${pal.border}" stroke-width="2"/>`
     : '';
-  return panel + placeQr(qrSvg, qx, qy) + text(capCx, qy + g.QR + 40, d.caption, { size: 20, font: theme.bodyFont, weight: '600', fill: pal.muted, anchor: 'middle', spacing: 2 });
+  const caption = d.caption.trim()
+    ? text(capCx, qy + g.QR + 40, d.caption, { size: 20, font: theme.bodyFont, weight: '600', fill: pal.muted, anchor: 'middle', spacing: 2 })
+    : '';
+  return panel + placeQr(qrSvg, qx, qy) + caption;
 }
 
 /** Inner content (text + QR) for one single-sided face at offset ox. */

@@ -35,6 +35,8 @@ export interface Config {
   cardCaption: string;
   cardDivider: CardDivider;
   cardGraphic: CardGraphic;
+  cardExactQr: boolean;
+  cardShowCaption: boolean;
   fg: string;
   bg: string;
   errorLevel: ErrorLevel;
@@ -93,6 +95,8 @@ const INITIAL: Config = {
   cardCaption: '',
   cardDivider: 'line',
   cardGraphic: 'none',
+  cardExactQr: false,
+  cardShowCaption: true,
   fg: '#101418',
   bg: '#ffffff',
   errorLevel: 'H',

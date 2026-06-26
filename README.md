@@ -131,7 +131,11 @@ skipped so a card QR always scans.
 
 Works for **any source** (the QR encodes the active code) with an optional
 **Name on card**. With no name it’s a clean **QR-only** card; a **Visiting card**
-source lays out the full contact details.
+source lays out the full contact details. By default the card QR uses just your
+colour/shape style so it always scans; tick **Match QR’s exact design** to
+replicate the live code exactly — halftone, centre logo and watermark included
+(then watch the main code’s badge for scannability). The **caption** under the QR
+is optional (custom text or hidden).
 
 **Design.** The card is fully themeable — pick a one-click **preset** (Paper,
 Ink, Mono, Vermilion, Ocean, Sunset, Mint, Blueprint) or set it yourself:

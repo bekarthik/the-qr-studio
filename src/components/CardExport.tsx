@@ -4,6 +4,7 @@ import { buildPayload, type SourceType } from '../content/payloads';
 import { buildMatrix } from '../qr/matrix';
 import { renderSVG } from '../qr/svg';
 import { brandDarkHex } from '../qr/grid';
+import { sampleImage, extractBrandColor } from '../qr/halftone';
 import {
   buildCardSVG, buildCardSheetSVG, buildCardFrontSVG, buildCardBackSVG, cardDims, CARD_FONTS,
   type CardData, type CardTheme, type CardBgStyle, type CardPattern, type CardText, type CardOrientation,
@@ -85,17 +86,47 @@ export function CardExport() {
 
   const out = useMemo(() => {
     if (!payload) return null;
+    // Exact mode mirrors the main code's design (image modes); otherwise a clean,
+    // always-scannable code with just the colour/shape styling.
+    const exact = cfg.cardExactQr;
+    const imageOn = exact && (cfg.resemble || cfg.embed);
+    const errorLevel = exact ? (imageOn ? 'H' : cfg.errorLevel) : 'H';
     let matrix;
     try {
-      matrix = buildMatrix(payload, 'H');
+      matrix = buildMatrix(payload, errorLevel);
     } catch {
       return null;
     }
-    const qrSvg = renderSVG({
-      matrix, quietModules: 2, fg: cfg.fg, bg: cfg.bg, sampler: null, protectPatterns: true,
-      colorStyle: cfg.colorStyle, brandColor: cfg.brandColor, sub: 3, core: 0,
-      shape: cfg.shape, eyeShape: cfg.eyeShape, eyeColor: cfg.autoEyeColor ? null : cfg.eyeColor, pixelSize: 420,
-    });
+    const eyeColor = cfg.autoEyeColor ? null : cfg.eyeColor;
+    let qrSvg: string;
+    if (exact) {
+      const detail = cfg.detail;
+      const smooth = detail >= 5 ? 1 : 0;
+      const brandColor =
+        cfg.autoBrand && cfg.image && cfg.colorStyle === 'brand'
+          ? extractBrandColor(cfg.image, cfg.image.naturalWidth, cfg.image.naturalHeight)
+          : cfg.brandColor;
+      const sampler =
+        cfg.resemble && cfg.image
+          ? sampleImage(cfg.image, cfg.image.naturalWidth, cfg.image.naturalHeight, {
+              gridSize: matrix.size * detail, threshold: cfg.threshold, invert: cfg.invert, auto: cfg.autoThreshold, smooth,
+            })
+          : null;
+      qrSvg = renderSVG({
+        matrix, quietModules: 2, fg: cfg.fg, bg: cfg.bg, sampler, protectPatterns: cfg.protectPatterns,
+        colorStyle: cfg.colorStyle, brandColor, sub: detail, core: 0, dotScale: cfg.dotSize,
+        shape: cfg.shape, eyeShape: cfg.eyeShape, eyeColor,
+        watermark: cfg.watermark && cfg.image ? { href: cfg.image.src, opacity: cfg.watermarkOpacity, position: cfg.watermarkPos } : null,
+        centerImage: cfg.embed && cfg.image ? { href: cfg.image.src, ratio: cfg.logoRatio, plate: cfg.plate, position: cfg.embedPos } : null,
+        pixelSize: 420,
+      });
+    } else {
+      qrSvg = renderSVG({
+        matrix, quietModules: 2, fg: cfg.fg, bg: cfg.bg, sampler: null, protectPatterns: true,
+        colorStyle: cfg.colorStyle, brandColor: cfg.brandColor, sub: 3, core: 0,
+        shape: cfg.shape, eyeShape: cfg.eyeShape, eyeColor, pixelSize: 420,
+      });
+    }
     const theme: CardTheme = {
       bgStyle: cfg.cardBgStyle, bg1: cfg.cardBg1, bg2: cfg.cardBg2, gradAngle: cfg.cardGradAngle, pattern: cfg.cardPattern,
       accent: cfg.cardAccentAuto ? (cfg.colorStyle === 'brand' ? brandDarkHex(cfg.brandColor) : '#e0522e') : cfg.cardAccent,
@@ -112,7 +143,7 @@ export function CardExport() {
       url: isVcard ? str(v.url) : '',
       address: isVcard ? str(v.address) : '',
       qrBg: cfg.bg,
-      caption: str(cfg.cardCaption).trim() || captionFor(cfg.type),
+      caption: cfg.cardShowCaption ? str(cfg.cardCaption).trim() || captionFor(cfg.type) : '',
     };
     const frontOpts = { logoHref: cfg.image?.src ?? null, watermarkHref: cfg.watermark ? cfg.image?.src ?? null : null, watermarkOpacity: cfg.watermarkOpacity };
     return {
@@ -182,7 +213,7 @@ export function CardExport() {
         </label>
         <label className="field">
           <span className="field__label">Caption <span className="h__opt">optional</span></span>
-          <input type="text" placeholder={captionFor(cfg.type)} value={cfg.cardCaption} onChange={(e) => update({ cardCaption: e.target.value })} />
+          <input type="text" placeholder={captionFor(cfg.type)} value={cfg.cardCaption} disabled={!cfg.cardShowCaption} onChange={(e) => update({ cardCaption: e.target.value })} />
         </label>
         <label className="field field--check">
           <input type="checkbox" checked={twoSided} onChange={(e) => update({ cardTwoSided: e.target.checked })} />
@@ -322,6 +353,14 @@ export function CardExport() {
           <input type="checkbox" checked={cfg.cardPanel} onChange={(e) => update({ cardPanel: e.target.checked })} />
           <span className="field__label">Panel behind QR</span>
         </label>
+        <label className="field field--check">
+          <input type="checkbox" checked={cfg.cardShowCaption} onChange={(e) => update({ cardShowCaption: e.target.checked })} />
+          <span className="field__label">Show caption</span>
+        </label>
+        <label className="field field--check">
+          <input type="checkbox" checked={cfg.cardExactQr} onChange={(e) => update({ cardExactQr: e.target.checked })} />
+          <span className="field__label">Match QR’s exact design (halftone, logo, watermark)</span>
+        </label>
       </div>
 
       {hasData && svg ? (
@@ -332,8 +371,10 @@ export function CardExport() {
             <button className="download download--alt" onClick={downloadSvg}>Download card SVG{twoSided && ' ×2'}</button>
           </div>
           <p className="finehint">
-            The QR encodes your current source. With no name it’s a clean QR-only card. The QR keeps
-            its own background so it always scans.
+            The QR encodes your current source. With no name it’s a clean QR-only card. By default
+            the card QR uses just your colour/shape style so it always scans; tick <b>Match QR’s
+            exact design</b> to replicate the halftone / logo / watermark (then check the main code’s
+            badge for scannability).
             {twoSided && <> Two-sided downloads as <b>two files</b> — <code>-front</code> and <code>-back</code>; the preview shows them side by side.</>}
           </p>
         </>
