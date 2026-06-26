@@ -241,9 +241,29 @@ h3 {
   width: 100%;
   max-width: 560px;
   height: auto;
-  margin: 4px auto 16px;
+  margin: 12px auto 16px;
   border: 1px solid var(--line, #e2ddd2);
   border-radius: 12px;
+}
+.preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 14px;
+}
+.preset {
+  font: 600 13px/1 var(--font-display, system-ui);
+  padding: 7px 12px;
+  border: 1px solid var(--ink, #1c1916);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink, #1c1916);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.preset:hover {
+  background: var(--ink, #1c1916);
+  color: var(--paper-2, #fffdf8);
 }
 .output {
   grid-area: preview;

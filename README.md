@@ -129,11 +129,24 @@ with a styled QR that **encodes the same vCard**, so scanning it saves you as a
 contact. It uses your colour/shape styling for brand consistency; image modes are
 skipped so a card QR always scans.
 
+Works for **any source** (the QR encodes the active code) with an optional
+**Name on card**. With no name it’s a clean **QR-only** card; a **Visiting card**
+source lays out the full contact details.
+
+**Design.** The card is fully themeable — pick a one-click **preset** (Paper,
+Ink, Mono, Vermilion, Ocean, Sunset, Mint, Blueprint) or set it yourself:
+**background** (solid / gradient with an angle / pattern — dots, grid, diagonal,
+crosshatch), **two colours**, **accent colour** (or match the QR), **text**
+(auto-contrast / dark / light), and toggles for the **accent bar**, **border**
+and **QR panel**. The QR always keeps its own light panel, so it scans on any
+background.
+
 Tick **Two-sided** for a front/back sheet: the **front** carries your details
 plus your uploaded image as a **logo** (and a faint **watermark** if the
-Watermark toggle is on), and the **back** carries the QR — so the code prints on
-the second page. `npm run verify:card` rasterises both the single card and the
-two-sided sheet and decodes the embedded QR to prove it.
+Watermark toggle is on), and the **back** carries the QR alone — so the code
+prints on the second page. `npm run verify:card` rasterises the single card,
+two-sided sheet, gradient/pattern themes and the QR-only layout, and decodes the
+embedded QR to prove they all scan.
 
 ### Verified scannable (live)
 

@@ -37,13 +37,21 @@ for (const [i, v] of vcards.entries()) {
     matrix, quietModules: 2, fg: '#101418', bg: '#ffffff', sampler: null, protectPatterns: true,
     colorStyle: 'solid', brandColor: '#2563eb', sub: 3, core: 0, shape: 'rounded', eyeShape: 'rounded', pixelSize: 420,
   });
-  const data = { name: `${v.first} ${v.last}`.trim(), title: v.title, org: v.org, phone: v.phone, email: v.email, url: v.url, address: v.address, accent: '#e0522e', qrBg: '#ffffff', caption: 'SCAN TO SAVE CONTACT' };
+  const data = { name: `${v.first} ${v.last}`.trim(), title: v.title, org: v.org, phone: v.phone, email: v.email, url: v.url, address: v.address, qrBg: '#ffffff', caption: 'SCAN TO SAVE CONTACT' };
+  // Exercise solid, gradient and pattern themes (the QR keeps its own panel).
+  const themes = {
+    solid: { bgStyle: 'solid', bg1: '#fffdf8', bg2: '#efe7d6', gradAngle: 135, pattern: 'dots', accent: '#e0522e', text: 'auto', accentBar: true, border: true, qrPanel: true },
+    gradient: { bgStyle: 'gradient', bg1: '#16324f', bg2: '#2f7d8f', gradAngle: 135, pattern: 'dots', accent: '#7fe3d0', text: 'light', accentBar: false, border: true, qrPanel: true },
+    pattern: { bgStyle: 'pattern', bg1: '#0f2436', bg2: '#24465f', gradAngle: 135, pattern: 'grid', accent: '#7fb3ff', text: 'light', accentBar: false, border: true, qrPanel: true },
+  };
 
-  for (const variant of ['single', 'two-sided']) {
+  for (const variant of ['single', 'two-sided', 'gradient', 'pattern', 'qr-only']) {
+    const theme = variant === 'gradient' ? themes.gradient : variant === 'pattern' ? themes.pattern : themes.solid;
+    const faceData = variant === 'qr-only' ? { ...data, name: '', title: '', org: '', phone: '', email: '', url: '', address: '' } : data;
     const card =
-      variant === 'single'
-        ? buildCardSVG(data, qrSvg)
-        : buildCardSheetSVG(data, qrSvg, { logoHref: LOGO, watermarkHref: LOGO, watermarkOpacity: 0.12 });
+      variant === 'two-sided'
+        ? buildCardSheetSVG(faceData, qrSvg, { logoHref: LOGO, watermarkHref: LOGO, watermarkOpacity: 0.12 }, theme)
+        : buildCardSVG(faceData, qrSvg, theme);
     const width = variant === 'single' ? 2100 : Math.round(sheetWidth() * 2);
     const png = new Resvg(card, { fitTo: { mode: 'width', value: width }, background: 'white' }).render().asPng();
     const dec = PNG.sync.read(Buffer.from(png));

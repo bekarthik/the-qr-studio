@@ -3,6 +3,7 @@ import { SOURCES } from '../ui/forms';
 import type { SourceType, PayloadInput } from '../content/payloads';
 import type { ErrorLevel } from '../qr/matrix';
 import type { ColorStyle, ModuleShape, EyeShape } from '../qr/grid';
+import type { CardBgStyle, CardPattern, CardText } from '../card/card';
 
 /** The full generator state — one object so a single change re-renders the tree. */
 export interface Config {
@@ -16,6 +17,18 @@ export interface Config {
   watermarkOpacity: number;
   cardTwoSided: boolean;
   cardName: string;
+  // Visiting-card design.
+  cardBgStyle: CardBgStyle;
+  cardBg1: string;
+  cardBg2: string;
+  cardGradAngle: number;
+  cardPattern: CardPattern;
+  cardAccentAuto: boolean;
+  cardAccent: string;
+  cardText: CardText;
+  cardAccentBar: boolean;
+  cardBorder: boolean;
+  cardPanel: boolean;
   fg: string;
   bg: string;
   errorLevel: ErrorLevel;
@@ -57,6 +70,17 @@ const INITIAL: Config = {
   watermarkOpacity: 0.12,
   cardTwoSided: false,
   cardName: '',
+  cardBgStyle: 'solid',
+  cardBg1: '#fffdf8',
+  cardBg2: '#efe7d6',
+  cardGradAngle: 135,
+  cardPattern: 'dots',
+  cardAccentAuto: true,
+  cardAccent: '#e0522e',
+  cardText: 'auto',
+  cardAccentBar: true,
+  cardBorder: true,
+  cardPanel: true,
   fg: '#101418',
   bg: '#ffffff',
   errorLevel: 'H',

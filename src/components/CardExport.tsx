@@ -1,52 +1,58 @@
 import { useMemo } from 'react';
-import { useGen } from '../state/GeneratorContext';
+import { useGen, type Config } from '../state/GeneratorContext';
 import { buildPayload, type SourceType } from '../content/payloads';
 import { buildMatrix } from '../qr/matrix';
 import { renderSVG } from '../qr/svg';
 import { brandDarkHex } from '../qr/grid';
-import { buildCardSVG, buildCardSheetSVG, CARD_W, CARD_H, sheetWidth, type CardData } from '../card/card';
+import {
+  buildCardSVG,
+  buildCardSheetSVG,
+  CARD_W,
+  CARD_H,
+  sheetWidth,
+  type CardData,
+  type CardTheme,
+  type CardBgStyle,
+  type CardPattern,
+  type CardText,
+} from '../card/card';
 
 const str = (v: unknown) => (v == null ? '' : String(v));
 
-/** A scan-prompt that fits the source type. */
 function captionFor(type: SourceType): string {
   switch (type) {
-    case 'vcard':
-      return 'SCAN TO SAVE CONTACT';
-    case 'url':
-    case 'appstore':
-    case 'playstore':
-      return 'SCAN TO VISIT';
-    case 'upi':
-    case 'indbank':
-    case 'paypal':
-    case 'venmo':
-    case 'cashapp':
-    case 'bitcoin':
-    case 'sepa':
-      return 'SCAN TO PAY';
-    case 'wifi':
-      return 'SCAN TO CONNECT';
-    case 'phone':
-      return 'SCAN TO CALL';
-    case 'email':
-      return 'SCAN TO EMAIL';
-    default:
-      return 'SCAN ME';
+    case 'vcard': return 'SCAN TO SAVE CONTACT';
+    case 'url': case 'appstore': case 'playstore': return 'SCAN TO VISIT';
+    case 'upi': case 'indbank': case 'paypal': case 'venmo': case 'cashapp': case 'bitcoin': case 'sepa': return 'SCAN TO PAY';
+    case 'wifi': return 'SCAN TO CONNECT';
+    case 'phone': return 'SCAN TO CALL';
+    case 'email': return 'SCAN TO EMAIL';
+    default: return 'SCAN ME';
   }
 }
 
+/** One-click design starting points. Each applies a bundle of card settings. */
+const PRESETS: Array<{ name: string; patch: Partial<Config> }> = [
+  { name: 'Paper', patch: { cardBgStyle: 'solid', cardBg1: '#fffdf8', cardAccentAuto: true, cardText: 'auto', cardAccentBar: true, cardBorder: true, cardPanel: true } },
+  { name: 'Ink', patch: { cardBgStyle: 'solid', cardBg1: '#1c1916', cardText: 'light', cardAccentAuto: false, cardAccent: '#e0522e', cardAccentBar: true } },
+  { name: 'Mono', patch: { cardBgStyle: 'solid', cardBg1: '#ffffff', cardText: 'dark', cardAccentAuto: false, cardAccent: '#1c1916', cardAccentBar: true, cardBorder: true } },
+  { name: 'Vermilion', patch: { cardBgStyle: 'gradient', cardBg1: '#e0522e', cardBg2: '#b5371f', cardGradAngle: 135, cardText: 'light', cardAccentAuto: false, cardAccent: '#ffd9cf', cardAccentBar: false } },
+  { name: 'Ocean', patch: { cardBgStyle: 'gradient', cardBg1: '#16324f', cardBg2: '#2f7d8f', cardGradAngle: 135, cardText: 'light', cardAccentAuto: false, cardAccent: '#7fe3d0', cardAccentBar: false } },
+  { name: 'Sunset', patch: { cardBgStyle: 'gradient', cardBg1: '#ff7e5f', cardBg2: '#feb47b', cardGradAngle: 120, cardText: 'dark', cardAccentAuto: false, cardAccent: '#7a2e12', cardAccentBar: false } },
+  { name: 'Mint', patch: { cardBgStyle: 'pattern', cardPattern: 'dots', cardBg1: '#eafaf1', cardBg2: '#bfe6cf', cardText: 'dark', cardAccentAuto: false, cardAccent: '#2f7d4f', cardAccentBar: true } },
+  { name: 'Blueprint', patch: { cardBgStyle: 'pattern', cardPattern: 'grid', cardBg1: '#0f2436', cardBg2: '#24465f', cardText: 'light', cardAccentAuto: false, cardAccent: '#7fb3ff', cardAccentBar: false } },
+];
+
 /**
- * Visiting-card export. Works for any source: it embeds a styled QR of the
- * active code and lets the user add an optional display name. When the source
- * is a vCard, the richer contact fields (title/org/phone/…) are laid out too.
+ * Visiting-card export. Works for any source: embeds a styled QR of the active
+ * code, an optional display name, and an extensive, themeable card design.
  */
 export function CardExport() {
   const { cfg, update } = useGen();
   const v = cfg.values.vcard ?? {};
   const isVcard = cfg.type === 'vcard';
   const vcardName = `${str(v.first)} ${str(v.last)}`.trim();
-  const displayName = str(cfg.cardName).trim() || vcardName || (isVcard ? str(v.org) : '');
+  const displayName = str(cfg.cardName).trim() || (isVcard ? vcardName : '');
 
   const payload = buildPayload(cfg.type, cfg.values[cfg.type] ?? {});
   const hasData = Boolean(payload);
@@ -60,25 +66,23 @@ export function CardExport() {
     } catch {
       return '';
     }
-    const accent = cfg.colorStyle === 'brand' ? brandDarkHex(cfg.brandColor) : '#e0522e';
-    // A clean, reliably-scannable code: current colour/shape styling, no image
-    // modes (a business-card QR must always scan).
     const qrSvg = renderSVG({
-      matrix,
-      quietModules: 2,
-      fg: cfg.fg,
-      bg: cfg.bg,
-      sampler: null,
-      protectPatterns: true,
-      colorStyle: cfg.colorStyle,
-      brandColor: cfg.brandColor,
-      sub: 3,
-      core: 0,
-      shape: cfg.shape,
-      eyeShape: cfg.eyeShape,
-      eyeColor: cfg.autoEyeColor ? null : cfg.eyeColor,
-      pixelSize: 420,
+      matrix, quietModules: 2, fg: cfg.fg, bg: cfg.bg, sampler: null, protectPatterns: true,
+      colorStyle: cfg.colorStyle, brandColor: cfg.brandColor, sub: 3, core: 0,
+      shape: cfg.shape, eyeShape: cfg.eyeShape, eyeColor: cfg.autoEyeColor ? null : cfg.eyeColor, pixelSize: 420,
     });
+    const theme: CardTheme = {
+      bgStyle: cfg.cardBgStyle,
+      bg1: cfg.cardBg1,
+      bg2: cfg.cardBg2,
+      gradAngle: cfg.cardGradAngle,
+      pattern: cfg.cardPattern,
+      accent: cfg.cardAccentAuto ? (cfg.colorStyle === 'brand' ? brandDarkHex(cfg.brandColor) : '#e0522e') : cfg.cardAccent,
+      text: cfg.cardText,
+      accentBar: cfg.cardAccentBar,
+      border: cfg.cardBorder,
+      qrPanel: cfg.cardPanel,
+    };
     const data: CardData = {
       name: displayName,
       title: isVcard ? str(v.title) : '',
@@ -87,27 +91,17 @@ export function CardExport() {
       email: isVcard ? str(v.email) : '',
       url: isVcard ? str(v.url) : '',
       address: isVcard ? str(v.address) : '',
-      accent,
       qrBg: cfg.bg,
       caption: captionFor(cfg.type),
     };
-    if (twoSided) {
-      return buildCardSheetSVG(data, qrSvg, {
-        logoHref: cfg.image?.src ?? null,
-        watermarkHref: cfg.watermark ? cfg.image?.src ?? null : null,
-        watermarkOpacity: cfg.watermarkOpacity,
-      });
-    }
-    return buildCardSVG(data, qrSvg);
+    return twoSided
+      ? buildCardSheetSVG(data, qrSvg, { logoHref: cfg.image?.src ?? null, watermarkHref: cfg.watermark ? cfg.image?.src ?? null : null, watermarkOpacity: cfg.watermarkOpacity }, theme)
+      : buildCardSVG(data, qrSvg, theme);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cfg, payload, twoSided, displayName, isVcard]);
 
   const baseName = (displayName || 'card').replace(/\s+/g, '-').toLowerCase() || 'card';
-
-  const downloadSvg = () => {
-    save(new Blob([svg], { type: 'image/svg+xml' }), `${baseName}.svg`);
-  };
-
+  const downloadSvg = () => save(new Blob([svg], { type: 'image/svg+xml' }), `${baseName}.svg`);
   const downloadPng = () => {
     const img = new Image();
     img.onload = () => {
@@ -124,6 +118,8 @@ export function CardExport() {
     img.src = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
   };
 
+  const showBg2 = cfg.cardBgStyle === 'gradient' || cfg.cardBgStyle === 'pattern';
+
   return (
     <div className="cardx">
       <div className="card__head">
@@ -133,23 +129,95 @@ export function CardExport() {
 
       <div className="grid2">
         <label className="field">
-          <span className="field__label">Name on card {isVcard && <span className="h__opt">optional</span>}</span>
-          <input
-            type="text"
-            placeholder={vcardName || 'e.g. Asha Rao'}
-            value={cfg.cardName}
-            onChange={(e) => update({ cardName: e.target.value })}
-          />
+          <span className="field__label">
+            Name on card <span className="h__opt">optional</span>
+          </span>
+          <input type="text" placeholder={vcardName || 'e.g. Asha Rao'} value={cfg.cardName} onChange={(e) => update({ cardName: e.target.value })} />
         </label>
         <label className="field field--check">
-          <input
-            type="checkbox"
-            checked={twoSided}
-            onChange={(e) => update({ cardTwoSided: e.target.checked })}
-          />
+          <input type="checkbox" checked={twoSided} onChange={(e) => update({ cardTwoSided: e.target.checked })} />
           <span className="field__label">
             Two-sided — <b>QR on the back</b>, logo/watermark on the front
           </span>
+        </label>
+      </div>
+
+      <p className="subhead">Design</p>
+      <div className="preset-row">
+        {PRESETS.map((p) => (
+          <button key={p.name} type="button" className="preset" onClick={() => update(p.patch)}>
+            {p.name}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid2">
+        <label className="field">
+          <span className="field__label">Background</span>
+          <select value={cfg.cardBgStyle} onChange={(e) => update({ cardBgStyle: e.target.value as CardBgStyle })}>
+            <option value="solid">Solid</option>
+            <option value="gradient">Gradient</option>
+            <option value="pattern">Pattern</option>
+          </select>
+        </label>
+        <label className="field">
+          <span className="field__label">Text</span>
+          <select value={cfg.cardText} onChange={(e) => update({ cardText: e.target.value as CardText })}>
+            <option value="auto">Auto contrast</option>
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+          </select>
+        </label>
+
+        <label className="field">
+          <span className="field__label">{showBg2 ? 'Colour 1' : 'Background colour'}</span>
+          <input type="color" value={cfg.cardBg1} onChange={(e) => update({ cardBg1: e.target.value })} />
+        </label>
+        {showBg2 && (
+          <label className="field">
+            <span className="field__label">{cfg.cardBgStyle === 'gradient' ? 'Colour 2' : 'Pattern colour'}</span>
+            <input type="color" value={cfg.cardBg2} onChange={(e) => update({ cardBg2: e.target.value })} />
+          </label>
+        )}
+
+        {cfg.cardBgStyle === 'gradient' && (
+          <label className="field">
+            <span className="field__label">Gradient angle</span>
+            <input type="range" min={0} max={360} value={cfg.cardGradAngle} onChange={(e) => update({ cardGradAngle: Number(e.target.value) })} />
+          </label>
+        )}
+        {cfg.cardBgStyle === 'pattern' && (
+          <label className="field">
+            <span className="field__label">Pattern</span>
+            <select value={cfg.cardPattern} onChange={(e) => update({ cardPattern: e.target.value as CardPattern })}>
+              <option value="dots">Dots</option>
+              <option value="grid">Grid</option>
+              <option value="diagonal">Diagonal</option>
+              <option value="crosshatch">Crosshatch</option>
+            </select>
+          </label>
+        )}
+
+        <label className="field">
+          <span className="field__label">Accent colour</span>
+          <input type="color" value={cfg.cardAccent} disabled={cfg.cardAccentAuto} onChange={(e) => update({ cardAccent: e.target.value })} />
+        </label>
+        <label className="field field--check">
+          <input type="checkbox" checked={cfg.cardAccentAuto} onChange={(e) => update({ cardAccentAuto: e.target.checked })} />
+          <span className="field__label">Match QR accent</span>
+        </label>
+
+        <label className="field field--check">
+          <input type="checkbox" checked={cfg.cardAccentBar} onChange={(e) => update({ cardAccentBar: e.target.checked })} />
+          <span className="field__label">Accent bar (left edge)</span>
+        </label>
+        <label className="field field--check">
+          <input type="checkbox" checked={cfg.cardBorder} onChange={(e) => update({ cardBorder: e.target.checked })} />
+          <span className="field__label">Border</span>
+        </label>
+        <label className="field field--check">
+          <input type="checkbox" checked={cfg.cardPanel} onChange={(e) => update({ cardPanel: e.target.checked })} />
+          <span className="field__label">Panel behind QR</span>
         </label>
       </div>
 
@@ -157,24 +225,14 @@ export function CardExport() {
         <>
           <img className="cardx__preview" src={`data:image/svg+xml;utf8,${encodeURIComponent(svg)}`} alt="Visiting card preview" />
           <div className="downloads">
-            <button className="download" onClick={downloadPng}>
-              Download card PNG
-            </button>
-            <button className="download download--alt" onClick={downloadSvg}>
-              Download card SVG
-            </button>
+            <button className="download" onClick={downloadPng}>Download card PNG</button>
+            <button className="download download--alt" onClick={downloadSvg}>Download card SVG</button>
           </div>
           <p className="finehint">
-            The QR encodes your current source. Add a <b>Name on card</b> to title it; a{' '}
-            <b>Visiting card</b> source also lays out title/company/contacts. Uses your colour/shape
-            style; image modes are skipped so the card always scans.
-            {twoSided && (
-              <>
-                {' '}
-                The sheet shows <b>front</b> (left) and <b>back</b> (right): the front uses your
-                uploaded image as the logo, and the <b>Watermark</b> toggle adds a faint watermark.
-              </>
-            )}
+            The QR encodes your current source. With no name it’s a clean QR-only card; add a{' '}
+            <b>Name on card</b> to title it, and a <b>Visiting card</b> source lays out
+            title/company/contacts. The QR keeps its own background so it always scans.
+            {twoSided && <> The sheet is <b>front</b> (left) | <b>back</b> (right, QR).</>}
           </p>
         </>
       ) : (
