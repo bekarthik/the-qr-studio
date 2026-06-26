@@ -22,7 +22,8 @@ const state = {
   threshold: 0.5,
   autoThreshold: true,
   invert: false,
-  detail: 3, // sub-cells per module (3 standard, 5 = finer)
+  detail: 3, // sub-cells per module (3 standard, 5/7 = finer image)
+  dotSize: 0, // half-width of the protected data dot (0 = smallest, most image)
   colorStyle: 'solid' as 'solid' | 'brand' | 'image',
   brandColor: '#2563eb',
   autoBrand: false,
@@ -50,6 +51,7 @@ interface RenderSnapshot {
   colorStyle: 'solid' | 'brand' | 'image';
   brandColor: string;
   sub: number;
+  core: number;
   centerHref: string | null;
 }
 let currentRender: RenderSnapshot | null = null;
@@ -230,6 +232,10 @@ on('#detail', 'change', (e) => {
   state.detail = Number((e.target as HTMLSelectElement).value);
   update();
 });
+on('#dotSize', 'input', (e) => {
+  state.dotSize = Number((e.target as HTMLInputElement).value);
+  update();
+});
 on('#autoBrand', 'change', (e) => {
   state.autoBrand = (e.target as HTMLInputElement).checked;
   ($('#brandColor') as HTMLInputElement).disabled = state.autoBrand;
@@ -334,6 +340,7 @@ on('#downloadSvg', 'click', () => {
     colorStyle: currentRender.colorStyle,
     brandColor: currentRender.brandColor,
     sub: currentRender.sub,
+    core: currentRender.core,
     centerImage: currentRender.centerHref
       ? { href: currentRender.centerHref, ratio: state.logoRatio, plate: state.plate }
       : null,
@@ -421,6 +428,7 @@ function update() {
     colorStyle: state.colorStyle,
     brandColor: state.brandColor,
     sub: detail,
+    core: state.dotSize,
     centerImage,
   });
 
@@ -434,6 +442,7 @@ function update() {
     colorStyle: state.colorStyle,
     brandColor: state.brandColor,
     sub: detail,
+    core: state.dotSize,
     centerHref: centerImage && state.image ? state.image.src : null,
   };
   previewEl.innerHTML = '';

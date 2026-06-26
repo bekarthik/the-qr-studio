@@ -30,6 +30,8 @@ export interface RenderOptions {
   brandColor: string;
   /** Sub-cells per module (odd: 3 standard, 5/7 = finer image detail). */
   sub: number;
+  /** Half-width of the protected data dot in sub-cells (0 = finest image). */
+  core: number;
   /** Optional logo embedded into carved-out center space. */
   centerImage?: CenterImage | null;
 }
@@ -46,7 +48,7 @@ export interface RenderOptions {
 export function renderQR(opts: RenderOptions): HTMLCanvasElement {
   const { matrix, quietModules, fg, bg, sampler, protectPatterns, colorStyle, centerImage } = opts;
   const { n, sub, quietSub, gridSide } = computeGrid(matrix.size, quietModules, opts.sub);
-  const fillOpts = { style: colorStyle, fg, bg, brand: brandDarkHex(opts.brandColor), protectPatterns };
+  const fillOpts = { style: colorStyle, fg, bg, brand: brandDarkHex(opts.brandColor), protectPatterns, core: opts.core };
 
   const cellPx = Math.max(1, Math.floor(opts.targetPx / gridSide));
   const dim = gridSide * cellPx;

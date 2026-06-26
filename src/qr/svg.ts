@@ -24,6 +24,8 @@ export interface SvgOptions {
   brandColor: string;
   /** Sub-cells per module (odd: 3 standard, 5/7 = finer image detail). */
   sub: number;
+  /** Half-width of the protected data dot in sub-cells (0 = finest image). */
+  core: number;
   centerImage?: SvgCenterImage | null;
   /** Pixel size written to the width/height attributes (the SVG stays vector). */
   pixelSize: number;
@@ -39,7 +41,7 @@ export interface SvgOptions {
 export function renderSVG(opts: SvgOptions): string {
   const { matrix, quietModules, fg, bg, sampler, protectPatterns, colorStyle, centerImage, pixelSize } = opts;
   const { n, sub, quietSub, gridSide } = computeGrid(matrix.size, quietModules, opts.sub);
-  const fillOpts = { style: colorStyle, fg, bg, brand: brandDarkHex(opts.brandColor), protectPatterns };
+  const fillOpts = { style: colorStyle, fg, bg, brand: brandDarkHex(opts.brandColor), protectPatterns, core: opts.core };
 
   // Paint colour for every sub-cell, indexed by sub-row/col in module space.
   const fillAt = (sr: number, sc: number): string =>

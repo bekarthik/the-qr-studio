@@ -81,11 +81,16 @@
               <span class="field__label">Auto-detect from image</span>
             </label>
             <label class="field opt-resemble">
-              <span class="field__label">Halftone detail</span>
+              <span class="field__label">Halftone detail (image fineness)</span>
               <select id="detail">
                 <option value="3" selected>Standard</option>
-                <option value="5">High (clearer)</option>
+                <option value="5">High</option>
+                <option value="7">Finest</option>
               </select>
+            </label>
+            <label class="field opt-resemble">
+              <span class="field__label">Data dot size (bigger = scans easier)</span>
+              <input type="range" id="dotSize" min="0" max="3" step="1" value="0" />
             </label>
             <label class="field field--check opt-resemble">
               <input type="checkbox" id="autoThreshold" checked />

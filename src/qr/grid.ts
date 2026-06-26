@@ -24,16 +24,16 @@ export function computeGrid(size: number, quietModules: number, sub = 3): GridSp
 }
 
 /**
- * True when (dr, dc) is the single centre sub-cell that carries the true module
- * value; every other sub-cell follows the image. Keeping the core to ONE cell
- * at all detail levels means raising the detail samples the image more finely
- * (smaller dots, more of the picture visible) instead of enlarging the solid
- * data dot — at standard 3x3 detail the core is 1/3 of the module, at 5x5 it is
- * 1/5, and so on.
+ * True when (dr, dc) is inside the central data "dot" that carries the true
+ * module value; every other sub-cell follows the image. `core` is the dot's
+ * half-width in sub-cells: 0 = a single centre cell (finest image, smallest
+ * dot), larger = a bigger, more scannable dot. It is clamped to the module so
+ * it can never exceed it. Detail (sub) sets image fineness; core sets dot size.
  */
-function inCore(dr: number, dc: number, sub: number): boolean {
+function inCore(dr: number, dc: number, sub: number, core: number): boolean {
   const mid = (sub - 1) / 2;
-  return dr === mid && dc === mid;
+  const cr = Math.max(0, Math.min(core, mid));
+  return Math.abs(dr - mid) <= cr && Math.abs(dc - mid) <= cr;
 }
 
 /**
@@ -54,8 +54,9 @@ export function subCellDark(
   dr: number,
   dc: number,
   sub = 3,
+  core = 0,
 ): boolean {
-  if (sampler && !inCore(dr, dc, sub) && !(protectPatterns && matrix.isFunction(r, c))) {
+  if (sampler && !inCore(dr, dc, sub, core) && !(protectPatterns && matrix.isFunction(r, c))) {
     return sampler.dark(r * sub + dr, c * sub + dc);
   }
   return matrix.get(r, c);
@@ -153,6 +154,10 @@ export interface FillOpts {
   /** Pre-clamped dark colour used by brand mode (see brandDarkHex). */
   brand: string;
   protectPatterns: boolean;
+  /** Half-width (in sub-cells) of the protected data dot at each module centre.
+   *  0 (default) = a single cell / finest image; larger = bigger, more
+   *  scannable dots. Only affects halftone (a sampler is present). */
+  core?: number;
 }
 
 /**
@@ -177,7 +182,8 @@ export function subCellFill(
   dc: number,
   sub = 3,
 ): string {
-  const dark = subCellDark(matrix, sampler, opts.protectPatterns, r, c, dr, dc, sub);
+  const core = opts.core ?? 0;
+  const dark = subCellDark(matrix, sampler, opts.protectPatterns, r, c, dr, dc, sub, core);
 
   if (opts.style === 'brand') {
     return dark ? opts.brand : opts.bg;
@@ -185,7 +191,7 @@ export function subCellFill(
 
   if (opts.style === 'image' && sampler?.colorAt) {
     const isFn = matrix.isFunction(r, c);
-    if (isFn || !inCore(dr, dc, sub)) {
+    if (isFn || !inCore(dr, dc, sub, core)) {
       const rgb = sampler.colorAt(r * sub + dr, c * sub + dc);
       // Identifier patterns get a stronger dark clamp for reliable detection.
       return rgbToHex(dark ? clampDark(rgb, isFn ? IDENTIFIER_DARK_MAX : DARK_MAX) : clampLight(rgb));
