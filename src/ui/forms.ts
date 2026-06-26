@@ -50,6 +50,16 @@ export const SOURCE_CATEGORY: Record<SourceType, SourceCategory> = {
   geo: 'Location',
 };
 
+/** Icon + short label for the category (source-type) selector. */
+export const CATEGORY_META: Record<SourceCategory, { icon: string; label: string }> = {
+  'Link & text': { icon: '🔗', label: 'Links' },
+  Contact: { icon: '👤', label: 'Contact' },
+  Payment: { icon: '💳', label: 'Payment' },
+  App: { icon: '📱', label: 'Apps' },
+  Network: { icon: '📶', label: 'Network' },
+  Location: { icon: '📍', label: 'Location' },
+};
+
 export const SOURCES: SourceDef[] = [
   {
     type: 'url',

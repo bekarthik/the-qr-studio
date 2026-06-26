@@ -1,23 +1,26 @@
 import { useEffect, useRef, useState } from 'react';
-import { SOURCES, CATEGORY_ORDER, SOURCE_CATEGORY } from '../ui/forms';
+import { SOURCES, CATEGORY_ORDER, CATEGORY_META, SOURCE_CATEGORY } from '../ui/forms';
 import { useGen } from '../state/GeneratorContext';
 
 /**
- * Compact, grouped source picker. A single trigger that opens an overlay menu
- * organised by category — so the list scales to many sources without a wall of
- * pills, and choosing a source never reflows the page (the trigger stays put;
- * only the form below it changes).
+ * Two-level source picker: a row of category icons ("source type") + a short
+ * dropdown of the sources within the chosen category. The category is derived
+ * from the current source (no extra state), so the dropdown only ever lists a
+ * handful of entries instead of all sixteen.
  */
 export function SourcePicker() {
   const { cfg, update } = useGen();
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const ddRef = useRef<HTMLDivElement>(null);
+
+  const currentCat = SOURCE_CATEGORY[cfg.type];
+  const inCategory = SOURCES.filter((s) => SOURCE_CATEGORY[s.type] === currentCat);
   const current = SOURCES.find((s) => s.type === cfg.type)!;
 
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ddRef.current && !ddRef.current.contains(e.target as Node)) setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
     document.addEventListener('mousedown', onDown);
@@ -28,55 +31,73 @@ export function SourcePicker() {
     };
   }, [open]);
 
-  return (
-    <div className="picker" ref={ref}>
-      <button
-        type="button"
-        className="picker__trigger"
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
-      >
-        <span className="picker__ico" aria-hidden="true">
-          {current.icon}
-        </span>
-        <span className="picker__label">{current.label}</span>
-        <span className="picker__caret" aria-hidden="true">
-          ▾
-        </span>
-      </button>
+  const pickCategory = (cat: (typeof CATEGORY_ORDER)[number]) => {
+    setOpen(false);
+    if (cat === currentCat) return;
+    const first = SOURCES.find((s) => SOURCE_CATEGORY[s.type] === cat);
+    if (first) update({ type: first.type });
+  };
 
-      {open && (
-        <div className="picker__menu" role="listbox">
-          {CATEGORY_ORDER.map((cat) => {
-            const items = SOURCES.filter((s) => SOURCE_CATEGORY[s.type] === cat);
-            if (!items.length) return null;
-            return (
-              <div className="picker__group" key={cat}>
-                <div className="picker__cat">{cat}</div>
-                {items.map((s) => (
-                  <button
-                    key={s.type}
-                    type="button"
-                    role="option"
-                    aria-selected={s.type === cfg.type}
-                    className={'picker__opt' + (s.type === cfg.type ? ' is-active' : '')}
-                    onClick={() => {
-                      update({ type: s.type });
-                      setOpen(false);
-                    }}
-                  >
-                    <span className="picker__ico" aria-hidden="true">
-                      {s.icon}
-                    </span>
-                    {s.label}
-                  </button>
-                ))}
-              </div>
-            );
-          })}
-        </div>
-      )}
+  return (
+    <div className="picker">
+      <div className="cat-row" role="tablist" aria-label="Source type">
+        {CATEGORY_ORDER.map((cat) => (
+          <button
+            key={cat}
+            type="button"
+            role="tab"
+            aria-selected={cat === currentCat}
+            className={'cat-chip' + (cat === currentCat ? ' is-active' : '')}
+            onClick={() => pickCategory(cat)}
+          >
+            <span className="cat-chip__ico" aria-hidden="true">
+              {CATEGORY_META[cat].icon}
+            </span>
+            <span className="cat-chip__label">{CATEGORY_META[cat].label}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="picker__dd" ref={ddRef}>
+        <button
+          type="button"
+          className="picker__trigger"
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          onClick={() => setOpen((o) => !o)}
+        >
+          <span className="picker__ico" aria-hidden="true">
+            {current.icon}
+          </span>
+          <span className="picker__label">{current.label}</span>
+          <span className="picker__caret" aria-hidden="true">
+            ▾
+          </span>
+        </button>
+
+        {open && (
+          <div className="picker__menu" role="listbox">
+            {inCategory.map((s) => (
+              <button
+                key={s.type}
+                type="button"
+                role="option"
+                aria-selected={s.type === cfg.type}
+                className={'picker__opt' + (s.type === cfg.type ? ' is-active' : '')}
+                onClick={() => {
+                  update({ type: s.type });
+                  setOpen(false);
+                }}
+              >
+                <span className="picker__ico" aria-hidden="true">
+                  {s.icon}
+                </span>
+                {s.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

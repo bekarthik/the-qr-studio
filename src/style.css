@@ -292,8 +292,45 @@ a:hover {
   font-size: 11px;
 }
 
-/* source picker (custom grouped dropdown) */
+/* source picker — category icons + per-category dropdown */
 .picker {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.cat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.cat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.15s;
+}
+.cat-chip:hover {
+  border-color: var(--line-2);
+  color: var(--text);
+}
+.cat-chip.is-active {
+  background: var(--accent);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 6px 16px -8px var(--accent);
+}
+.cat-chip__ico {
+  font-size: 15px;
+}
+.picker__dd {
   position: relative;
 }
 .picker__trigger {
