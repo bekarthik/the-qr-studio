@@ -4,7 +4,7 @@ import { buildPayload } from '../content/payloads';
 import { buildMatrix } from '../qr/matrix';
 import { renderSVG } from '../qr/svg';
 import { brandDarkHex } from '../qr/grid';
-import { buildCardSVG, type CardData } from '../card/card';
+import { buildCardSVG, buildCardSheetSVG, CARD_W, CARD_H, sheetWidth, type CardData } from '../card/card';
 
 const str = (v: unknown) => (v == null ? '' : String(v));
 
@@ -14,11 +14,12 @@ const str = (v: unknown) => (v == null ? '' : String(v));
  * scanning the card saves the contact). Independent of the active source.
  */
 export function CardExport() {
-  const { cfg } = useGen();
+  const { cfg, update } = useGen();
   const v = cfg.values.vcard ?? {};
   const name = `${str(v.first)} ${str(v.last)}`.trim();
   const org = str(v.org);
   const hasData = Boolean(name || org);
+  const twoSided = cfg.cardTwoSided;
 
   const svg = useMemo(() => {
     if (!hasData) return '';
@@ -61,9 +62,16 @@ export function CardExport() {
       qrBg: cfg.bg,
       caption: 'SCAN TO SAVE CONTACT',
     };
+    if (twoSided) {
+      return buildCardSheetSVG(data, qrSvg, {
+        logoHref: cfg.image?.src ?? null,
+        watermarkHref: cfg.watermark ? cfg.image?.src ?? null : null,
+        watermarkOpacity: cfg.watermarkOpacity,
+      });
+    }
     return buildCardSVG(data, qrSvg);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cfg, hasData]);
+  }, [cfg, hasData, twoSided]);
 
   const baseName = (name || org || 'card').replace(/\s+/g, '-').toLowerCase();
 
@@ -76,8 +84,8 @@ export function CardExport() {
     img.onload = () => {
       const scale = 2;
       const canvas = document.createElement('canvas');
-      canvas.width = 1050 * scale;
-      canvas.height = 600 * scale;
+      canvas.width = (twoSided ? sheetWidth() : CARD_W) * scale;
+      canvas.height = CARD_H * scale;
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
@@ -93,6 +101,16 @@ export function CardExport() {
         <h2>Visiting card</h2>
         <p>A print-ready business card (3.5×2″) with your contact QR.</p>
       </div>
+      <label className="field field--check">
+        <input
+          type="checkbox"
+          checked={twoSided}
+          onChange={(e) => update({ cardTwoSided: e.target.checked })}
+        />
+        <span className="field__label">
+          Two-sided — <b>QR on the back</b>, logo/watermark on the front
+        </span>
+      </label>
       {hasData && svg ? (
         <>
           <img className="cardx__preview" src={`data:image/svg+xml;utf8,${encodeURIComponent(svg)}`} alt="Visiting card preview" />
@@ -108,6 +126,13 @@ export function CardExport() {
             Pulls from the <b>Visiting card</b> source fields. The QR encodes your vCard, so scanning
             the card adds you as a contact. Uses your colour/shape style; image modes are skipped so
             the card always scans.
+            {twoSided && (
+              <>
+                {' '}
+                The sheet shows <b>front</b> (left) and <b>back</b> (right). The front uses your
+                uploaded image as the logo, and the <b>Watermark</b> toggle adds a faint watermark.
+              </>
+            )}
           </p>
         </>
       ) : (

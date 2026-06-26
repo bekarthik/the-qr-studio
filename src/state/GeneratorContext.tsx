@@ -14,6 +14,7 @@ export interface Config {
   watermark: boolean;
   watermarkPos: 'across' | 'br';
   watermarkOpacity: number;
+  cardTwoSided: boolean;
   fg: string;
   bg: string;
   errorLevel: ErrorLevel;
@@ -53,6 +54,7 @@ const INITIAL: Config = {
   watermark: false,
   watermarkPos: 'across',
   watermarkOpacity: 0.12,
+  cardTwoSided: false,
   fg: '#101418',
   bg: '#ffffff',
   errorLevel: 'H',

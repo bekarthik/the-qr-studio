@@ -127,8 +127,13 @@ or SVG**, composed from the **Visiting card** source fields. The card pairs your
 typeset contact details (name, title, company, phone, email, website, address)
 with a styled QR that **encodes the same vCard**, so scanning it saves you as a
 contact. It uses your colour/shape styling for brand consistency; image modes are
-skipped so a card QR always scans. `npm run verify:card` rasterises the composed
-card and decodes the embedded QR to prove it.
+skipped so a card QR always scans.
+
+Tick **Two-sided** for a front/back sheet: the **front** carries your details
+plus your uploaded image as a **logo** (and a faint **watermark** if the
+Watermark toggle is on), and the **back** carries the QR — so the code prints on
+the second page. `npm run verify:card` rasterises both the single card and the
+two-sided sheet and decodes the embedded QR to prove it.
 
 ### Verified scannable (live)
 
