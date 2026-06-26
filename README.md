@@ -120,6 +120,16 @@ ideal for print). Both are produced from the same sub-cell geometry, so they are
 equally scannable. The SVG merges dark sub-cells into horizontal runs to stay
 compact and embeds a centre logo as an `<image>` element.
 
+### Visiting card
+
+Generate a print-ready **business card** (3.5×2″, 1050×600 at 300 dpi) as **PNG
+or SVG**, composed from the **Visiting card** source fields. The card pairs your
+typeset contact details (name, title, company, phone, email, website, address)
+with a styled QR that **encodes the same vCard**, so scanning it saves you as a
+contact. It uses your colour/shape styling for brand consistency; image modes are
+skipped so a card QR always scans. `npm run verify:card` rasterises the composed
+card and decodes the embedded QR to prove it.
+
 ### Verified scannable (live)
 
 Every rendered code is **decoded in-browser with jsQR** and the result shown as a

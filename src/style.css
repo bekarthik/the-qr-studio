@@ -218,7 +218,8 @@ h3 {
   grid-template-columns: 1.12fr 0.88fr;
   grid-template-areas:
     'content preview'
-    'style preview';
+    'style preview'
+    'cardx cardx';
   gap: 20px;
   padding: 28px 24px 60px;
   max-width: var(--maxw);
@@ -230,6 +231,18 @@ h3 {
 }
 .card--style {
   grid-area: style;
+}
+.cardx-wrap {
+  grid-area: cardx;
+}
+.cardx__preview {
+  display: block;
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+  margin: 4px auto 16px;
+  border: 1px solid var(--line, #e2ddd2);
+  border-radius: 12px;
 }
 .output {
   grid-area: preview;
@@ -243,7 +256,8 @@ h3 {
     grid-template-areas:
       'content'
       'preview'
-      'style';
+      'style'
+      'cardx';
   }
   .output {
     position: static;

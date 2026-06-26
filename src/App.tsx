@@ -7,6 +7,7 @@ import { SourceForm } from './components/SourceForm';
 import { ImageSection } from './components/ImageSection';
 import { Settings } from './components/Settings';
 import { Preview } from './components/Preview';
+import { CardExport } from './components/CardExport';
 
 export function App() {
   return (
@@ -48,6 +49,11 @@ export function App() {
             <p>Applies to every code you make.</p>
           </div>
           <Settings />
+        </section>
+
+        {/* Visiting card export (grid-area: full width) */}
+        <section className="card cardx-wrap">
+          <CardExport />
         </section>
       </main>
 

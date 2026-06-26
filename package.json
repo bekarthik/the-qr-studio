@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "verify": "node scripts/verify.mjs",
+    "verify:card": "node scripts/card-check.mjs",
     "example": "node scripts/example.mjs"
   },
   "keywords": [
