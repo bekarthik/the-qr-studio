@@ -162,7 +162,33 @@ export type ColorStyle = 'solid' | 'brand' | 'image';
  * the timing/alignment patterns are kept as solid squares — a scanner samples
  * each module's centre, which every shape fills.
  */
-export type ModuleShape = 'square' | 'dot' | 'rounded';
+export type ModuleShape = 'square' | 'dot' | 'rounded' | 'extra';
+
+/** How the three finder patterns ("eyes") are drawn. `auto` follows the module
+ *  shape (dots → circular eyes, rounded/extra → rounded eyes, else square). */
+export type EyeShape = 'auto' | 'square' | 'rounded' | 'circle';
+
+/** Resolved (non-auto) eye shape, given the eye choice and the module shape. */
+export function resolveEyeShape(eye: EyeShape, mod: ModuleShape): 'square' | 'rounded' | 'circle' {
+  if (eye !== 'auto') return eye;
+  if (mod === 'dot') return 'circle';
+  if (mod === 'rounded' || mod === 'extra') return 'rounded';
+  return 'square';
+}
+
+/** Corner radius as a fraction of the module side for each module shape (dots
+ *  are drawn as circles, not rounded rects). Shared so canvas + SVG match. */
+export const SHAPE_RX: Record<ModuleShape, number> = { square: 0, dot: 0, rounded: 0.32, extra: 0.46 };
+/** Corner radius as a fraction of a finder-eye layer side, for rounded eyes. */
+export const EYE_RX = 0.28;
+
+/** The three concentric layers of a finder eye, as fractions of a module: an
+ *  outer frame (7), a cleared gap (5) and the centre pupil (3). */
+export const EYE_LAYERS: Array<{ inset: number; size: number; dark: boolean }> = [
+  { inset: 0, size: 7, dark: true },
+  { inset: 1, size: 5, dark: false },
+  { inset: 2, size: 3, dark: true },
+];
 
 /** Top-left corner (module coords) of each 7×7 finder/position pattern. */
 export function finderOrigins(n: number): Array<[number, number]> {

@@ -28,22 +28,25 @@ Generate a correctly-formatted QR for any of:
 | Visiting card | vCard 3.0 |
 | Location | `geo:lat,lng` |
 
-### Module shapes
+### Module & eye styling
 
-For plain (non-image) codes, pick how each dark module is drawn:
+Style the code with three independent controls:
 
-- **Square** — classic solid blocks (default).
-- **Dots** — a filled circle per data module; the three finder patterns become
-  concentric rings with a round pupil.
-- **Rounded** — rounded-corner squares; finder patterns become rounded frames.
+- **Module shape** — how each dark data module is drawn: **Square** (classic),
+  **Dots** (circles), **Rounded**, or **Extra rounded**.
+- **Finder eyes** — the three corner patterns drawn as a cohesive eye:
+  **Auto** (follows the module shape), **Square**, **Rounded**, or **Circle**.
+- **Eye colour** — a separate colour for the eyes (or match the foreground),
+  auto-darkened into the scannable band so a light accent still reads.
 
-Shapes are a cosmetic layer over the block renderer, so they apply when no
-halftone image is active (a halftone already styles every sub-cell). To keep the
-code scannable, the **timing/alignment** patterns stay solid squares and each
-**finder pattern is drawn as one cohesive eye** — a scanner samples every
-module's centre, which all three shapes fill. Both PNG and SVG export the shapes
-(SVG uses real `<circle>`/rounded-`<rect>` elements), and `npm run verify`
-decodes the shaped output to prove it scans.
+Styling works on **plain and halftone** codes. On a halftone, the protected
+centre **data dot** is drawn in the chosen module shape (grow it with *Data dot
+size*), and the eyes are restyled on top. To keep every code scannable, the
+**timing/alignment** patterns stay solid squares and each **finder pattern is
+drawn as one cohesive eye** — a scanner samples each module's centre, which
+every shape fills. Both PNG and SVG export the styling (SVG uses real
+`<circle>` / rounded-`<rect>` elements), and `npm run verify` decodes the styled
+output (including halftone + shaped dots + coloured eyes) to prove it scans.
 
 ### Two independent image modes
 

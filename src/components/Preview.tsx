@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import jsQR from 'jsqr';
-import { useGen } from '../state/GeneratorContext';
+import { useGen, type Config } from '../state/GeneratorContext';
 import { buildPayload } from '../content/payloads';
 import { buildMatrix, type QrMatrix } from '../qr/matrix';
 import { sampleImage, extractBrandColor, type ImageSampler } from '../qr/halftone';
@@ -17,7 +17,9 @@ interface Snapshot {
   bg: string;
   protectPatterns: boolean;
   colorStyle: 'solid' | 'brand' | 'image';
-  shape: 'square' | 'dot' | 'rounded';
+  shape: Config['shape'];
+  eyeShape: Config['eyeShape'];
+  eyeColor: string | null;
   brandColor: string;
   sub: number;
   dotScale: number;
@@ -83,6 +85,7 @@ export function Preview() {
 
     const detail = cfg.detail;
     const smooth = detail >= 5 ? 1 : 0;
+    const eyeColorOverride = cfg.autoEyeColor ? null : cfg.eyeColor;
     const brandColor =
       cfg.autoBrand && cfg.image && cfg.colorStyle === 'brand'
         ? extractBrandColor(cfg.image, cfg.image.naturalWidth, cfg.image.naturalHeight)
@@ -124,6 +127,8 @@ export function Preview() {
       core: 0,
       dotScale: cfg.dotSize,
       shape: cfg.shape,
+      eyeShape: cfg.eyeShape,
+      eyeColor: eyeColorOverride,
       centerImage,
     });
     canvas.className = 'qr';
@@ -137,6 +142,8 @@ export function Preview() {
       protectPatterns: cfg.protectPatterns,
       colorStyle: cfg.colorStyle,
       shape: cfg.shape,
+      eyeShape: cfg.eyeShape,
+      eyeColor: eyeColorOverride,
       brandColor,
       sub: detail,
       dotScale: cfg.dotSize,
@@ -199,6 +206,8 @@ export function Preview() {
       core: 0,
       dotScale: s.dotScale,
       shape: s.shape,
+      eyeShape: s.eyeShape,
+      eyeColor: s.eyeColor,
       centerImage: s.centerHref ? { href: s.centerHref, ratio: cfg.logoRatio, plate: cfg.plate } : null,
       pixelSize: RES,
     });

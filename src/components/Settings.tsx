@@ -1,5 +1,5 @@
 import { useGen } from '../state/GeneratorContext';
-import type { ColorStyle, ModuleShape } from '../qr/grid';
+import type { ColorStyle, ModuleShape, EyeShape } from '../qr/grid';
 import type { ErrorLevel } from '../qr/matrix';
 
 /**
@@ -49,16 +49,40 @@ export function Settings() {
 
       <label className="field">
         <span className="field__label">Module shape</span>
-        <select
-          value={cfg.shape}
-          disabled={cfg.resemble}
-          title={cfg.resemble ? 'Shapes apply to plain codes; turn off “Resemble image” to use them' : undefined}
-          onChange={(e) => update({ shape: e.target.value as ModuleShape })}
-        >
+        <select value={cfg.shape} onChange={(e) => update({ shape: e.target.value as ModuleShape })}>
           <option value="square">Square (classic)</option>
           <option value="dot">Dots (circles)</option>
           <option value="rounded">Rounded</option>
+          <option value="extra">Extra rounded</option>
         </select>
+      </label>
+
+      <label className="field">
+        <span className="field__label">Finder eyes</span>
+        <select value={cfg.eyeShape} onChange={(e) => update({ eyeShape: e.target.value as EyeShape })}>
+          <option value="auto">Auto (match modules)</option>
+          <option value="square">Square</option>
+          <option value="rounded">Rounded</option>
+          <option value="circle">Circle</option>
+        </select>
+      </label>
+
+      <label className="field">
+        <span className="field__label">Eye colour</span>
+        <input
+          type="color"
+          value={cfg.eyeColor}
+          disabled={cfg.autoEyeColor}
+          onChange={(e) => update({ eyeColor: e.target.value })}
+        />
+      </label>
+      <label className="field field--check">
+        <input
+          type="checkbox"
+          checked={cfg.autoEyeColor}
+          onChange={(e) => update({ autoEyeColor: e.target.checked })}
+        />
+        <span className="field__label">Match foreground colour</span>
       </label>
 
       {cfg.colorStyle === 'brand' && (

@@ -150,6 +150,8 @@ function svgFor(text, opts) {
     core: 0,
     dotScale: opts.dotScale,
     shape: opts.shape,
+    eyeShape: opts.eyeShape,
+    eyeColor: opts.eyeColor,
     centerImage: opts.embed ? { href: 'x', ratio: 0.22, plate: true } : null,
     pixelSize: 1024,
   });
@@ -191,6 +193,15 @@ const cases = [
   { name: 'halftone dot 0.4', text: 'https://example.com/welcome', opts: { halftone: true, dotScale: 0.4 } },
   { name: 'halftone dot 0.8', text: 'https://example.com/welcome', opts: { halftone: true, dotScale: 0.8 } },
   { name: 'image dot 0.6', text: 'https://example.com/welcome', opts: { halftone: true, style: 'image', dotScale: 0.6 } },
+  // Extra-rounded + independent eye shapes/colours.
+  { name: 'extra url', text: 'https://example.com/welcome', opts: { shape: 'extra' } },
+  { name: 'square+circle-eyes', text: 'https://example.com/welcome', opts: { eyeShape: 'circle' } },
+  { name: 'dot+square-eyes', text: 'https://example.com/welcome', opts: { shape: 'dot', eyeShape: 'square' } },
+  { name: 'rounded+rounded-eyes col', text: 'https://chores.app/r/AB12CD', opts: { shape: 'rounded', eyeShape: 'rounded', eyeColor: '#e0522e' } },
+  // Styling on halftone: shaped data dot + styled/coloured eyes.
+  { name: 'halftone dot eyes', text: 'https://example.com/welcome', opts: { halftone: true, shape: 'dot', dotScale: 0.6, eyeShape: 'circle' } },
+  { name: 'halftone rounded eyes col', text: 'https://example.com/welcome', opts: { halftone: true, shape: 'rounded', dotScale: 0.5, eyeShape: 'rounded', eyeColor: '#1d4ed8' } },
+  { name: 'image dot eyes', text: VCARD, opts: { halftone: true, style: 'image', shape: 'dot', dotScale: 0.6, eyeShape: 'circle' } },
 ];
 
 let pass = 0, total = 0;

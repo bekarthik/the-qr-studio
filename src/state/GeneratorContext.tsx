@@ -2,7 +2,7 @@ import { createContext, useContext, useMemo, useState, type ReactNode } from 're
 import { SOURCES } from '../ui/forms';
 import type { SourceType, PayloadInput } from '../content/payloads';
 import type { ErrorLevel } from '../qr/matrix';
-import type { ColorStyle, ModuleShape } from '../qr/grid';
+import type { ColorStyle, ModuleShape, EyeShape } from '../qr/grid';
 
 /** The full generator state — one object so a single change re-renders the tree. */
 export interface Config {
@@ -21,6 +21,9 @@ export interface Config {
   dotSize: number;
   colorStyle: ColorStyle;
   shape: ModuleShape;
+  eyeShape: EyeShape;
+  eyeColor: string;
+  autoEyeColor: boolean;
   brandColor: string;
   autoBrand: boolean;
   logoRatio: number;
@@ -53,6 +56,9 @@ const INITIAL: Config = {
   dotSize: 0,
   colorStyle: 'solid',
   shape: 'square',
+  eyeShape: 'auto',
+  eyeColor: '#101418',
+  autoEyeColor: true,
   brandColor: '#2563eb',
   autoBrand: false,
   logoRatio: 0.22,

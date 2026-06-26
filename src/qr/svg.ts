@@ -9,8 +9,13 @@ import {
   finderOrigins,
   moduleColor,
   dotHalfWidth,
+  resolveEyeShape,
+  SHAPE_RX,
+  EYE_RX,
+  EYE_LAYERS,
   type ColorStyle,
   type ModuleShape,
+  type EyeShape,
 } from './grid';
 
 export interface SvgCenterImage {
@@ -39,8 +44,12 @@ export interface SvgOptions {
   core: number;
   /** Continuous 0–1 size of the solid data dot over a halftone module's centre. */
   dotScale?: number;
-  /** Shape of each dark module (block codes only; ignored when halftoning). */
+  /** Shape of each dark data module (and the halftone data dot). */
   shape?: ModuleShape;
+  /** Shape of the three finder "eyes" (auto = follow the module shape). */
+  eyeShape?: EyeShape;
+  /** Override colour for the finder eyes; falls back to the module dark colour. */
+  eyeColor?: string | null;
   centerImage?: SvgCenterImage | null;
   /** Pixel size written to the width/height attributes (the SVG stays vector). */
   pixelSize: number;
@@ -59,14 +68,22 @@ export function renderSVG(opts: SvgOptions): string {
   const fillOpts = { style: colorStyle, fg, bg, brand: brandDarkHex(opts.brandColor), protectPatterns, core: opts.core };
 
   const total = n * sub;
-  const shaped = !sampler && opts.shape && opts.shape !== 'square';
-  const rects: string[] = shaped
-    ? shapedModules(matrix, n, quietSub, sub, opts.shape!, fillOpts)
+  const shape: ModuleShape = opts.shape ?? 'square';
+  const eyeShape = opts.eyeShape ?? 'auto';
+  const eyeShapeR = resolveEyeShape(eyeShape, shape);
+  const eyeColor = opts.eyeColor ? brandDarkHex(opts.eyeColor) : moduleColor(true, fillOpts);
+  // Eyes are restyled whenever the user has chosen any styling.
+  const eyesActive = shape !== 'square' || eyeShape !== 'auto' || !!opts.eyeColor;
+
+  // Data layer: styled module shapes for block codes, else the merged sub-cells
+  // (plain or halftone). Styled eyes are drawn separately, below.
+  const shapedData = !sampler && shape !== 'square';
+  const rects: string[] = shapedData
+    ? shapedModules(matrix, n, quietSub, sub, shape, fillOpts)
     : mergedRects(matrix, sampler, fillOpts, n, sub, quietSub, bg);
 
-  // Linear data-dot overlay (halftone only): a solid square at each data
-  // module's centre, sized continuously by dotScale. Drawn after the sub-cells
-  // so it sits on top; function patterns are already solid and skipped.
+  // Linear data-dot overlay (halftone only): a solid mark at each data module's
+  // centre, sized continuously by dotScale and drawn in the chosen module shape.
   const dotScale = opts.dotScale ?? 0;
   if (sampler && dotScale > 0) {
     const hw = dotHalfWidth(sub, dotScale);
@@ -75,10 +92,16 @@ export function renderSVG(opts: SvgOptions): string {
         if (matrix.isFunction(r, c)) continue;
         const cx = quietSub + c * sub + sub / 2;
         const cy = quietSub + r * sub + sub / 2;
-        rects.push(
-          `<rect x="${r2(cx - hw)}" y="${r2(cy - hw)}" width="${r2(2 * hw)}" height="${r2(2 * hw)}" fill="${moduleColor(matrix.get(r, c), fillOpts)}"/>`,
-        );
+        rects.push(markSvg(cx, cy, hw, shape, moduleColor(matrix.get(r, c), fillOpts)));
       }
+    }
+  }
+
+  // Styled finder eyes (works for both block and halftone): clear each 7×7 then
+  // redraw the position pattern in the chosen shape/colour.
+  if (eyesActive) {
+    for (const [fr, fc] of finderOrigins(n)) {
+      rects.push(...eyeSvg(quietSub + fc * sub, quietSub + fr * sub, sub, eyeShapeR, eyeColor, bg));
     }
   }
 
@@ -146,9 +169,9 @@ function mergedRects(
 }
 
 /**
- * Styled-module output (dots / rounded). Coordinates are in module units of
- * `sub` (matching the viewBox). Data modules take the shape, timing/alignment
- * stay square, and each finder pattern is one cohesive eye — so it still scans.
+ * Styled data modules (dots / rounded / extra). Coordinates are in module units
+ * of `sub`. Finder patterns are skipped here (drawn as styled eyes separately)
+ * and timing/alignment stay solid squares so the code still scans.
  */
 function shapedModules(
   matrix: QrMatrix,
@@ -159,9 +182,7 @@ function shapedModules(
   fillOpts: { style: ColorStyle; fg: string; bg: string; brand: string },
 ): string[] {
   const dark = moduleColor(true, fillOpts);
-  const bg = fillOpts.bg;
   const out: string[] = [];
-
   for (let r = 0; r < n; r++) {
     for (let c = 0; c < n; c++) {
       if (inFinder(r, c, n) || !matrix.get(r, c)) continue;
@@ -169,30 +190,45 @@ function shapedModules(
       const y = quietSub + r * sub;
       if (matrix.isFunction(r, c)) {
         out.push(`<rect x="${x}" y="${y}" width="${sub}" height="${sub}" fill="${dark}"/>`);
-      } else if (shape === 'dot') {
-        out.push(`<circle cx="${r2(x + sub / 2)}" cy="${r2(y + sub / 2)}" r="${r2(sub / 2)}" fill="${dark}"/>`);
       } else {
-        out.push(`<rect x="${x}" y="${y}" width="${sub}" height="${sub}" rx="${r2(sub * 0.32)}" fill="${dark}"/>`);
+        out.push(markSvg(x + sub / 2, y + sub / 2, sub / 2, shape, dark));
       }
     }
   }
+  return out;
+}
 
-  for (const [fr, fc] of finderOrigins(n)) {
-    const x = quietSub + fc * sub;
-    const y = quietSub + fr * sub;
-    if (shape === 'dot') {
-      const cx = r2(x + 3.5 * sub);
-      const cy = r2(y + 3.5 * sub);
-      out.push(`<circle cx="${cx}" cy="${cy}" r="${r2(3.5 * sub)}" fill="${dark}"/>`);
-      out.push(`<circle cx="${cx}" cy="${cy}" r="${r2(2.5 * sub)}" fill="${bg}"/>`);
-      out.push(`<circle cx="${cx}" cy="${cy}" r="${r2(1.5 * sub)}" fill="${dark}"/>`);
+/** One module-sized mark centred at (cx, cy) with half-width `half`. */
+function markSvg(cx: number, cy: number, half: number, shape: ModuleShape, color: string): string {
+  if (shape === 'dot') {
+    return `<circle cx="${r2(cx)}" cy="${r2(cy)}" r="${r2(half)}" fill="${color}"/>`;
+  }
+  const rx = SHAPE_RX[shape] * 2 * half;
+  const rxa = rx ? ` rx="${r2(rx)}"` : '';
+  return `<rect x="${r2(cx - half)}" y="${r2(cy - half)}" width="${r2(2 * half)}" height="${r2(2 * half)}"${rxa} fill="${color}"/>`;
+}
+
+/** A styled finder eye: clear the 7×7, then redraw frame / gap / pupil. */
+function eyeSvg(
+  x: number,
+  y: number,
+  sub: number,
+  shape: 'square' | 'rounded' | 'circle',
+  dark: string,
+  bg: string,
+): string[] {
+  const out = [`<rect x="${r2(x)}" y="${r2(y)}" width="${7 * sub}" height="${7 * sub}" fill="${bg}"/>`];
+  for (const { inset, size, dark: isDark } of EYE_LAYERS) {
+    const color = isDark ? dark : bg;
+    const cx = x + (inset + size / 2) * sub;
+    const cy = y + (inset + size / 2) * sub;
+    if (shape === 'circle') {
+      out.push(`<circle cx="${r2(cx)}" cy="${r2(cy)}" r="${r2((size / 2) * sub)}" fill="${color}"/>`);
     } else {
-      out.push(`<rect x="${x}" y="${y}" width="${7 * sub}" height="${7 * sub}" rx="${r2(2 * sub)}" fill="${dark}"/>`);
+      const rx = shape === 'rounded' ? EYE_RX * size * sub : 0;
+      const rxa = rx ? ` rx="${r2(rx)}"` : '';
       out.push(
-        `<rect x="${x + sub}" y="${y + sub}" width="${5 * sub}" height="${5 * sub}" rx="${r2(1.4 * sub)}" fill="${bg}"/>`,
-      );
-      out.push(
-        `<rect x="${x + 2 * sub}" y="${y + 2 * sub}" width="${3 * sub}" height="${3 * sub}" rx="${r2(0.9 * sub)}" fill="${dark}"/>`,
+        `<rect x="${r2(x + inset * sub)}" y="${r2(y + inset * sub)}" width="${r2(size * sub)}" height="${r2(size * sub)}"${rxa} fill="${color}"/>`,
       );
     }
   }

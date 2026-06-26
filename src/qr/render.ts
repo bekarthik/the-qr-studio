@@ -9,8 +9,13 @@ import {
   finderOrigins,
   moduleColor,
   dotHalfWidth,
+  resolveEyeShape,
+  SHAPE_RX,
+  EYE_RX,
+  EYE_LAYERS,
   type ColorStyle,
   type ModuleShape,
+  type EyeShape,
 } from './grid';
 
 export interface CenterImage {
@@ -46,8 +51,12 @@ export interface RenderOptions {
   /** Continuous 0–1 size of the solid data dot drawn over a halftone module's
    *  centre (0 = single centre cell, 1 = whole module). Linear, detail-agnostic. */
   dotScale?: number;
-  /** Shape of each dark module (block codes only; ignored when halftoning). */
+  /** Shape of each dark data module (and the halftone data dot). */
   shape?: ModuleShape;
+  /** Shape of the three finder "eyes" (auto = follow the module shape). */
+  eyeShape?: EyeShape;
+  /** Override colour for the finder eyes; falls back to the module dark colour. */
+  eyeColor?: string | null;
   /** Optional logo embedded into carved-out center space. */
   centerImage?: CenterImage | null;
 }
@@ -78,12 +87,18 @@ export function renderQR(opts: RenderOptions): HTMLCanvasElement {
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, dim, dim);
 
-  // A shaped (dots / rounded) code is a block code with no image sampler — the
-  // image styling and shape styling are mutually exclusive paths.
-  const shaped = !sampler && opts.shape && opts.shape !== 'square';
+  const shape: ModuleShape = opts.shape ?? 'square';
+  const eyeShape = opts.eyeShape ?? 'auto';
+  const eyeShapeR = resolveEyeShape(eyeShape, shape);
+  const eyeColor = opts.eyeColor ? brandDarkHex(opts.eyeColor) : moduleColor(true, fillOpts);
+  const eyesActive = shape !== 'square' || eyeShape !== 'auto' || !!opts.eyeColor;
 
-  if (shaped) {
-    drawShapedModules(ctx, matrix, n, quietSub * cellPx, sub * cellPx, opts.shape!, fillOpts);
+  // Styled data modules (dots / rounded) only apply to block codes; a halftone
+  // styles every sub-cell from the image instead.
+  const shapedData = !sampler && shape !== 'square';
+
+  if (shapedData) {
+    drawShapedModules(ctx, matrix, n, quietSub * cellPx, sub * cellPx, shape, fillOpts);
   } else {
     for (let r = 0; r < n; r++) {
       for (let c = 0; c < n; c++) {
@@ -99,9 +114,8 @@ export function renderQR(opts: RenderOptions): HTMLCanvasElement {
     }
   }
 
-  // Linear data-dot overlay: a solid square at each halftone *data* module's
-  // centre whose size scales continuously with dotScale (function patterns are
-  // already kept solid, so they're skipped).
+  // Linear data-dot overlay (halftone): a solid mark at each data module's
+  // centre, sized continuously by dotScale and drawn in the chosen module shape.
   const dotScale = opts.dotScale ?? 0;
   if (sampler && dotScale > 0) {
     const hw = dotHalfWidth(sub, dotScale) * cellPx;
@@ -111,9 +125,17 @@ export function renderQR(opts: RenderOptions): HTMLCanvasElement {
         if (matrix.isFunction(r, c)) continue;
         const cx = (quietSub + c * sub) * cellPx + moduleUnit / 2;
         const cy = (quietSub + r * sub) * cellPx + moduleUnit / 2;
-        ctx.fillStyle = moduleColor(matrix.get(r, c), fillOpts);
-        ctx.fillRect(cx - hw, cy - hw, 2 * hw, 2 * hw);
+        markCanvas(ctx, cx, cy, hw, shape, moduleColor(matrix.get(r, c), fillOpts));
       }
+    }
+  }
+
+  // Styled finder eyes (block + halftone): clear each 7×7, then redraw the
+  // position pattern in the chosen shape/colour.
+  if (eyesActive) {
+    const m = sub * cellPx;
+    for (const [fr, fc] of finderOrigins(n)) {
+      drawEye(ctx, (quietSub + fc * sub) * cellPx, (quietSub + fr * sub) * cellPx, m, eyeShapeR, eyeColor, bg);
     }
   }
 
@@ -157,9 +179,9 @@ function drawCenterImage(
 }
 
 /**
- * Draws a code as styled modules (dots or rounded squares). Data modules take
- * the chosen shape; the three finder patterns are drawn as one cohesive eye and
- * the timing/alignment patterns stay solid squares, so the code still scans.
+ * Draws the styled data modules (dots / rounded / extra). Finder patterns are
+ * skipped (drawn as styled eyes elsewhere) and timing/alignment stay solid
+ * squares so the code still scans.
  */
 function drawShapedModules(
   ctx: CanvasRenderingContext2D,
@@ -171,66 +193,73 @@ function drawShapedModules(
   fillOpts: { style: ColorStyle; fg: string; bg: string; brand: string },
 ) {
   const dark = moduleColor(true, fillOpts);
-  const bg = fillOpts.bg;
-
   for (let r = 0; r < n; r++) {
     for (let c = 0; c < n; c++) {
       if (inFinder(r, c, n) || !matrix.get(r, c)) continue;
       const x = origin + c * m;
       const y = origin + r * m;
-      ctx.fillStyle = dark;
       // Keep structural (timing/alignment) modules solid for reliable detection.
-      if (matrix.isFunction(r, c) || shape === 'rounded') {
-        if (shape === 'rounded' && !matrix.isFunction(r, c)) {
-          roundRect(ctx, x, y, m, m, m * 0.32);
-          ctx.fill();
-        } else {
-          ctx.fillRect(x, y, m, m);
-        }
+      if (matrix.isFunction(r, c)) {
+        ctx.fillStyle = dark;
+        ctx.fillRect(x, y, m, m);
       } else {
-        circle(ctx, x + m / 2, y + m / 2, m / 2);
-        ctx.fill();
+        markCanvas(ctx, x + m / 2, y + m / 2, m / 2, shape, dark);
       }
     }
   }
-
-  for (const [fr, fc] of finderOrigins(n)) {
-    drawEye(ctx, origin + fc * m, origin + fr * m, m, shape, dark, bg);
-  }
 }
 
-/** One finder "eye": an outer frame, a cleared gap, and a centre pupil. */
+/** One module-sized mark centred at (cx, cy) with half-width `half`. */
+function markCanvas(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  half: number,
+  shape: ModuleShape,
+  color: string,
+) {
+  ctx.fillStyle = color;
+  if (shape === 'dot') {
+    circle(ctx, cx, cy, half);
+  } else {
+    const rx = SHAPE_RX[shape] * 2 * half;
+    if (rx) roundRect(ctx, cx - half, cy - half, 2 * half, 2 * half, rx);
+    else {
+      ctx.fillRect(cx - half, cy - half, 2 * half, 2 * half);
+      return;
+    }
+  }
+  ctx.fill();
+}
+
+/** A styled finder eye: clear the 7×7, then redraw frame / gap / pupil. */
 function drawEye(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
   m: number,
-  shape: ModuleShape,
+  shape: 'square' | 'rounded' | 'circle',
   dark: string,
   bg: string,
 ) {
-  if (shape === 'dot') {
-    const cx = x + 3.5 * m;
-    const cy = y + 3.5 * m;
-    ctx.fillStyle = dark;
-    circle(ctx, cx, cy, 3.5 * m);
-    ctx.fill();
-    ctx.fillStyle = bg;
-    circle(ctx, cx, cy, 2.5 * m);
-    ctx.fill();
-    ctx.fillStyle = dark;
-    circle(ctx, cx, cy, 1.5 * m);
-    ctx.fill();
-  } else {
-    ctx.fillStyle = dark;
-    roundRect(ctx, x, y, 7 * m, 7 * m, 2 * m);
-    ctx.fill();
-    ctx.fillStyle = bg;
-    roundRect(ctx, x + m, y + m, 5 * m, 5 * m, 1.4 * m);
-    ctx.fill();
-    ctx.fillStyle = dark;
-    roundRect(ctx, x + 2 * m, y + 2 * m, 3 * m, 3 * m, 0.9 * m);
-    ctx.fill();
+  ctx.fillStyle = bg;
+  ctx.fillRect(x, y, 7 * m, 7 * m);
+  for (const { inset, size, dark: isDark } of EYE_LAYERS) {
+    const color = isDark ? dark : bg;
+    const cx = x + (inset + size / 2) * m;
+    const cy = y + (inset + size / 2) * m;
+    if (shape === 'circle') {
+      markCanvas(ctx, cx, cy, (size / 2) * m, 'dot', color);
+    } else {
+      const rx = shape === 'rounded' ? EYE_RX * size * m : 0;
+      ctx.fillStyle = color;
+      if (rx) {
+        roundRect(ctx, x + inset * m, y + inset * m, size * m, size * m, rx);
+        ctx.fill();
+      } else {
+        ctx.fillRect(x + inset * m, y + inset * m, size * m, size * m);
+      }
+    }
   }
 }
 
