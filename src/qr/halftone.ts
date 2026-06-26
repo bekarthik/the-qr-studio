@@ -22,6 +22,45 @@ export interface SampleOptions {
   /** Box-blur radius (in sub-cells) applied before sampling to kill texture
    *  aliasing/speckle at high detail. 0 = no blur. */
   smooth: number;
+  /** Floyd–Steinberg dither instead of a flat threshold, so tonal gradients
+   *  read as varying dot density rather than harsh black/white blobs. */
+  dither: boolean;
+}
+
+/**
+ * Floyd–Steinberg error-diffusion dither. Turns a continuous-tone luminance
+ * field into a 1-bit dark/light map whose *dot density* tracks the original
+ * brightness — the standard way to make a thresholded image still look like the
+ * photo instead of a blotchy posterisation. Pure (no DOM) so it is unit
+ * testable; `cut` is the same dark/light pivot the flat path uses, so the auto
+ * contrast / threshold controls keep their meaning.
+ */
+export function ditherFloydSteinberg(
+  lum: Float32Array,
+  w: number,
+  h: number,
+  cut: number,
+): Uint8Array {
+  const buf = Float32Array.from(lum); // accumulates diffused error; don't mutate input
+  const out = new Uint8Array(w * h); // 1 = dark
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = y * w + x;
+      const old = buf[i];
+      const dark = old < cut;
+      out[i] = dark ? 1 : 0;
+      const err = old - (dark ? 0 : 255);
+      // Diffuse the quantisation error to not-yet-visited neighbours (7/3/5/1).
+      if (x + 1 < w) buf[i + 1] += (err * 7) / 16;
+      if (y + 1 < h) {
+        const d = i + w;
+        if (x > 0) buf[d - 1] += (err * 3) / 16;
+        buf[d] += (err * 5) / 16;
+        if (x + 1 < w) buf[d + 1] += (err * 1) / 16;
+      }
+    }
+  }
+  return out;
 }
 
 /**
@@ -107,7 +146,7 @@ export function sampleImage(
   height: number,
   opts: SampleOptions,
 ): ImageSampler {
-  const { gridSize, threshold, invert, auto, smooth } = opts;
+  const { gridSize, threshold, invert, auto, smooth, dither } = opts;
   const canvas = document.createElement('canvas');
   canvas.width = gridSize;
   canvas.height = gridSize;
@@ -124,27 +163,30 @@ export function sampleImage(
   const raw = ctx.getImageData(0, 0, gridSize, gridSize).data;
   const data = boxBlurRGBA(raw, gridSize, gridSize, smooth);
 
+  // Per-cell luminance (transparent → white/light), reused for the cut-off and
+  // the dither pass.
+  const N = gridSize * gridSize;
+  const lumF = new Float32Array(N);
+  for (let i = 0; i < N; i++) {
+    const j = i * 4;
+    lumF[i] = data[j + 3] < 16 ? 255 : 0.299 * data[j] + 0.587 * data[j + 1] + 0.114 * data[j + 2];
+  }
+
   // Choose the dark/light cut-off: Otsu auto, or the manual threshold slider.
   let cut = threshold * 255;
   if (auto) {
-    const lumas = new Uint8Array(gridSize * gridSize);
-    for (let i = 0; i < lumas.length; i++) {
-      const j = i * 4;
-      lumas[i] = data[j + 3] < 16 ? 255 : (0.299 * data[j] + 0.587 * data[j + 1] + 0.114 * data[j + 2]) | 0;
-    }
+    const lumas = new Uint8Array(N);
+    for (let i = 0; i < N; i++) lumas[i] = lumF[i] | 0;
     cut = otsuCut(lumas);
   }
 
+  // Dithered dark/light map (tone via dot density) when requested.
+  const ditherMap = dither ? ditherFloydSteinberg(lumF, gridSize, gridSize, cut) : null;
+
   return {
     dark(subRow: number, subCol: number): boolean {
-      const idx = (subRow * gridSize + subCol) * 4;
-      const r = data[idx];
-      const g = data[idx + 1];
-      const b = data[idx + 2];
-      const a = data[idx + 3];
-      // Transparent pixels are treated as light (background).
-      const lum = a < 16 ? 255 : 0.299 * r + 0.587 * g + 0.114 * b;
-      const isDark = lum < cut;
+      const i = subRow * gridSize + subCol;
+      const isDark = ditherMap ? ditherMap[i] === 1 : lumF[i] < cut;
       return invert ? !isDark : isDark;
     },
     colorAt(subRow: number, subCol: number): [number, number, number] {

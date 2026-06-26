@@ -24,6 +24,7 @@ const state = {
   invert: false,
   detail: 3, // sub-cells per module (3 standard, 5 = finer)
   autotune: true, // raise halftone detail for dense codes so they still scan
+  dither: true, // Floyd–Steinberg dither for smoother halftone tone
   colorStyle: 'solid' as 'solid' | 'brand' | 'image',
   brandColor: '#2563eb',
   autoBrand: false,
@@ -219,6 +220,10 @@ $('#autotune').addEventListener('change', (e) => {
   state.autotune = (e.target as HTMLInputElement).checked;
   update();
 });
+$('#dither').addEventListener('change', (e) => {
+  state.dither = (e.target as HTMLInputElement).checked;
+  update();
+});
 $('#autoBrand').addEventListener('change', (e) => {
   state.autoBrand = (e.target as HTMLInputElement).checked;
   ($('#brandColor') as HTMLInputElement).disabled = state.autoBrand;
@@ -388,6 +393,7 @@ function update() {
           invert: state.invert,
           auto: state.autoThreshold,
           smooth,
+          dither: state.dither,
         })
       : null;
 
