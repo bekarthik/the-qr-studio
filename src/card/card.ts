@@ -26,6 +26,8 @@ export type CardBgStyle = 'solid' | 'gradient' | 'pattern';
 export type CardPattern = 'dots' | 'grid' | 'diagonal' | 'crosshatch';
 export type CardText = 'auto' | 'dark' | 'light';
 export type CardOrientation = 'landscape' | 'portrait';
+export type CardDivider = 'line' | 'none' | 'short' | 'dotted' | 'double' | 'thick';
+export type CardGraphic = 'none' | 'arc' | 'ring' | 'dots' | 'wave' | 'corner';
 
 export interface CardTheme {
   bgStyle: CardBgStyle;
@@ -41,6 +43,8 @@ export interface CardTheme {
   orientation: CardOrientation;
   headingFont: string;
   bodyFont: string;
+  divider: CardDivider;
+  graphic: CardGraphic;
 }
 
 export interface FrontOptions {
@@ -137,6 +141,7 @@ function faceWrap(ox: number, g: Geo, theme: CardTheme, fill: string, pal: Palet
     `<clipPath id="${clip}"><rect x="${ox + 1.5}" y="1.5" width="${g.W - 3}" height="${g.H - 3}" rx="26"/></clipPath>` +
     `<g clip-path="url(#${clip})">` +
     `<rect x="${ox}" y="0" width="${g.W}" height="${g.H}" fill="${fill}"/>` +
+    graphicLayer(ox, g, theme) +
     (theme.accentBar ? `<rect x="${ox}" y="0" width="16" height="${g.H}" fill="${theme.accent}"/>` : '') +
     content +
     `</g>` +
@@ -148,6 +153,68 @@ function faceWrap(ox: number, g: Geo, theme: CardTheme, fill: string, pal: Palet
 
 const hasDetails = (d: CardData) =>
   Boolean(d.name || d.title || d.org || d.phone || d.email || d.url || d.address);
+
+/** Decorative accent graphic drawn behind the content (faint where it could sit
+ *  under text; the opaque QR panel covers anything beneath it). */
+function graphicLayer(ox: number, g: Geo, theme: CardTheme): string {
+  const a = theme.accent;
+  switch (theme.graphic) {
+    case 'none':
+      return '';
+    case 'arc':
+      return `<circle cx="${ox + g.W}" cy="${g.H}" r="${r3(g.H * 0.55)}" fill="${a}" opacity="0.12"/><circle cx="${ox}" cy="0" r="${r3(g.H * 0.32)}" fill="${a}" opacity="0.1"/>`;
+    case 'ring':
+      return `<circle cx="${ox + g.W - 34}" cy="34" r="86" fill="none" stroke="${a}" stroke-width="14" opacity="0.18"/>`;
+    case 'dots': {
+      const out: string[] = [];
+      const x0 = ox + g.W - 152;
+      const y0 = g.H - 152;
+      for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) out.push(`<circle cx="${x0 + c * 32}" cy="${y0 + r * 32}" r="4" fill="${a}" opacity="0.4"/>`);
+      return out.join('');
+    }
+    case 'wave': {
+      const y0 = g.H - 48;
+      let d = `M ${ox} ${g.H} L ${ox} ${y0}`;
+      const step = 70;
+      for (let x = 0; x < g.W; x += step) {
+        const cx = ox + x + step / 2;
+        const ex = ox + Math.min(x + step, g.W);
+        d += ` Q ${cx} ${y0 - 22} ${ex} ${y0}`;
+      }
+      d += ` L ${ox + g.W} ${g.H} Z`;
+      return `<path d="${d}" fill="${a}" opacity="0.85"/>`;
+    }
+    case 'corner':
+      return `<path d="M ${ox + g.W} 0 L ${ox + g.W} 150 L ${ox + g.W - 150} 0 Z" fill="${a}" opacity="0.9"/>`;
+  }
+}
+
+/** A styleable rule below the name. */
+function divider(parts: string[], tx: number, y: number, w: number, theme: CardTheme): void {
+  const a = theme.accent;
+  switch (theme.divider) {
+    case 'none':
+      return;
+    case 'line':
+      parts.push(`<rect x="${tx}" y="${y}" width="${w}" height="3" fill="${a}"/>`);
+      return;
+    case 'short':
+      parts.push(`<rect x="${tx}" y="${y}" width="${Math.min(w, 120)}" height="4" fill="${a}"/>`);
+      return;
+    case 'thick':
+      parts.push(`<rect x="${tx}" y="${y}" width="${w}" height="7" rx="3.5" fill="${a}"/>`);
+      return;
+    case 'double':
+      parts.push(`<rect x="${tx}" y="${y}" width="${w}" height="2" fill="${a}"/>`);
+      parts.push(`<rect x="${tx}" y="${y + 7}" width="${w}" height="2" fill="${a}"/>`);
+      return;
+    case 'dotted': {
+      const n = Math.floor(w / 22);
+      for (let i = 0; i < n; i++) parts.push(`<circle cx="${tx + 11 + i * 22}" cy="${y + 2}" r="3.5" fill="${a}"/>`);
+      return;
+    }
+  }
+}
 
 /** Heading + title + org block; returns the next free y. */
 function heading(parts: string[], tx: number, y: number, d: CardData, theme: CardTheme, pal: Palette, big: number): number {
@@ -183,7 +250,7 @@ function singleContent(ox: number, g: Geo, o: CardOrientation, qrSvg: string, d:
   if (o === 'portrait') {
     let y = heading(parts, tx, 116, d, theme, pal, 46);
     y += 6;
-    parts.push(`<rect x="${tx}" y="${y}" width="300" height="3" fill="${theme.accent}"/>`);
+    divider(parts, tx, y, 300, theme);
     const qx = ox + (g.W - g.QR) / 2;
     const qy = 296;
     parts.push(qrBlock(g, qrSvg, d, theme, pal, qx, qy, ox + g.W / 2));
@@ -191,7 +258,7 @@ function singleContent(ox: number, g: Geo, o: CardOrientation, qrSvg: string, d:
   } else {
     let y = heading(parts, tx, 168, d, theme, pal, 54);
     y += 8;
-    parts.push(`<rect x="${tx}" y="${y}" width="${Math.min(g.W - 2 * g.PAD - g.QR - 44, 360)}" height="3" fill="${theme.accent}"/>`);
+    divider(parts, tx, y, Math.min(g.W - 2 * g.PAD - g.QR - 44, 360), theme);
     y += 40;
     contacts(parts, tx, y, d, theme, pal, 42);
     const qx = ox + g.W - g.PAD - g.QR;
@@ -209,12 +276,12 @@ function frontContent(ox: number, g: Geo, o: CardOrientation, d: CardData, theme
     if (o === 'portrait') {
       let y = heading(parts, tx, 116, d, theme, pal, 46);
       y += 6;
-      parts.push(`<rect x="${tx}" y="${y}" width="300" height="3" fill="${theme.accent}"/>`);
+      divider(parts, tx, y, 300, theme);
       contacts(parts, tx, 760, d, theme, pal, 40);
     } else {
       let y = heading(parts, tx, 168, d, theme, pal, 54);
       y += 8;
-      parts.push(`<rect x="${tx}" y="${y}" width="360" height="3" fill="${theme.accent}"/>`);
+      divider(parts, tx, y, 360, theme);
       y += 40;
       contacts(parts, tx, y, d, theme, pal, 42);
     }
@@ -255,6 +322,33 @@ export function buildCardSVG(d: CardData, qrSvg: string, theme: CardTheme): stri
     open(g.W, g.H) +
     (defs ? `<defs>${defs}</defs>` : '') +
     faceWrap(0, g, theme, fill, pal, singleContent(0, g, theme.orientation, qrSvg, d, theme, pal)) +
+    '</svg>'
+  );
+}
+
+/** The front face alone (details + logo + watermark, no QR) — for separate
+ *  two-sided downloads. */
+export function buildCardFrontSVG(d: CardData, front: FrontOptions, theme: CardTheme): string {
+  const g = GEO[theme.orientation];
+  const pal = palette(theme);
+  const { defs, fill } = paint(theme);
+  return (
+    open(g.W, g.H) +
+    (defs ? `<defs>${defs}</defs>` : '') +
+    faceWrap(0, g, theme, fill, pal, frontContent(0, g, theme.orientation, d, theme, pal, front)) +
+    '</svg>'
+  );
+}
+
+/** The back face alone (QR only) — for separate two-sided downloads. */
+export function buildCardBackSVG(d: CardData, qrSvg: string, theme: CardTheme): string {
+  const g = GEO[theme.orientation];
+  const pal = palette(theme);
+  const { defs, fill } = paint(theme);
+  return (
+    open(g.W, g.H) +
+    (defs ? `<defs>${defs}</defs>` : '') +
+    faceWrap(0, g, theme, fill, pal, backContent(0, g, qrSvg, d, theme, pal)) +
     '</svg>'
   );
 }

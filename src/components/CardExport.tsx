@@ -5,8 +5,9 @@ import { buildMatrix } from '../qr/matrix';
 import { renderSVG } from '../qr/svg';
 import { brandDarkHex } from '../qr/grid';
 import {
-  buildCardSVG, buildCardSheetSVG, cardDims, CARD_FONTS,
+  buildCardSVG, buildCardSheetSVG, buildCardFrontSVG, buildCardBackSVG, cardDims, CARD_FONTS,
   type CardData, type CardTheme, type CardBgStyle, type CardPattern, type CardText, type CardOrientation,
+  type CardDivider, type CardGraphic,
 } from '../card/card';
 
 const str = (v: unknown) => (v == null ? '' : String(v));
@@ -27,6 +28,7 @@ function captionFor(type: SourceType): string {
 const CAPTURE = [
   'cardBgStyle', 'cardBg1', 'cardBg2', 'cardGradAngle', 'cardPattern', 'cardAccentAuto', 'cardAccent',
   'cardText', 'cardAccentBar', 'cardBorder', 'cardPanel', 'cardOrientation', 'cardHeadingFont', 'cardBodyFont',
+  'cardDivider', 'cardGraphic',
 ] as const;
 
 type Preset = { name: string; patch: Partial<Config> };
@@ -81,13 +83,13 @@ export function CardExport() {
   };
   const deletePreset = (name: string) => persist(custom.filter((p) => p.name !== name));
 
-  const svg = useMemo(() => {
-    if (!payload) return '';
+  const out = useMemo(() => {
+    if (!payload) return null;
     let matrix;
     try {
       matrix = buildMatrix(payload, 'H');
     } catch {
-      return '';
+      return null;
     }
     const qrSvg = renderSVG({
       matrix, quietModules: 2, fg: cfg.fg, bg: cfg.bg, sampler: null, protectPatterns: true,
@@ -99,6 +101,7 @@ export function CardExport() {
       accent: cfg.cardAccentAuto ? (cfg.colorStyle === 'brand' ? brandDarkHex(cfg.brandColor) : '#e0522e') : cfg.cardAccent,
       text: cfg.cardText, accentBar: cfg.cardAccentBar, border: cfg.cardBorder, qrPanel: cfg.cardPanel,
       orientation: cfg.cardOrientation, headingFont: cfg.cardHeadingFont, bodyFont: cfg.cardBodyFont,
+      divider: cfg.cardDivider, graphic: cfg.cardGraphic,
     };
     const data: CardData = {
       name: displayName,
@@ -111,16 +114,21 @@ export function CardExport() {
       qrBg: cfg.bg,
       caption: str(cfg.cardCaption).trim() || captionFor(cfg.type),
     };
-    return twoSided
-      ? buildCardSheetSVG(data, qrSvg, { logoHref: cfg.image?.src ?? null, watermarkHref: cfg.watermark ? cfg.image?.src ?? null : null, watermarkOpacity: cfg.watermarkOpacity }, theme)
-      : buildCardSVG(data, qrSvg, theme);
+    const frontOpts = { logoHref: cfg.image?.src ?? null, watermarkHref: cfg.watermark ? cfg.image?.src ?? null : null, watermarkOpacity: cfg.watermarkOpacity };
+    return {
+      preview: twoSided ? buildCardSheetSVG(data, qrSvg, frontOpts, theme) : buildCardSVG(data, qrSvg, theme),
+      single: buildCardSVG(data, qrSvg, theme),
+      front: buildCardFrontSVG(data, frontOpts, theme),
+      back: buildCardBackSVG(data, qrSvg, theme),
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cfg, payload, twoSided, displayName, isVcard]);
 
+  const svg = out?.preview ?? '';
   const baseName = (displayName || 'card').replace(/\s+/g, '-').toLowerCase() || 'card';
-  const downloadSvg = () => save(new Blob([svg], { type: 'image/svg+xml' }), `${baseName}.svg`);
-  const downloadPng = () => {
-    const { w, h } = cardDims(cfg.cardOrientation, twoSided);
+
+  const savePng = (source: string, filename: string) => {
+    const { w, h } = cardDims(cfg.cardOrientation, false);
     const img = new Image();
     img.onload = () => {
       const scale = 2;
@@ -130,10 +138,29 @@ export function CardExport() {
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob((b) => b && save(b, `${baseName}.png`), 'image/png');
+      canvas.toBlob((b) => b && save(b, filename), 'image/png');
       URL.revokeObjectURL(img.src);
     };
-    img.src = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+    img.src = URL.createObjectURL(new Blob([source], { type: 'image/svg+xml' }));
+  };
+
+  const downloadSvg = () => {
+    if (!out) return;
+    if (twoSided) {
+      save(new Blob([out.front], { type: 'image/svg+xml' }), `${baseName}-front.svg`);
+      save(new Blob([out.back], { type: 'image/svg+xml' }), `${baseName}-back.svg`);
+    } else {
+      save(new Blob([out.single], { type: 'image/svg+xml' }), `${baseName}.svg`);
+    }
+  };
+  const downloadPng = () => {
+    if (!out) return;
+    if (twoSided) {
+      savePng(out.front, `${baseName}-front.png`);
+      savePng(out.back, `${baseName}-back.png`);
+    } else {
+      savePng(out.single, `${baseName}.png`);
+    }
   };
 
   const showBg2 = cfg.cardBgStyle === 'gradient' || cfg.cardBgStyle === 'pattern';
@@ -260,6 +287,29 @@ export function CardExport() {
           <span className="field__label">Match QR accent</span>
         </label>
 
+        <label className="field">
+          <span className="field__label">Divider (under name)</span>
+          <select value={cfg.cardDivider} onChange={(e) => update({ cardDivider: e.target.value as CardDivider })}>
+            <option value="line">Line</option>
+            <option value="short">Short</option>
+            <option value="thick">Thick</option>
+            <option value="double">Double</option>
+            <option value="dotted">Dotted</option>
+            <option value="none">None</option>
+          </select>
+        </label>
+        <label className="field">
+          <span className="field__label">Graphic</span>
+          <select value={cfg.cardGraphic} onChange={(e) => update({ cardGraphic: e.target.value as CardGraphic })}>
+            <option value="none">None</option>
+            <option value="arc">Arcs</option>
+            <option value="ring">Ring</option>
+            <option value="dots">Dots</option>
+            <option value="wave">Wave footer</option>
+            <option value="corner">Corner</option>
+          </select>
+        </label>
+
         <label className="field field--check">
           <input type="checkbox" checked={cfg.cardAccentBar} onChange={(e) => update({ cardAccentBar: e.target.checked })} />
           <span className="field__label">Accent bar (left edge)</span>
@@ -278,13 +328,13 @@ export function CardExport() {
         <>
           <img className="cardx__preview" src={`data:image/svg+xml;utf8,${encodeURIComponent(svg)}`} alt="Visiting card preview" />
           <div className="downloads">
-            <button className="download" onClick={downloadPng}>Download card PNG</button>
-            <button className="download download--alt" onClick={downloadSvg}>Download card SVG</button>
+            <button className="download" onClick={downloadPng}>Download card PNG{twoSided && ' ×2'}</button>
+            <button className="download download--alt" onClick={downloadSvg}>Download card SVG{twoSided && ' ×2'}</button>
           </div>
           <p className="finehint">
             The QR encodes your current source. With no name it’s a clean QR-only card. The QR keeps
             its own background so it always scans.
-            {twoSided && <> The sheet is <b>front</b> (left) | <b>back</b> (right, QR).</>}
+            {twoSided && <> Two-sided downloads as <b>two files</b> — <code>-front</code> and <code>-back</code>; the preview shows them side by side.</>}
           </p>
         </>
       ) : (

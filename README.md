@@ -138,15 +138,19 @@ Ink, Mono, Vermilion, Ocean, Sunset, Mint, Blueprint) or set it yourself:
 **orientation** (landscape / portrait), **background** (solid / gradient with an
 angle / pattern — dots, grid, diagonal, crosshatch), **two colours**, **accent
 colour** (or match the QR), **text** (auto-contrast / dark / light), **per-element
-fonts** (heading + body, from web-safe stacks), a **custom caption**, and toggles
-for the **accent bar**, **border** and **QR panel**. Save your own design as a
-named **preset** (kept in the browser). The QR always keeps its own light panel,
-so it scans on any background.
+fonts** (heading + body, from web-safe stacks), a **custom caption**, a
+**divider** style under the name (line, short, thick, double, dotted, none), a
+decorative **graphic** (arcs, ring, dots, wave footer, corner), and toggles for
+the **accent bar**, **border** and **QR panel**. Save your own design as a named
+**preset** (kept in the browser). The QR always keeps its own light panel, so it
+scans on any background.
 
-Tick **Two-sided** for a front/back sheet: the **front** carries your details
+Tick **Two-sided** for a front/back card: the **front** carries your details
 plus your uploaded image as a **logo** (and a faint **watermark** if the
 Watermark toggle is on), and the **back** carries the QR alone — so the code
-prints on the second page. `npm run verify:card` rasterises the single card,
+prints on the second page. Two-sided **downloads as two separate files**
+(`-front` and `-back`) for both PNG and SVG; the preview shows them side by side.
+`npm run verify:card` rasterises the single card,
 two-sided sheet, gradient/pattern themes and the QR-only layout, and decodes the
 embedded QR to prove they all scan.
 

@@ -3,7 +3,7 @@ import { SOURCES } from '../ui/forms';
 import type { SourceType, PayloadInput } from '../content/payloads';
 import type { ErrorLevel } from '../qr/matrix';
 import type { ColorStyle, ModuleShape, EyeShape } from '../qr/grid';
-import type { CardBgStyle, CardPattern, CardText, CardOrientation } from '../card/card';
+import type { CardBgStyle, CardPattern, CardText, CardOrientation, CardDivider, CardGraphic } from '../card/card';
 
 /** The full generator state — one object so a single change re-renders the tree. */
 export interface Config {
@@ -33,6 +33,8 @@ export interface Config {
   cardHeadingFont: string;
   cardBodyFont: string;
   cardCaption: string;
+  cardDivider: CardDivider;
+  cardGraphic: CardGraphic;
   fg: string;
   bg: string;
   errorLevel: ErrorLevel;
@@ -89,6 +91,8 @@ const INITIAL: Config = {
   cardHeadingFont: "'Helvetica Neue', Arial, sans-serif",
   cardBodyFont: "'Helvetica Neue', Arial, sans-serif",
   cardCaption: '',
+  cardDivider: 'line',
+  cardGraphic: 'none',
   fg: '#101418',
   bg: '#ffffff',
   errorLevel: 'H',
