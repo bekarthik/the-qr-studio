@@ -11,6 +11,7 @@ import {
   dotHalfWidth,
   resolveEyeShape,
   liquidOps,
+  liquidDotOps,
   SHAPE_RX,
   EYE_RX,
   EYE_LAYERS,
@@ -88,12 +89,22 @@ export function renderSVG(opts: SvgOptions): string {
   const dotScale = opts.dotScale ?? 0;
   if (sampler && dotScale > 0) {
     const hw = dotHalfWidth(sub, dotScale);
-    for (let r = 0; r < n; r++) {
-      for (let c = 0; c < n; c++) {
-        if (matrix.isFunction(r, c)) continue;
-        const cx = quietSub + c * sub + sub / 2;
-        const cy = quietSub + r * sub + sub / 2;
-        rects.push(markSvg(cx, cy, hw, shape, moduleColor(matrix.get(r, c), fillOpts)));
+    const dark = moduleColor(true, fillOpts);
+    if (shape === 'liquid') {
+      const { dots, bars } = liquidDotOps(matrix, n, quietSub, quietSub, sub, hw);
+      for (const b of bars) {
+        rects.push(`<rect x="${r2(b.x)}" y="${r2(b.y)}" width="${r2(b.w)}" height="${r2(b.h)}" fill="${dark}"/>`);
+      }
+      for (const d of dots) if (d.dark) rects.push(markSvg(d.cx, d.cy, hw, 'dot', dark));
+      for (const d of dots) if (!d.dark) rects.push(markSvg(d.cx, d.cy, hw, 'dot', bg));
+    } else {
+      for (let r = 0; r < n; r++) {
+        for (let c = 0; c < n; c++) {
+          if (matrix.isFunction(r, c)) continue;
+          const cx = quietSub + c * sub + sub / 2;
+          const cy = quietSub + r * sub + sub / 2;
+          rects.push(markSvg(cx, cy, hw, shape, moduleColor(matrix.get(r, c), fillOpts)));
+        }
       }
     }
   }

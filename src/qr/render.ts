@@ -11,6 +11,7 @@ import {
   dotHalfWidth,
   resolveEyeShape,
   liquidOps,
+  liquidDotOps,
   SHAPE_RX,
   EYE_RX,
   EYE_LAYERS,
@@ -121,12 +122,23 @@ export function renderQR(opts: RenderOptions): HTMLCanvasElement {
   if (sampler && dotScale > 0) {
     const hw = dotHalfWidth(sub, dotScale) * cellPx;
     const moduleUnit = sub * cellPx;
-    for (let r = 0; r < n; r++) {
-      for (let c = 0; c < n; c++) {
-        if (matrix.isFunction(r, c)) continue;
-        const cx = (quietSub + c * sub) * cellPx + moduleUnit / 2;
-        const cy = (quietSub + r * sub) * cellPx + moduleUnit / 2;
-        markCanvas(ctx, cx, cy, hw, shape, moduleColor(matrix.get(r, c), fillOpts));
+    const dark = moduleColor(true, fillOpts);
+    if (shape === 'liquid') {
+      // Bridge adjacent dark data dots into connected blobs; draw dark first,
+      // then light dots on top so light centres stay protected.
+      const { dots, bars } = liquidDotOps(matrix, n, quietSub * cellPx, quietSub * cellPx, moduleUnit, hw);
+      ctx.fillStyle = dark;
+      for (const b of bars) ctx.fillRect(b.x, b.y, b.w, b.h);
+      for (const d of dots) if (d.dark) markCanvas(ctx, d.cx, d.cy, hw, 'dot', dark);
+      for (const d of dots) if (!d.dark) markCanvas(ctx, d.cx, d.cy, hw, 'dot', bg);
+    } else {
+      for (let r = 0; r < n; r++) {
+        for (let c = 0; c < n; c++) {
+          if (matrix.isFunction(r, c)) continue;
+          const cx = (quietSub + c * sub) * cellPx + moduleUnit / 2;
+          const cy = (quietSub + r * sub) * cellPx + moduleUnit / 2;
+          markCanvas(ctx, cx, cy, hw, shape, moduleColor(matrix.get(r, c), fillOpts));
+        }
       }
     }
   }

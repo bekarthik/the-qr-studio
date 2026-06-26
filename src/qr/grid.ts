@@ -265,6 +265,55 @@ export function liquidOps(
   return ops;
 }
 
+/** A halftone liquid data dot (centre + half-width) and whether it's dark. */
+export interface LiquidDot {
+  cx: number;
+  cy: number;
+  hw: number;
+  dark: boolean;
+}
+/** A bar bridging two adjacent dark data dots so they read as one blob. */
+export interface LiquidBar {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+/**
+ * Liquid geometry for the *halftone* data-dot overlay: a dot at each data
+ * module's centre (half-width `hw`, sized by the dot-size slider) plus a bridge
+ * between orthogonally adjacent *dark* data dots, so the protected data flows
+ * into connected blobs while the image still shows around them.
+ */
+export function liquidDotOps(
+  matrix: { size: number; get(r: number, c: number): boolean; isFunction(r: number, c: number): boolean },
+  n: number,
+  ox: number,
+  oy: number,
+  m: number,
+  hw: number,
+): { dots: LiquidDot[]; bars: LiquidBar[] } {
+  const dataDark = (r: number, c: number) =>
+    r >= 0 && c >= 0 && r < n && c < n && matrix.get(r, c) && !inFinder(r, c, n) && !matrix.isFunction(r, c);
+  const dots: LiquidDot[] = [];
+  const bars: LiquidBar[] = [];
+  for (let r = 0; r < n; r++) {
+    for (let c = 0; c < n; c++) {
+      if (matrix.isFunction(r, c) || inFinder(r, c, n)) continue;
+      const cx = ox + c * m + m / 2;
+      const cy = oy + r * m + m / 2;
+      const dark = matrix.get(r, c);
+      dots.push({ cx, cy, hw, dark });
+      if (dark) {
+        if (dataDark(r, c + 1)) bars.push({ x: cx, y: cy - hw, w: m, h: 2 * hw });
+        if (dataDark(r + 1, c)) bars.push({ x: cx - hw, y: cy, w: 2 * hw, h: m });
+      }
+    }
+  }
+  return { dots, bars };
+}
+
 /** Which corner of a light cell a concave fillet rounds. */
 export type Corner = 'tl' | 'tr' | 'br' | 'bl';
 

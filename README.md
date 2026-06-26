@@ -43,7 +43,9 @@ Style the code with three independent controls:
 
 Styling works on **plain and halftone** codes. On a halftone, the protected
 centre **data dot** is drawn in the chosen module shape (grow it with *Data dot
-size*), and the eyes are restyled on top. To keep every code scannable, the
+size*), and the eyes are restyled on top. With **Liquid**, adjacent dark data
+dots are **bridged into connected blobs** over the image while light areas keep
+the picture. To keep every code scannable, the
 **timing/alignment** patterns stay solid squares and each **finder pattern is
 drawn as one cohesive eye** — a scanner samples each module's centre, which
 every shape fills. Both PNG and SVG export the styling (SVG uses real

@@ -183,6 +183,10 @@ const cases = [
   { name: 'liquid brand url', text: 'https://example.com/welcome', opts: { shape: 'liquid', style: 'brand' } },
   { name: 'liquid+circle eyes', text: 'https://chores.app/r/AB12CD', opts: { shape: 'liquid', eyeShape: 'circle' } },
   { name: 'liquid vcard', text: VCARD, opts: { shape: 'liquid' } },
+  // Liquid on halftone: bridged data dots over the image.
+  { name: 'halftone liquid 0.5', text: 'https://example.com/welcome', opts: { halftone: true, shape: 'liquid', dotScale: 0.5 } },
+  { name: 'halftone liquid 0.8', text: 'https://example.com/welcome', opts: { halftone: true, shape: 'liquid', dotScale: 0.8 } },
+  { name: 'image liquid eyes', text: VCARD, opts: { halftone: true, style: 'image', shape: 'liquid', dotScale: 0.6, eyeShape: 'circle' } },
 ];
 
 let pass = 0, total = 0;
