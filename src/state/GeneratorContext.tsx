@@ -30,6 +30,7 @@ export interface Config {
   brandColor: string;
   autoBrand: boolean;
   logoRatio: number;
+  embedPos: 'center' | 'br';
   plate: boolean;
   protectPatterns: boolean;
 }
@@ -68,6 +69,7 @@ const INITIAL: Config = {
   brandColor: '#2563eb',
   autoBrand: false,
   logoRatio: 0.22,
+  embedPos: 'center',
   plate: true,
   protectPatterns: true,
 };

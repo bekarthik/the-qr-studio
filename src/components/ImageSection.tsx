@@ -38,7 +38,7 @@ export function ImageSection() {
       <label className="field field--check">
         <input type="checkbox" checked={cfg.embed} onChange={(e) => update({ embed: e.target.checked })} />
         <span className="field__label">
-          Embed the image in the <b>centre</b>
+          <b>Embed</b> the image (crisp logo — centre or corner)
         </span>
       </label>
       <label className="field field--check">

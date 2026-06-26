@@ -170,13 +170,23 @@ export function Settings() {
 
       {cfg.embed && (
         <>
-          <p className="subhead">Centre logo</p>
+          <p className="subhead">Embedded logo</p>
+          <label className="field">
+            <span className="field__label">Position</span>
+            <select
+              value={cfg.embedPos}
+              onChange={(e) => update({ embedPos: e.target.value as 'center' | 'br' })}
+            >
+              <option value="center">Centre</option>
+              <option value="br">Bottom-right corner</option>
+            </select>
+          </label>
           <label className="field">
             <span className="field__label">Logo size</span>
             <input
               type="range"
-              min={12}
-              max={30}
+              min={10}
+              max={32}
               value={Math.round(cfg.logoRatio * 100)}
               onChange={(e) => update({ logoRatio: Number(e.target.value) / 100 })}
             />

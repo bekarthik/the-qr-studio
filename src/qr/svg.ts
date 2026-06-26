@@ -27,6 +27,8 @@ export interface SvgCenterImage {
   ratio: number;
   /** Round the corners of the carved-out region (vs a square hole). */
   plate: boolean;
+  /** Where the carved logo sits: the centre, or the bottom-right corner. */
+  position?: 'center' | 'br';
 }
 
 export interface SvgOptions {
@@ -143,14 +145,33 @@ export function renderSVG(opts: SvgOptions): string {
     // Carve an empty region (snapped to the module grid) and inset the logo so
     // it sits in cleared space with a quiet margin, never over live modules.
     const { holeSide, logoBox, radius } = centerHole(total, sub, centerImage.ratio);
-    const mid = gridSide / 2;
-    const hs = mid - holeSide / 2;
+    let hx: number, hy: number;
+    if (centerImage.position === 'br') {
+      hx = quietSub + total - sub - holeSide;
+      hy = quietSub + total - sub - holeSide;
+    } else {
+      hx = hy = gridSide / 2 - holeSide / 2;
+    }
     const rx = centerImage.plate ? ` rx="${r2(radius)}"` : '';
-    center += `<rect x="${r2(hs)}" y="${r2(hs)}" width="${r2(holeSide)}" height="${r2(holeSide)}"${rx} fill="${bg}"/>`;
-    const ib = mid - logoBox / 2;
+    center += `<rect x="${r2(hx)}" y="${r2(hy)}" width="${r2(holeSide)}" height="${r2(holeSide)}"${rx} fill="${bg}"/>`;
+    const ibx = hx + holeSide / 2 - logoBox / 2;
+    const iby = hy + holeSide / 2 - logoBox / 2;
     center +=
-      `<image x="${r2(ib)}" y="${r2(ib)}" width="${r2(logoBox)}" height="${r2(logoBox)}" ` +
+      `<image x="${r2(ibx)}" y="${r2(iby)}" width="${r2(logoBox)}" height="${r2(logoBox)}" ` +
       `href="${escapeAttr(centerImage.href)}" preserveAspectRatio="xMidYMid meet"/>`;
+    // Re-stamp any function module under a corner hole (e.g. the bottom-right
+    // alignment pattern) so the structural locator survives the carve.
+    if (centerImage.position === 'br') {
+      const c0 = Math.max(0, Math.floor((hx - quietSub) / sub));
+      const c1 = Math.min(n - 1, Math.floor((hx + holeSide - quietSub) / sub));
+      const r0 = Math.max(0, Math.floor((hy - quietSub) / sub));
+      const r1 = Math.min(n - 1, Math.floor((hy + holeSide - quietSub) / sub));
+      for (let r = r0; r <= r1; r++)
+        for (let c = c0; c <= c1; c++)
+          if (matrix.isFunction(r, c)) {
+            center += `<rect x="${quietSub + c * sub}" y="${quietSub + r * sub}" width="${sub}" height="${sub}" fill="${moduleColor(matrix.get(r, c), fillOpts)}"/>`;
+          }
+    }
   }
 
   return (

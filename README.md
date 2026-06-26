@@ -60,9 +60,13 @@ output (including halftone + shaped dots + coloured eyes) to prove it scans.
    follow the brightness of your image. The finished code looks like your
    picture but still scans.
 
-2. **Embed the image in the centre.** A square of modules in the middle is
-   *carved out* (cleared to the background) and the logo is drawn into that
-   empty space — embedded inside the code, not pasted on top of live modules.
+2. **Embed the image (crisp logo).** A square of modules is *carved out*
+   (cleared to the background) and the logo is drawn into that empty space —
+   embedded inside the code, not pasted on top of live modules. Choose the
+   **position** (centre or **bottom-right corner**) and the **size** with a
+   linear slider. A corner carve can overlap the bottom-right alignment pattern,
+   so that function pattern is **re-stamped over the logo** to keep the
+   structural locator — the live badge confirms scannability for the chosen size.
 
 3. **Watermark the logo.** Draw the logo faintly over the code at a chosen
    **opacity** — either **across** the whole code (cover-fit, clipped to the

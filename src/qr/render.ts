@@ -28,6 +28,8 @@ export interface CenterImage {
   ratio: number;
   /** Round the corners of the carved-out region (vs a square hole). */
   plate: boolean;
+  /** Where the carved logo sits: the centre, or the bottom-right corner. */
+  position?: 'center' | 'br';
 }
 
 export interface RenderOptions {
@@ -188,7 +190,25 @@ export function renderQR(opts: RenderOptions): HTMLCanvasElement {
     ctx.restore();
   }
 
-  if (centerImage) drawCenterImage(ctx, dim, n * sub * cellPx, sub * cellPx, bg, centerImage);
+  if (centerImage) {
+    const hole = drawCenterImage(ctx, dim, n * sub * cellPx, sub * cellPx, bg, centerImage);
+    // A corner hole can land on the bottom-right alignment pattern; re-stamp any
+    // function module under the hole so that structural locator survives.
+    if (centerImage.position === 'br') {
+      const m = sub * cellPx;
+      const start = quietSub * cellPx;
+      const c0 = Math.max(0, Math.floor((hole.x - start) / m));
+      const c1 = Math.min(n - 1, Math.floor((hole.x + hole.side - start) / m));
+      const r0 = Math.max(0, Math.floor((hole.y - start) / m));
+      const r1 = Math.min(n - 1, Math.floor((hole.y + hole.side - start) / m));
+      for (let r = r0; r <= r1; r++)
+        for (let c = c0; c <= c1; c++)
+          if (matrix.isFunction(r, c)) {
+            ctx.fillStyle = moduleColor(matrix.get(r, c), fillOpts);
+            ctx.fillRect(start + c * m, start + r * m, m, m);
+          }
+    }
+  }
 
   return canvas;
 }
@@ -205,26 +225,35 @@ function drawCenterImage(
   modulePx: number,
   bg: string,
   logo: CenterImage,
-) {
+): { x: number; y: number; side: number } {
   const { holeSide, logoBox, radius } = centerHole(qrPx, modulePx, logo.ratio);
-  const center = dim / 2;
-  const holeStart = center - holeSide / 2;
+  // Top-left of the carved hole: centred, or anchored bottom-right with a
+  // one-module margin from the code edge.
+  const start = (dim - qrPx) / 2;
+  let hx: number, hy: number;
+  if (logo.position === 'br') {
+    hx = start + qrPx - modulePx - holeSide;
+    hy = start + qrPx - modulePx - holeSide;
+  } else {
+    hx = hy = dim / 2 - holeSide / 2;
+  }
 
   // Clear the region (rounded corners when a plate is requested, else a square
   // hole) so the modules underneath are removed, not just covered.
   ctx.fillStyle = bg;
   if (logo.plate) {
-    roundRect(ctx, holeStart, holeStart, holeSide, holeSide, radius);
+    roundRect(ctx, hx, hy, holeSide, holeSide, radius);
     ctx.fill();
   } else {
-    ctx.fillRect(holeStart, holeStart, holeSide, holeSide);
+    ctx.fillRect(hx, hy, holeSide, holeSide);
   }
 
   // Embed the logo (contain fit) within the inner box, leaving the margin clear.
   const scale = Math.min(logoBox / logo.width, logoBox / logo.height);
   const dw = logo.width * scale;
   const dh = logo.height * scale;
-  ctx.drawImage(logo.source, center - dw / 2, center - dh / 2, dw, dh);
+  ctx.drawImage(logo.source, hx + holeSide / 2 - dw / 2, hy + holeSide / 2 - dh / 2, dw, dh);
+  return { x: hx, y: hy, side: holeSide };
 }
 
 /**

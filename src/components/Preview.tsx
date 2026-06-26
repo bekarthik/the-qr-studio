@@ -111,6 +111,7 @@ export function Preview() {
             height: cfg.image.naturalHeight,
             ratio: cfg.logoRatio,
             plate: cfg.plate,
+            position: cfg.embedPos,
           }
         : null;
 
@@ -223,7 +224,7 @@ export function Preview() {
       eyeShape: s.eyeShape,
       eyeColor: s.eyeColor,
       watermark: s.watermark,
-      centerImage: s.centerHref ? { href: s.centerHref, ratio: cfg.logoRatio, plate: cfg.plate } : null,
+      centerImage: s.centerHref ? { href: s.centerHref, ratio: cfg.logoRatio, plate: cfg.plate, position: cfg.embedPos } : null,
       pixelSize: RES,
     });
     save(new Blob([svg], { type: 'image/svg+xml' }), 'svg');

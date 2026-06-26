@@ -144,7 +144,7 @@ function svgFor(text, opts) {
     eyeShape: opts.eyeShape,
     eyeColor: opts.eyeColor,
     watermark: opts.watermark ? { href: WMARK, opacity: opts.watermarkOpacity ?? 0.12, position: opts.watermarkPos ?? 'across' } : null,
-    centerImage: opts.embed ? { href: 'x', ratio: 0.22, plate: true } : null,
+    centerImage: opts.embed ? { href: 'x', ratio: opts.embedRatio ?? 0.22, plate: true, position: opts.embedPos ?? 'center' } : null,
     pixelSize: 1024,
   });
 }
@@ -208,6 +208,10 @@ const cases = [
   { name: 'watermark across vcard', text: VCARD, opts: { watermark: true, watermarkOpacity: 0.12 } },
   { name: 'watermark br', text: 'https://example.com/welcome', opts: { watermark: true, watermarkPos: 'br', watermarkOpacity: 0.35 } },
   { name: 'watermark br + liquid', text: 'https://chores.app/r/AB12CD', opts: { shape: 'liquid', watermark: true, watermarkPos: 'br', watermarkOpacity: 0.3 } },
+  // Crisp embedded logo carved into the bottom-right corner, a few sizes.
+  { name: 'embed br', text: 'https://example.com/welcome', opts: { halftone: true, embed: true, embedPos: 'br' } },
+  { name: 'embed br large', text: 'https://chores.app/r/AB12CD', opts: { halftone: true, embed: true, embedPos: 'br', embedRatio: 0.3 } },
+  { name: 'embed br vcard', text: VCARD, opts: { halftone: true, embed: true, embedPos: 'br' } },
 ];
 
 let pass = 0, total = 0;
