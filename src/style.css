@@ -218,8 +218,7 @@ h3 {
   grid-template-columns: 1.12fr 0.88fr;
   grid-template-areas:
     'content preview'
-    'style preview'
-    'cardx cardx';
+    'style preview';
   gap: 20px;
   padding: 28px 24px 60px;
   max-width: var(--maxw);
@@ -232,8 +231,10 @@ h3 {
 .card--style {
   grid-area: style;
 }
-.cardx-wrap {
-  grid-area: cardx;
+.cardx-section {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 24px 64px;
 }
 .cardx__preview {
   display: block;
@@ -256,8 +257,7 @@ h3 {
     grid-template-areas:
       'content'
       'preview'
-      'style'
-      'cardx';
+      'style';
   }
   .output {
     position: static;

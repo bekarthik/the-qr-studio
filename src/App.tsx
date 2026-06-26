@@ -50,12 +50,15 @@ export function App() {
           </div>
           <Settings />
         </section>
+      </main>
 
-        {/* Visiting card export (grid-area: full width) */}
+      {/* Visiting card export — outside the grid so the sticky preview never
+          overlaps it */}
+      <div className="cardx-section">
         <section className="card cardx-wrap">
           <CardExport />
         </section>
-      </main>
+      </div>
 
       <Footer />
     </GeneratorProvider>

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useGen } from '../state/GeneratorContext';
-import { buildPayload } from '../content/payloads';
+import { buildPayload, type SourceType } from '../content/payloads';
 import { buildMatrix } from '../qr/matrix';
 import { renderSVG } from '../qr/svg';
 import { brandDarkHex } from '../qr/grid';
@@ -8,22 +8,51 @@ import { buildCardSVG, buildCardSheetSVG, CARD_W, CARD_H, sheetWidth, type CardD
 
 const str = (v: unknown) => (v == null ? '' : String(v));
 
+/** A scan-prompt that fits the source type. */
+function captionFor(type: SourceType): string {
+  switch (type) {
+    case 'vcard':
+      return 'SCAN TO SAVE CONTACT';
+    case 'url':
+    case 'appstore':
+    case 'playstore':
+      return 'SCAN TO VISIT';
+    case 'upi':
+    case 'indbank':
+    case 'paypal':
+    case 'venmo':
+    case 'cashapp':
+    case 'bitcoin':
+    case 'sepa':
+      return 'SCAN TO PAY';
+    case 'wifi':
+      return 'SCAN TO CONNECT';
+    case 'phone':
+      return 'SCAN TO CALL';
+    case 'email':
+      return 'SCAN TO EMAIL';
+    default:
+      return 'SCAN ME';
+  }
+}
+
 /**
- * Visiting-card export. Builds a print-ready 3.5"×2" business card from the
- * vCard contact fields, embedding a styled QR that encodes the same vCard (so
- * scanning the card saves the contact). Independent of the active source.
+ * Visiting-card export. Works for any source: it embeds a styled QR of the
+ * active code and lets the user add an optional display name. When the source
+ * is a vCard, the richer contact fields (title/org/phone/…) are laid out too.
  */
 export function CardExport() {
   const { cfg, update } = useGen();
   const v = cfg.values.vcard ?? {};
-  const name = `${str(v.first)} ${str(v.last)}`.trim();
-  const org = str(v.org);
-  const hasData = Boolean(name || org);
+  const isVcard = cfg.type === 'vcard';
+  const vcardName = `${str(v.first)} ${str(v.last)}`.trim();
+  const displayName = str(cfg.cardName).trim() || vcardName || (isVcard ? str(v.org) : '');
+
+  const payload = buildPayload(cfg.type, cfg.values[cfg.type] ?? {});
+  const hasData = Boolean(payload);
   const twoSided = cfg.cardTwoSided;
 
   const svg = useMemo(() => {
-    if (!hasData) return '';
-    const payload = buildPayload('vcard', v);
     if (!payload) return '';
     let matrix;
     try {
@@ -51,16 +80,16 @@ export function CardExport() {
       pixelSize: 420,
     });
     const data: CardData = {
-      name,
-      title: str(v.title),
-      org,
-      phone: str(v.phone),
-      email: str(v.email),
-      url: str(v.url),
-      address: str(v.address),
+      name: displayName,
+      title: isVcard ? str(v.title) : '',
+      org: isVcard ? str(v.org) : '',
+      phone: isVcard ? str(v.phone) : '',
+      email: isVcard ? str(v.email) : '',
+      url: isVcard ? str(v.url) : '',
+      address: isVcard ? str(v.address) : '',
       accent,
       qrBg: cfg.bg,
-      caption: 'SCAN TO SAVE CONTACT',
+      caption: captionFor(cfg.type),
     };
     if (twoSided) {
       return buildCardSheetSVG(data, qrSvg, {
@@ -71,9 +100,9 @@ export function CardExport() {
     }
     return buildCardSVG(data, qrSvg);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cfg, hasData, twoSided]);
+  }, [cfg, payload, twoSided, displayName, isVcard]);
 
-  const baseName = (name || org || 'card').replace(/\s+/g, '-').toLowerCase();
+  const baseName = (displayName || 'card').replace(/\s+/g, '-').toLowerCase() || 'card';
 
   const downloadSvg = () => {
     save(new Blob([svg], { type: 'image/svg+xml' }), `${baseName}.svg`);
@@ -99,18 +128,31 @@ export function CardExport() {
     <div className="cardx">
       <div className="card__head">
         <h2>Visiting card</h2>
-        <p>A print-ready business card (3.5×2″) with your contact QR.</p>
+        <p>A print-ready business card (3.5×2″) with your QR — for any source.</p>
       </div>
-      <label className="field field--check">
-        <input
-          type="checkbox"
-          checked={twoSided}
-          onChange={(e) => update({ cardTwoSided: e.target.checked })}
-        />
-        <span className="field__label">
-          Two-sided — <b>QR on the back</b>, logo/watermark on the front
-        </span>
-      </label>
+
+      <div className="grid2">
+        <label className="field">
+          <span className="field__label">Name on card {isVcard && <span className="h__opt">optional</span>}</span>
+          <input
+            type="text"
+            placeholder={vcardName || 'e.g. Asha Rao'}
+            value={cfg.cardName}
+            onChange={(e) => update({ cardName: e.target.value })}
+          />
+        </label>
+        <label className="field field--check">
+          <input
+            type="checkbox"
+            checked={twoSided}
+            onChange={(e) => update({ cardTwoSided: e.target.checked })}
+          />
+          <span className="field__label">
+            Two-sided — <b>QR on the back</b>, logo/watermark on the front
+          </span>
+        </label>
+      </div>
+
       {hasData && svg ? (
         <>
           <img className="cardx__preview" src={`data:image/svg+xml;utf8,${encodeURIComponent(svg)}`} alt="Visiting card preview" />
@@ -123,22 +165,20 @@ export function CardExport() {
             </button>
           </div>
           <p className="finehint">
-            Pulls from the <b>Visiting card</b> source fields. The QR encodes your vCard, so scanning
-            the card adds you as a contact. Uses your colour/shape style; image modes are skipped so
-            the card always scans.
+            The QR encodes your current source. Add a <b>Name on card</b> to title it; a{' '}
+            <b>Visiting card</b> source also lays out title/company/contacts. Uses your colour/shape
+            style; image modes are skipped so the card always scans.
             {twoSided && (
               <>
                 {' '}
-                The sheet shows <b>front</b> (left) and <b>back</b> (right). The front uses your
+                The sheet shows <b>front</b> (left) and <b>back</b> (right): the front uses your
                 uploaded image as the logo, and the <b>Watermark</b> toggle adds a faint watermark.
               </>
             )}
           </p>
         </>
       ) : (
-        <p className="empty">
-          Fill in the <b>Visiting card</b> source (name, company, phone…) to generate a card.
-        </p>
+        <p className="empty">Fill in the source details (above) to generate a card.</p>
       )}
     </div>
   );
