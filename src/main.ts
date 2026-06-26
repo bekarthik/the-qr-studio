@@ -60,6 +60,22 @@ let currentRender: RenderSnapshot | null = null;
 
 const $ = <T extends HTMLElement>(sel: string) => document.querySelector(sel) as T;
 
+/**
+ * Attach a listener only if the element exists. A missing optional control
+ * (e.g. a stale/cached index.html that predates a newly added toggle) then
+ * degrades gracefully instead of throwing — which would abort the whole module
+ * and silently break every listener defined after it (image upload, render…).
+ */
+const on = (sel: string, ev: string, fn: (e: Event) => void) => {
+  const el = document.querySelector(sel);
+  if (el) el.addEventListener(ev, fn as EventListener);
+  else console.warn(`[qr-studio] control ${sel} not found — skipping its listener`);
+};
+
+/** Output resolution (px) for the rendered PNG/SVG. Declared up here so it can
+ *  never land in a temporal-dead-zone if module init is interrupted. */
+const RES = 1600;
+
 const tabsEl = $('#sourceTabs');
 const formEl = $('#formFields');
 const previewEl = $('#preview');
@@ -191,76 +207,76 @@ function renderForm() {
 
 /* ----------------------------------------------------------- style inputs */
 
-$('#fgColor').addEventListener('input', (e) => {
+on('#fgColor', 'input', (e) => {
   state.fg = (e.target as HTMLInputElement).value;
   update();
 });
-$('#bgColor').addEventListener('input', (e) => {
+on('#bgColor', 'input', (e) => {
   state.bg = (e.target as HTMLInputElement).value;
   update();
 });
-$('#errLevel').addEventListener('change', (e) => {
+on('#errLevel', 'change', (e) => {
   state.errorLevel = (e.target as HTMLSelectElement).value as ErrorLevel;
   update();
 });
-$('#threshold').addEventListener('input', (e) => {
+on('#threshold', 'input', (e) => {
   state.threshold = Number((e.target as HTMLInputElement).value) / 100;
   update();
 });
-$('#autoThreshold').addEventListener('change', (e) => {
+on('#autoThreshold', 'change', (e) => {
   state.autoThreshold = (e.target as HTMLInputElement).checked;
   ($('#threshold') as HTMLInputElement).disabled = state.autoThreshold;
   update();
 });
-$('#detail').addEventListener('change', (e) => {
+on('#detail', 'change', (e) => {
   state.detail = Number((e.target as HTMLSelectElement).value);
   update();
 });
-$('#autotune').addEventListener('change', (e) => {
+on('#autotune', 'change', (e) => {
   state.autotune = (e.target as HTMLInputElement).checked;
   update();
 });
-$('#dither').addEventListener('change', (e) => {
+on('#dither', 'change', (e) => {
   state.dither = (e.target as HTMLInputElement).checked;
   update();
 });
-$('#autoBrand').addEventListener('change', (e) => {
+on('#autoBrand', 'change', (e) => {
   state.autoBrand = (e.target as HTMLInputElement).checked;
   ($('#brandColor') as HTMLInputElement).disabled = state.autoBrand;
   update();
 });
-$('#invert').addEventListener('change', (e) => {
+on('#invert', 'change', (e) => {
   state.invert = (e.target as HTMLInputElement).checked;
   update();
 });
-$('#colorStyle').addEventListener('change', (e) => {
+on('#colorStyle', 'change', (e) => {
   state.colorStyle = (e.target as HTMLSelectElement).value as typeof state.colorStyle;
   document.body.classList.toggle('brand-on', state.colorStyle === 'brand');
   update();
 });
-$('#brandColor').addEventListener('input', (e) => {
+on('#brandColor', 'input', (e) => {
   state.brandColor = (e.target as HTMLInputElement).value;
   update();
 });
-$('#logoRatio').addEventListener('input', (e) => {
+on('#logoRatio', 'input', (e) => {
   state.logoRatio = Number((e.target as HTMLInputElement).value) / 100;
   update();
 });
-$('#plate').addEventListener('change', (e) => {
+on('#plate', 'change', (e) => {
   state.plate = (e.target as HTMLInputElement).checked;
   update();
 });
-$('#protectPatterns').addEventListener('change', (e) => {
+on('#protectPatterns', 'change', (e) => {
   state.protectPatterns = (e.target as HTMLInputElement).checked;
   update();
 });
 
-$('#optResemble').addEventListener('change', (e) => {
+on('#optResemble', 'change', (e) => {
   state.resemble = (e.target as HTMLInputElement).checked;
   syncErrorLevel();
   update();
 });
-$('#optEmbed').addEventListener('change', (e) => {
+on('#optEmbed', 'change', (e) => {
   state.embed = (e.target as HTMLInputElement).checked;
   syncErrorLevel();
   update();
@@ -268,18 +284,20 @@ $('#optEmbed').addEventListener('change', (e) => {
 
 /** Force high error correction whenever an image feature is active. */
 function syncErrorLevel() {
+  const errEl = $('#errLevel') as HTMLSelectElement | null;
+  if (!errEl) return;
   if (state.resemble || state.embed) {
     state.errorLevel = 'H';
-    ($('#errLevel') as HTMLSelectElement).value = 'H';
-    ($('#errLevel') as HTMLSelectElement).disabled = true;
+    errEl.value = 'H';
+    errEl.disabled = true;
   } else {
-    ($('#errLevel') as HTMLSelectElement).disabled = false;
+    errEl.disabled = false;
   }
 }
 
 /* --------------------------------------------------------- image loading */
 
-$('#imageInput').addEventListener('change', (e) => {
+on('#imageInput', 'change', (e) => {
   const file = (e.target as HTMLInputElement).files?.[0];
   if (!file) return;
   const reader = new FileReader();
@@ -287,8 +305,11 @@ $('#imageInput').addEventListener('change', (e) => {
     const img = new Image();
     img.onload = () => {
       state.image = img;
-      $('#imgThumb').setAttribute('src', img.src);
-      $('#imgThumb').classList.add('show');
+      const thumb = $('#imgThumb');
+      if (thumb) {
+        thumb.setAttribute('src', img.src);
+        thumb.classList.add('show');
+      }
       update();
     };
     img.src = String(reader.result);
@@ -306,12 +327,12 @@ function saveBlob(blob: Blob, ext: string) {
   URL.revokeObjectURL(a.href);
 }
 
-$('#downloadPng').addEventListener('click', () => {
+on('#downloadPng', 'click', () => {
   if (!currentCanvas) return;
   currentCanvas.toBlob((blob) => blob && saveBlob(blob, 'png'), 'image/png');
 });
 
-$('#downloadSvg').addEventListener('click', () => {
+on('#downloadSvg', 'click', () => {
   if (!currentRender) return;
   const svg = renderSVG({
     matrix: currentRender.matrix,
@@ -333,11 +354,9 @@ $('#downloadSvg').addEventListener('click', () => {
 
 /* ---------------------------------------------------------- render cycle */
 
-const RES = 1600;
-
-function setDownloadsEnabled(on: boolean) {
-  ($('#downloadPng') as HTMLButtonElement).disabled = !on;
-  ($('#downloadSvg') as HTMLButtonElement).disabled = !on;
+function setDownloadsEnabled(enabled: boolean) {
+  ($('#downloadPng') as HTMLButtonElement).disabled = !enabled;
+  ($('#downloadSvg') as HTMLButtonElement).disabled = !enabled;
 }
 
 function update() {
@@ -460,6 +479,8 @@ function update() {
 renderTabs();
 renderForm();
 syncErrorLevel();
-($('#threshold') as HTMLInputElement).disabled = state.autoThreshold;
-($('#brandColor') as HTMLInputElement).disabled = state.autoBrand;
+const thresholdEl = $('#threshold') as HTMLInputElement | null;
+if (thresholdEl) thresholdEl.disabled = state.autoThreshold;
+const brandEl = $('#brandColor') as HTMLInputElement | null;
+if (brandEl) brandEl.disabled = state.autoBrand;
 update();
