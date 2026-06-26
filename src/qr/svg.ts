@@ -1,6 +1,16 @@
 import type { QrMatrix } from './matrix';
 import type { ImageSampler } from './halftone';
-import { computeGrid, subCellFill, brandDarkHex, centerHole, type ColorStyle } from './grid';
+import {
+  computeGrid,
+  subCellFill,
+  brandDarkHex,
+  centerHole,
+  inFinder,
+  finderOrigins,
+  moduleColor,
+  type ColorStyle,
+  type ModuleShape,
+} from './grid';
 
 export interface SvgCenterImage {
   /** Data URL (or any URL) of the logo to embed. */
@@ -26,6 +36,8 @@ export interface SvgOptions {
   sub: number;
   /** Half-width of the protected data dot in sub-cells (0 = finest image). */
   core: number;
+  /** Shape of each dark module (block codes only; ignored when halftoning). */
+  shape?: ModuleShape;
   centerImage?: SvgCenterImage | null;
   /** Pixel size written to the width/height attributes (the SVG stays vector). */
   pixelSize: number;
@@ -43,7 +55,47 @@ export function renderSVG(opts: SvgOptions): string {
   const { n, sub, quietSub, gridSide } = computeGrid(matrix.size, quietModules, opts.sub);
   const fillOpts = { style: colorStyle, fg, bg, brand: brandDarkHex(opts.brandColor), protectPatterns, core: opts.core };
 
-  // Paint colour for every sub-cell, indexed by sub-row/col in module space.
+  const total = n * sub;
+  const shaped = !sampler && opts.shape && opts.shape !== 'square';
+  const rects: string[] = shaped
+    ? shapedModules(matrix, n, quietSub, sub, opts.shape!, fillOpts)
+    : mergedRects(matrix, sampler, fillOpts, n, sub, quietSub, bg);
+
+  let center = '';
+  if (centerImage) {
+    // Carve an empty region (snapped to the module grid) and inset the logo so
+    // it sits in cleared space with a quiet margin, never over live modules.
+    const { holeSide, logoBox, radius } = centerHole(total, sub, centerImage.ratio);
+    const mid = gridSide / 2;
+    const hs = mid - holeSide / 2;
+    const rx = centerImage.plate ? ` rx="${r2(radius)}"` : '';
+    center += `<rect x="${r2(hs)}" y="${r2(hs)}" width="${r2(holeSide)}" height="${r2(holeSide)}"${rx} fill="${bg}"/>`;
+    const ib = mid - logoBox / 2;
+    center +=
+      `<image x="${r2(ib)}" y="${r2(ib)}" width="${r2(logoBox)}" height="${r2(logoBox)}" ` +
+      `href="${escapeAttr(centerImage.href)}" preserveAspectRatio="xMidYMid meet"/>`;
+  }
+
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${pixelSize}" height="${pixelSize}" ` +
+    `viewBox="0 0 ${gridSide} ${gridSide}" shape-rendering="crispEdges">` +
+    `<rect x="0" y="0" width="${gridSide}" height="${gridSide}" fill="${bg}"/>` +
+    rects.join('') +
+    center +
+    `</svg>`
+  );
+}
+
+/** Classic block output: horizontally-adjacent same-colour sub-cells merged. */
+function mergedRects(
+  matrix: QrMatrix,
+  sampler: ImageSampler | null | undefined,
+  fillOpts: Parameters<typeof subCellFill>[2],
+  n: number,
+  sub: number,
+  quietSub: number,
+  bg: string,
+): string[] {
   const fillAt = (sr: number, sc: number): string =>
     subCellFill(matrix, sampler, fillOpts, Math.floor(sr / sub), Math.floor(sc / sub), sr % sub, sc % sub, sub);
 
@@ -69,30 +121,61 @@ export function renderSVG(opts: SvgOptions): string {
     }
     flush(total);
   }
+  return rects;
+}
 
-  let center = '';
-  if (centerImage) {
-    // Carve an empty region (snapped to the module grid) and inset the logo so
-    // it sits in cleared space with a quiet margin, never over live modules.
-    const { holeSide, logoBox, radius } = centerHole(total, sub, centerImage.ratio);
-    const mid = gridSide / 2;
-    const hs = mid - holeSide / 2;
-    const rx = centerImage.plate ? ` rx="${r2(radius)}"` : '';
-    center += `<rect x="${r2(hs)}" y="${r2(hs)}" width="${r2(holeSide)}" height="${r2(holeSide)}"${rx} fill="${bg}"/>`;
-    const ib = mid - logoBox / 2;
-    center +=
-      `<image x="${r2(ib)}" y="${r2(ib)}" width="${r2(logoBox)}" height="${r2(logoBox)}" ` +
-      `href="${escapeAttr(centerImage.href)}" preserveAspectRatio="xMidYMid meet"/>`;
+/**
+ * Styled-module output (dots / rounded). Coordinates are in module units of
+ * `sub` (matching the viewBox). Data modules take the shape, timing/alignment
+ * stay square, and each finder pattern is one cohesive eye — so it still scans.
+ */
+function shapedModules(
+  matrix: QrMatrix,
+  n: number,
+  quietSub: number,
+  sub: number,
+  shape: ModuleShape,
+  fillOpts: { style: ColorStyle; fg: string; bg: string; brand: string },
+): string[] {
+  const dark = moduleColor(true, fillOpts);
+  const bg = fillOpts.bg;
+  const out: string[] = [];
+
+  for (let r = 0; r < n; r++) {
+    for (let c = 0; c < n; c++) {
+      if (inFinder(r, c, n) || !matrix.get(r, c)) continue;
+      const x = quietSub + c * sub;
+      const y = quietSub + r * sub;
+      if (matrix.isFunction(r, c)) {
+        out.push(`<rect x="${x}" y="${y}" width="${sub}" height="${sub}" fill="${dark}"/>`);
+      } else if (shape === 'dot') {
+        out.push(`<circle cx="${r2(x + sub / 2)}" cy="${r2(y + sub / 2)}" r="${r2(sub / 2)}" fill="${dark}"/>`);
+      } else {
+        out.push(`<rect x="${x}" y="${y}" width="${sub}" height="${sub}" rx="${r2(sub * 0.32)}" fill="${dark}"/>`);
+      }
+    }
   }
 
-  return (
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${pixelSize}" height="${pixelSize}" ` +
-    `viewBox="0 0 ${gridSide} ${gridSide}" shape-rendering="crispEdges">` +
-    `<rect x="0" y="0" width="${gridSide}" height="${gridSide}" fill="${bg}"/>` +
-    rects.join('') +
-    center +
-    `</svg>`
-  );
+  for (const [fr, fc] of finderOrigins(n)) {
+    const x = quietSub + fc * sub;
+    const y = quietSub + fr * sub;
+    if (shape === 'dot') {
+      const cx = r2(x + 3.5 * sub);
+      const cy = r2(y + 3.5 * sub);
+      out.push(`<circle cx="${cx}" cy="${cy}" r="${r2(3.5 * sub)}" fill="${dark}"/>`);
+      out.push(`<circle cx="${cx}" cy="${cy}" r="${r2(2.5 * sub)}" fill="${bg}"/>`);
+      out.push(`<circle cx="${cx}" cy="${cy}" r="${r2(1.5 * sub)}" fill="${dark}"/>`);
+    } else {
+      out.push(`<rect x="${x}" y="${y}" width="${7 * sub}" height="${7 * sub}" rx="${r2(2 * sub)}" fill="${dark}"/>`);
+      out.push(
+        `<rect x="${x + sub}" y="${y + sub}" width="${5 * sub}" height="${5 * sub}" rx="${r2(1.4 * sub)}" fill="${bg}"/>`,
+      );
+      out.push(
+        `<rect x="${x + 2 * sub}" y="${y + 2 * sub}" width="${3 * sub}" height="${3 * sub}" rx="${r2(0.9 * sub)}" fill="${dark}"/>`,
+      );
+    }
+  }
+  return out;
 }
 
 const r2 = (v: number) => Math.round(v * 1000) / 1000;

@@ -17,6 +17,7 @@ interface Snapshot {
   bg: string;
   protectPatterns: boolean;
   colorStyle: 'solid' | 'brand' | 'image';
+  shape: 'square' | 'dot' | 'rounded';
   brandColor: string;
   sub: number;
   core: number;
@@ -121,6 +122,7 @@ export function Preview() {
       brandColor,
       sub: detail,
       core: cfg.dotSize,
+      shape: cfg.shape,
       centerImage,
     });
     canvas.className = 'qr';
@@ -133,6 +135,7 @@ export function Preview() {
       bg: cfg.bg,
       protectPatterns: cfg.protectPatterns,
       colorStyle: cfg.colorStyle,
+      shape: cfg.shape,
       brandColor,
       sub: detail,
       core: cfg.dotSize,
@@ -193,6 +196,7 @@ export function Preview() {
       brandColor: s.brandColor,
       sub: s.sub,
       core: s.core,
+      shape: s.shape,
       centerImage: s.centerHref ? { href: s.centerHref, ratio: cfg.logoRatio, plate: cfg.plate } : null,
       pixelSize: RES,
     });

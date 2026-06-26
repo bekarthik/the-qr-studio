@@ -147,6 +147,46 @@ export function centerHole(qrSide: number, moduleUnit: number, ratio: number): C
 /** How data cells are coloured. */
 export type ColorStyle = 'solid' | 'brand' | 'image';
 
+/* ------------------------------------------------------------ module shape --- */
+
+/**
+ * The shape each *dark module* is drawn as, for plain (non-halftone) codes:
+ *  - square  : classic solid blocks (default).
+ *  - dot     : a filled circle per data module; finder eyes become rings + a
+ *              round pupil.
+ *  - rounded : rounded-corner squares; finder eyes become rounded frames.
+ *
+ * Shapes are a cosmetic layer over the *block* renderer, so they only apply
+ * when no image sampler is active (halftone already styles every sub-cell). To
+ * stay scannable, the three finder patterns are drawn as one cohesive eye and
+ * the timing/alignment patterns are kept as solid squares — a scanner samples
+ * each module's centre, which every shape fills.
+ */
+export type ModuleShape = 'square' | 'dot' | 'rounded';
+
+/** Top-left corner (module coords) of each 7×7 finder/position pattern. */
+export function finderOrigins(n: number): Array<[number, number]> {
+  return [
+    [0, 0],
+    [0, n - 7],
+    [n - 7, 0],
+  ];
+}
+
+/** True when module (r, c) falls inside one of the three 7×7 finder patterns. */
+export function inFinder(r: number, c: number, n: number): boolean {
+  for (const [fr, fc] of finderOrigins(n)) {
+    if (r >= fr && r < fr + 7 && c >= fc && c < fc + 7) return true;
+  }
+  return false;
+}
+
+/** Paint colour for a whole module in the block (non-halftone) renderer. */
+export function moduleColor(dark: boolean, opts: Pick<FillOpts, 'style' | 'fg' | 'bg' | 'brand'>): string {
+  if (!dark) return opts.bg;
+  return opts.style === 'brand' ? opts.brand : opts.fg;
+}
+
 export interface FillOpts {
   style: ColorStyle;
   fg: string;

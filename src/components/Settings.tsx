@@ -1,5 +1,5 @@
 import { useGen } from '../state/GeneratorContext';
-import type { ColorStyle } from '../qr/grid';
+import type { ColorStyle, ModuleShape } from '../qr/grid';
 import type { ErrorLevel } from '../qr/matrix';
 
 /**
@@ -44,6 +44,20 @@ export function Settings() {
           <option value="solid">Solid (foreground)</option>
           <option value="brand">Brand colour</option>
           <option value="image">Image colours</option>
+        </select>
+      </label>
+
+      <label className="field">
+        <span className="field__label">Module shape</span>
+        <select
+          value={cfg.shape}
+          disabled={cfg.resemble}
+          title={cfg.resemble ? 'Shapes apply to plain codes; turn off “Resemble image” to use them' : undefined}
+          onChange={(e) => update({ shape: e.target.value as ModuleShape })}
+        >
+          <option value="square">Square (classic)</option>
+          <option value="dot">Dots (circles)</option>
+          <option value="rounded">Rounded</option>
         </select>
       </label>
 

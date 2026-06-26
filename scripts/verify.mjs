@@ -102,17 +102,33 @@ function rasterizeSVG(svg) {
   const S = 12;
   const dim = Math.round(G * S);
   const data = new Uint8ClampedArray(dim * dim * 4).fill(255);
-  const re = /<rect x="([-\d.]+)" y="([-\d.]+)" width="([-\d.]+)" height="([-\d.]+)"(?: rx="[-\d.]+")? fill="(#[0-9a-fA-F]{6})"\/>/g;
+  // Replay rects and circles in document order so layered eyes paint correctly.
+  const re =
+    /<rect x="([-\d.]+)" y="([-\d.]+)" width="([-\d.]+)" height="([-\d.]+)"(?: rx="[-\d.]+")? fill="(#[0-9a-fA-F]{6})"\/>|<circle cx="([-\d.]+)" cy="([-\d.]+)" r="([-\d.]+)" fill="(#[0-9a-fA-F]{6})"\/>/g;
   let m;
   while ((m = re.exec(svg))) {
-    const v = lum(hexToRgb(m[5]));
-    const x0 = Math.round(+m[1] * S), y0 = Math.round(+m[2] * S);
-    const x1 = Math.round((+m[1] + +m[3]) * S), y1 = Math.round((+m[2] + +m[4]) * S);
-    for (let py = Math.max(0, y0); py < Math.min(dim, y1); py++)
-      for (let px = Math.max(0, x0); px < Math.min(dim, x1); px++) {
-        const i = (py * dim + px) * 4;
-        data[i] = data[i + 1] = data[i + 2] = v;
-      }
+    if (m[1] !== undefined) {
+      const v = lum(hexToRgb(m[5]));
+      const x0 = Math.round(+m[1] * S), y0 = Math.round(+m[2] * S);
+      const x1 = Math.round((+m[1] + +m[3]) * S), y1 = Math.round((+m[2] + +m[4]) * S);
+      for (let py = Math.max(0, y0); py < Math.min(dim, y1); py++)
+        for (let px = Math.max(0, x0); px < Math.min(dim, x1); px++) {
+          const i = (py * dim + px) * 4;
+          data[i] = data[i + 1] = data[i + 2] = v;
+        }
+    } else {
+      const v = lum(hexToRgb(m[9]));
+      const cx = +m[6] * S, cy = +m[7] * S, rr = +m[8] * S;
+      const y0 = Math.max(0, Math.floor(cy - rr)), y1 = Math.min(dim, Math.ceil(cy + rr));
+      const x0 = Math.max(0, Math.floor(cx - rr)), x1 = Math.min(dim, Math.ceil(cx + rr));
+      for (let py = y0; py < y1; py++)
+        for (let px = x0; px < x1; px++) {
+          const dx = px + 0.5 - cx, dy = py + 0.5 - cy;
+          if (dx * dx + dy * dy > rr * rr) continue;
+          const i = (py * dim + px) * 4;
+          data[i] = data[i + 1] = data[i + 2] = v;
+        }
+    }
   }
   return { data, dim };
 }
@@ -131,6 +147,8 @@ function svgFor(text, opts) {
     colorStyle: opts.style || 'solid',
     brandColor: '#1d4ed8',
     sub,
+    core: 0,
+    shape: opts.shape,
     centerImage: opts.embed ? { href: 'x', ratio: 0.22, plate: true } : null,
     pixelSize: 1024,
   });
@@ -160,6 +178,14 @@ const cases = [
   { name: 'detail7 halftone', text: 'https://chores.app/r/AB12CD', opts: { halftone: true, sub: 7 } },
   { name: 'detail7 image', text: 'https://chores.app/r/AB12CD', opts: { halftone: true, style: 'image', sub: 7 } },
   { name: 'detail5 vcard image', text: VCARD, opts: { halftone: true, style: 'image', sub: 5 } },
+  // Module shapes (block codes): dots & rounded, plain / brand / embed / vcard.
+  { name: 'dot url', text: 'https://example.com/welcome', opts: { shape: 'dot' } },
+  { name: 'rounded url', text: 'https://example.com/welcome', opts: { shape: 'rounded' } },
+  { name: 'dot brand url', text: 'https://example.com/welcome', opts: { shape: 'dot', style: 'brand' } },
+  { name: 'dot+embed url', text: 'https://chores.app/r/AB12CD', opts: { shape: 'dot', embed: true } },
+  { name: 'rounded+embed url', text: 'https://chores.app/r/AB12CD', opts: { shape: 'rounded', embed: true } },
+  { name: 'dot vcard', text: VCARD, opts: { shape: 'dot' } },
+  { name: 'rounded vcard', text: VCARD, opts: { shape: 'rounded' } },
 ];
 
 let pass = 0, total = 0;

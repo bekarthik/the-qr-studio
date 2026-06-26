@@ -28,6 +28,23 @@ Generate a correctly-formatted QR for any of:
 | Visiting card | vCard 3.0 |
 | Location | `geo:lat,lng` |
 
+### Module shapes
+
+For plain (non-image) codes, pick how each dark module is drawn:
+
+- **Square** — classic solid blocks (default).
+- **Dots** — a filled circle per data module; the three finder patterns become
+  concentric rings with a round pupil.
+- **Rounded** — rounded-corner squares; finder patterns become rounded frames.
+
+Shapes are a cosmetic layer over the block renderer, so they apply when no
+halftone image is active (a halftone already styles every sub-cell). To keep the
+code scannable, the **timing/alignment** patterns stay solid squares and each
+**finder pattern is drawn as one cohesive eye** — a scanner samples every
+module's centre, which all three shapes fill. Both PNG and SVG export the shapes
+(SVG uses real `<circle>`/rounded-`<rect>` elements), and `npm run verify`
+decodes the shaped output to prove it scans.
+
 ### Two independent image modes
 
 1. **Resemble the image (halftone).** Every QR module is expanded into a 3×3
