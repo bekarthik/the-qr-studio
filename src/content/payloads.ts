@@ -42,11 +42,15 @@ export function buildPayload(type: SourceType, f: PayloadInput): string {
       return String(f.text || '');
 
     case 'email': {
+      // mailto: follows RFC 6068, NOT form-urlencoding — so spaces must be
+      // %20 (a literal "+" means a plus sign here, not a space). Build the
+      // query with encodeURIComponent rather than URLSearchParams, whose
+      // toString() encodes spaces as "+".
       const to = String(f.to || '').trim();
-      const params = new URLSearchParams();
-      if (f.subject) params.set('subject', String(f.subject));
-      if (f.body) params.set('body', String(f.body));
-      const q = params.toString();
+      const params: string[] = [];
+      if (f.subject) params.push(`subject=${encodeURIComponent(String(f.subject))}`);
+      if (f.body) params.push(`body=${encodeURIComponent(String(f.body))}`);
+      const q = params.join('&');
       return `mailto:${to}${q ? `?${q}` : ''}`;
     }
 
