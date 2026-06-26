@@ -18,6 +18,33 @@ export interface SourceDef {
   note?: string;
 }
 
+/** Groupings used to organise the source picker. */
+export type SourceCategory = 'Link & text' | 'Contact' | 'Payment' | 'App' | 'Network' | 'Location';
+
+export const CATEGORY_ORDER: SourceCategory[] = [
+  'Link & text',
+  'Contact',
+  'Payment',
+  'App',
+  'Network',
+  'Location',
+];
+
+export const SOURCE_CATEGORY: Record<SourceType, SourceCategory> = {
+  url: 'Link & text',
+  text: 'Link & text',
+  email: 'Contact',
+  phone: 'Contact',
+  sms: 'Contact',
+  whatsapp: 'Contact',
+  vcard: 'Contact',
+  upi: 'Payment',
+  appstore: 'App',
+  playstore: 'App',
+  wifi: 'Network',
+  geo: 'Location',
+};
+
 export const SOURCES: SourceDef[] = [
   {
     type: 'url',
