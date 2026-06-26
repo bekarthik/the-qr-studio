@@ -8,6 +8,7 @@ export type SourceType =
   | 'sms'
   | 'whatsapp'
   | 'upi'
+  | 'indbank'
   | 'paypal'
   | 'venmo'
   | 'cashapp'
@@ -89,6 +90,25 @@ export function buildPayload(type: SourceType, f: PayloadInput): string {
       parts.push('cu=INR');
       if (f.note) parts.push(`tn=${encodeURIComponent(String(f.note))}`);
       return `upi://pay?${parts.join('&')}`;
+    }
+
+    case 'indbank': {
+      // Indian bank account details for NEFT/IMPS/RTGS or adding a beneficiary.
+      // There's no universal scan-to-pay standard for account+IFSC, so this is
+      // a clean labelled-text "share my details" code (any scanner shows it).
+      const acc = String(f.account || '').replace(/\s+/g, '');
+      const ifsc = String(f.ifsc || '').replace(/\s+/g, '').toUpperCase();
+      if (!acc || !ifsc) return '';
+      const lines = ['Bank transfer (India)'];
+      const name = String(f.name || '').trim();
+      if (name) lines.push(`Name: ${name}`);
+      lines.push(`A/C: ${acc}`);
+      lines.push(`IFSC: ${ifsc}`);
+      const bank = String(f.bank || '').trim();
+      if (bank) lines.push(`Bank: ${bank}`);
+      const type = String(f.acctype || '').trim();
+      if (type) lines.push(`Type: ${type}`);
+      return lines.join('\n');
     }
 
     case 'paypal': {

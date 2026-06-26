@@ -39,6 +39,7 @@ export const SOURCE_CATEGORY: Record<SourceType, SourceCategory> = {
   whatsapp: 'Contact',
   vcard: 'Contact',
   upi: 'Payment',
+  indbank: 'Payment',
   paypal: 'Payment',
   venmo: 'Payment',
   cashapp: 'Payment',
@@ -119,6 +120,29 @@ export const SOURCES: SourceDef[] = [
       { key: 'note', label: 'Note (optional)', type: 'text', placeholder: 'Order #123' },
     ],
     note: 'Scan UPI codes inside a UPI app (GPay, PhonePe, Paytm) — a plain camera or Google Lens won’t open them. Use a real VPA; test payee IDs show as “invalid”.',
+  },
+  {
+    type: 'indbank',
+    label: 'Bank account (India)',
+    icon: '🏧',
+    fields: [
+      { key: 'name', label: 'Account holder', type: 'text', placeholder: 'Asha Rao' },
+      { key: 'account', label: 'Account number', type: 'text', placeholder: '00123456789' },
+      { key: 'ifsc', label: 'IFSC code', type: 'text', placeholder: 'HDFC0001234' },
+      { key: 'bank', label: 'Bank name (optional)', type: 'text', placeholder: 'HDFC Bank' },
+      {
+        key: 'acctype',
+        label: 'Account type (optional)',
+        type: 'select',
+        value: '',
+        options: [
+          { value: '', label: '—' },
+          { value: 'Savings', label: 'Savings' },
+          { value: 'Current', label: 'Current' },
+        ],
+      },
+    ],
+    note: 'Shares account details for NEFT/IMPS/RTGS or adding a beneficiary — it’s not a tap-to-pay link (no universal scan-to-pay standard exists for account+IFSC). For instant payment, use UPI. Scanning shows the details as text.',
   },
   {
     type: 'paypal',

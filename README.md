@@ -18,6 +18,7 @@ Generate a correctly-formatted QR for any of:
 | SMS | `SMSTO:` |
 | WhatsApp | `https://wa.me/<number>?text=…` |
 | UPI Pay | `upi://pay?pa=…&pn=…&am=…&cu=INR` (India) |
+| Bank account (India) | labelled A/C + IFSC details (NEFT/IMPS/RTGS) |
 | PayPal | `https://paypal.me/<user>/<amount><cur>` |
 | Venmo | `https://venmo.com/?txn=pay&recipients=…` (US) |
 | Cash App | `https://cash.app/$<cashtag>/<amount>` (US/UK) |
