@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import jsQR from 'jsqr';
-import { useGen, type Config } from '../state/GeneratorContext';
+import { useGen, roleImage, primaryImage, type Config } from '../state/GeneratorContext';
 import { buildPayload } from '../content/payloads';
 import { buildMatrix, type QrMatrix } from '../qr/matrix';
 import { sampleImage, extractBrandColor, type ImageSampler } from '../qr/halftone';
@@ -87,14 +87,19 @@ export function Preview() {
     const detail = cfg.detail;
     const smooth = detail >= 5 ? 1 : 0;
     const eyeColorOverride = cfg.autoEyeColor ? null : cfg.eyeColor;
+    const brandImg = primaryImage(cfg);
     const brandColor =
-      cfg.autoBrand && cfg.image && cfg.colorStyle === 'brand'
-        ? extractBrandColor(cfg.image, cfg.image.naturalWidth, cfg.image.naturalHeight)
+      cfg.autoBrand && brandImg && cfg.colorStyle === 'brand'
+        ? extractBrandColor(brandImg, brandImg.naturalWidth, brandImg.naturalHeight)
         : cfg.brandColor;
 
+    const halftoneImg = roleImage(cfg, 'halftone');
+    const logoImg = roleImage(cfg, 'logo');
+    const watermarkImg = roleImage(cfg, 'watermark');
+
     const sampler: ImageSampler | null =
-      cfg.resemble && cfg.image
-        ? sampleImage(cfg.image, cfg.image.naturalWidth, cfg.image.naturalHeight, {
+      cfg.resemble && halftoneImg
+        ? sampleImage(halftoneImg, halftoneImg.naturalWidth, halftoneImg.naturalHeight, {
             gridSize: matrix.size * detail,
             threshold: cfg.threshold,
             invert: cfg.invert,
@@ -104,11 +109,11 @@ export function Preview() {
         : null;
 
     const centerImage =
-      cfg.embed && cfg.image
+      cfg.embed && logoImg
         ? {
-            source: cfg.image,
-            width: cfg.image.naturalWidth,
-            height: cfg.image.naturalHeight,
+            source: logoImg,
+            width: logoImg.naturalWidth,
+            height: logoImg.naturalHeight,
             ratio: cfg.logoRatio,
             plate: cfg.plate,
             position: cfg.embedPos,
@@ -116,11 +121,11 @@ export function Preview() {
         : null;
 
     const watermark =
-      cfg.watermark && cfg.image
+      cfg.watermark && watermarkImg
         ? {
-            source: cfg.image,
-            width: cfg.image.naturalWidth,
-            height: cfg.image.naturalHeight,
+            source: watermarkImg,
+            width: watermarkImg.naturalWidth,
+            height: watermarkImg.naturalHeight,
             opacity: cfg.watermarkOpacity,
             position: cfg.watermarkPos,
           }
@@ -161,12 +166,13 @@ export function Preview() {
       brandColor,
       sub: detail,
       dotScale: cfg.dotSize,
-      centerHref: centerImage && cfg.image ? cfg.image.src : null,
-      watermark: watermark && cfg.image ? { href: cfg.image.src, opacity: cfg.watermarkOpacity, position: cfg.watermarkPos } : null,
+      centerHref: centerImage && logoImg ? logoImg.src : null,
+      watermark: watermark && watermarkImg ? { href: watermarkImg.src, opacity: cfg.watermarkOpacity, position: cfg.watermarkPos } : null,
     };
     setReady(true);
 
-    const useImage = cfg.image && (cfg.resemble || cfg.embed || cfg.watermark);
+    const useImage =
+      (cfg.resemble && halftoneImg) || (cfg.embed && logoImg) || (cfg.watermark && watermarkImg);
     setHint(
       useImage
         ? 'Tip: image-styled codes use maximum error correction. Always test-scan before printing; lower the detail / dot size or logo size if a phone struggles.'

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useGen, type Config } from '../state/GeneratorContext';
+import { useGen, roleImage, primaryImage, type Config } from '../state/GeneratorContext';
 import { buildPayload, type SourceType } from '../content/payloads';
 import { buildMatrix } from '../qr/matrix';
 import { renderSVG } from '../qr/svg';
@@ -103,13 +103,17 @@ export function CardExport() {
     if (exact) {
       const detail = cfg.detail;
       const smooth = detail >= 5 ? 1 : 0;
+      const brandImg = primaryImage(cfg);
+      const halftoneImg = roleImage(cfg, 'halftone');
+      const logoImg = roleImage(cfg, 'logo');
+      const watermarkImg = roleImage(cfg, 'watermark');
       const brandColor =
-        cfg.autoBrand && cfg.image && cfg.colorStyle === 'brand'
-          ? extractBrandColor(cfg.image, cfg.image.naturalWidth, cfg.image.naturalHeight)
+        cfg.autoBrand && brandImg && cfg.colorStyle === 'brand'
+          ? extractBrandColor(brandImg, brandImg.naturalWidth, brandImg.naturalHeight)
           : cfg.brandColor;
       const sampler =
-        cfg.resemble && cfg.image
-          ? sampleImage(cfg.image, cfg.image.naturalWidth, cfg.image.naturalHeight, {
+        cfg.resemble && halftoneImg
+          ? sampleImage(halftoneImg, halftoneImg.naturalWidth, halftoneImg.naturalHeight, {
               gridSize: matrix.size * detail, threshold: cfg.threshold, invert: cfg.invert, auto: cfg.autoThreshold, smooth,
             })
           : null;
@@ -117,8 +121,8 @@ export function CardExport() {
         matrix, quietModules: 2, fg: cfg.fg, bg: cfg.bg, sampler, protectPatterns: cfg.protectPatterns,
         colorStyle: cfg.colorStyle, brandColor, sub: detail, core: 0, dotScale: cfg.dotSize,
         shape: cfg.shape, eyeShape: cfg.eyeShape, eyeColor,
-        watermark: cfg.watermark && cfg.image ? { href: cfg.image.src, opacity: cfg.watermarkOpacity, position: cfg.watermarkPos } : null,
-        centerImage: cfg.embed && cfg.image ? { href: cfg.image.src, ratio: cfg.logoRatio, plate: cfg.plate, position: cfg.embedPos } : null,
+        watermark: cfg.watermark && watermarkImg ? { href: watermarkImg.src, opacity: cfg.watermarkOpacity, position: cfg.watermarkPos } : null,
+        centerImage: cfg.embed && logoImg ? { href: logoImg.src, ratio: cfg.logoRatio, plate: cfg.plate, position: cfg.embedPos } : null,
         pixelSize: 420,
       });
     } else {
@@ -148,8 +152,8 @@ export function CardExport() {
       caption: cfg.cardShowCaption ? str(cfg.cardCaption).trim() || captionFor(cfg.type) : '',
     };
     const frontOpts = {
-      logoHref: cfg.image?.src ?? null,
-      watermarkHref: cfg.watermark ? cfg.image?.src ?? null : null,
+      logoHref: roleImage(cfg, 'logo')?.src ?? null,
+      watermarkHref: cfg.watermark ? roleImage(cfg, 'watermark')?.src ?? null : null,
       watermarkOpacity: cfg.watermarkOpacity,
       showLogo: cfg.cardLogoShow,
       logoV: cfg.cardLogoV,

@@ -5,11 +5,19 @@ import type { ErrorLevel } from '../qr/matrix';
 import type { ColorStyle, ModuleShape, EyeShape } from '../qr/grid';
 import type { CardBgStyle, CardPattern, CardText, CardOrientation, CardDivider, CardGraphic, CardTextV, CardTextH } from '../card/card';
 
+/** Which feature an uploaded image is assigned to. */
+export type ImageRole = 'halftone' | 'logo' | 'watermark';
+
 /** The full generator state — one object so a single change re-renders the tree. */
 export interface Config {
   type: SourceType;
   values: Record<string, PayloadInput>;
-  image: HTMLImageElement | null;
+  /** All uploaded images; any one can be assigned to multiple roles. */
+  images: HTMLImageElement[];
+  /** Index into `images` for each role (defaults to 0 — one image for all). */
+  halftoneIdx: number;
+  logoIdx: number;
+  watermarkIdx: number;
   resemble: boolean;
   embed: boolean;
   watermark: boolean;
@@ -76,7 +84,10 @@ function initialValues(): Record<string, PayloadInput> {
 const INITIAL: Config = {
   type: 'url',
   values: initialValues(),
-  image: null,
+  images: [],
+  halftoneIdx: 0,
+  logoIdx: 0,
+  watermarkIdx: 0,
   resemble: false,
   embed: false,
   watermark: false,
@@ -162,4 +173,20 @@ export function useGen(): Ctx {
   const ctx = useContext(GeneratorContext);
   if (!ctx) throw new Error('useGen must be used inside <GeneratorProvider>');
   return ctx;
+}
+
+/** The image assigned to a given role, or null if none uploaded. */
+// eslint-disable-next-line react-refresh/only-export-components
+export function roleImage(cfg: Config, role: ImageRole): HTMLImageElement | null {
+  const idx = role === 'halftone' ? cfg.halftoneIdx : role === 'logo' ? cfg.logoIdx : cfg.watermarkIdx;
+  return cfg.images[idx] ?? cfg.images[0] ?? null;
+}
+
+/**
+ * A single representative image (for brand-colour auto-detect): prefer the
+ * logo, then the halftone source, then the first uploaded.
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export function primaryImage(cfg: Config): HTMLImageElement | null {
+  return roleImage(cfg, 'logo') ?? roleImage(cfg, 'halftone') ?? cfg.images[0] ?? null;
 }

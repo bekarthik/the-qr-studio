@@ -52,6 +52,17 @@ every shape fills. Both PNG and SVG export the styling (SVG uses real
 `<circle>` / rounded-`<rect>` elements), and `npm run verify` decodes the styled
 output (including halftone + shaped dots + coloured eyes) to prove it scans.
 
+### Multiple images, one per role
+
+Upload **several images** and assign each effect its own: pick which image is the
+**halftone** source, which is the **embedded logo**, and which is the
+**watermark** — or point all three at a single upload. Each effect shows a small
+*uses Image N* picker (only when more than one image is present), and every
+thumbnail is badged with the roles it currently drives (**H** halftone · **L**
+logo · **W** watermark). The card front logo and watermark follow the same logo /
+watermark assignments. Remove any image and the role assignments re-map
+automatically.
+
 ### Three independent image modes
 
 1. **Resemble the image (halftone).** Every QR module is expanded into a 3×3
