@@ -55,6 +55,10 @@ export interface FrontOptions {
   logoHref?: string | null;
   watermarkHref?: string | null;
   watermarkOpacity?: number;
+  showLogo?: boolean;
+  logoV?: CardTextV;
+  logoH?: CardTextH;
+  logoSize?: number;
 }
 
 /** Web-safe font stacks offered for the card (render without external fonts). */
@@ -260,10 +264,8 @@ function renderContacts(parts: string[], ax: number, y: number, align: Align, d:
   }
 }
 
-/** Draw the media element (QR or logo) at (x, y) within a QR-sized box. */
-function pushMedia(parts: string[], g: Geo, qrSvg: string | null, logoHref: string | null | undefined, d: CardData, theme: CardTheme, pal: Palette, x: number, y: number): void {
-  if (qrSvg) parts.push(qrBlock(g, qrSvg, d, theme, pal, x, y, x + g.QR / 2));
-  else if (logoHref) parts.push(`<image x="${x}" y="${y}" width="${g.QR}" height="${g.QR}" preserveAspectRatio="xMidYMid meet" href="${esc(logoHref)}"/>`);
+function pushQr(parts: string[], g: Geo, qrSvg: string, d: CardData, theme: CardTheme, pal: Palette, x: number, y: number): void {
+  parts.push(qrBlock(g, qrSvg, d, theme, pal, x, y, x + g.QR / 2));
 }
 
 function qrBlock(g: Geo, qrSvg: string, d: CardData, theme: CardTheme, pal: Palette, qx: number, qy: number, capCx: number): string {
@@ -277,45 +279,47 @@ function qrBlock(g: Geo, qrSvg: string, d: CardData, theme: CardTheme, pal: Pale
 }
 
 /**
- * Lays out the text block and a media element (QR for a single card, logo for a
- * two-sided front, or none) at the chosen text position. Tall text blocks (a
- * vCard with contacts) are forced to the top so they never collide with the
- * media; short blocks (just a name) honour all nine positions.
+ * Lays out the text block — with the QR when `qrSvg` is given (single card), or
+ * filling the whole card when it isn't (two-sided front; the logo is placed
+ * separately). Tall blocks (a vCard with contacts) pin to the top so they never
+ * collide with the QR; short blocks (just a name) honour all nine positions.
  */
-function placeContent(ox: number, g: Geo, o: CardOrientation, d: CardData, theme: CardTheme, pal: Palette, qrSvg: string | null, logoHref: string | null): string {
+function placeContent(ox: number, g: Geo, o: CardOrientation, d: CardData, theme: CardTheme, pal: Palette, qrSvg: string | null): string {
   const parts: string[] = [];
   const big = o === 'portrait' ? 46 : 54;
   const step = o === 'portrait' ? 40 : 42;
   const withC = contactLines(d).length > 0;
-  const media = Boolean(qrSvg || logoHref);
-  const tall = withC; // a vCard-style block: pin to top, side-by-side
+  const media = Boolean(qrSvg);
+  const tall = withC; // a vCard-style block: pin to top
   const tv: CardTextV = tall ? 'top' : theme.textV;
   const th = theme.textH;
   const align = alignOf(th);
   const MW = g.QR;
 
-  // PORTRAIT: split vCard (header above media, contacts below), else a vertical
-  // group anchored by textV.
   if (o === 'portrait') {
     const cx = ox + (align === 'middle' ? g.W / 2 : align === 'end' ? g.W - g.PAD : g.PAD);
     if (tall) {
-      renderHeader(parts, cx, 132, align, d, theme, pal, big, 300);
-      const qy = 300;
-      if (media) pushMedia(parts, g, qrSvg, logoHref, d, theme, pal, ox + (g.W - MW) / 2, qy);
-      renderContacts(parts, cx, qy + MW + (qrSvg ? 96 : 60), align, d, theme, pal, step);
+      const y = renderHeader(parts, cx, 132, align, d, theme, pal, big, 300);
+      if (qrSvg) {
+        const qy = 300;
+        pushQr(parts, g, qrSvg, d, theme, pal, ox + (g.W - MW) / 2, qy);
+        renderContacts(parts, cx, qy + MW + 96, align, d, theme, pal, step);
+      } else {
+        renderContacts(parts, cx, y + 8, align, d, theme, pal, step);
+      }
       return parts.join('');
     }
     const h = blockHeight(d, theme, big, step, false);
-    const groupH = h + (media ? 26 + MW + (qrSvg ? 36 : 0) : 0);
+    const groupH = h + (qrSvg ? 26 + MW + 36 : 0);
     const gy = tv === 'middle' ? (g.H - groupH) / 2 : tv === 'bottom' ? g.H - g.PAD - groupH : g.PAD;
     renderHeader(parts, cx, gy + big * 0.7, align, d, theme, pal, big, 300);
-    if (media) pushMedia(parts, g, qrSvg, logoHref, d, theme, pal, ox + (g.W - MW) / 2, gy + h + 26);
+    if (qrSvg) pushQr(parts, g, qrSvg, d, theme, pal, ox + (g.W - MW) / 2, gy + h + 26);
     return parts.join('');
   }
 
   // LANDSCAPE.
-  const sideBySide = tall || th !== 'center';
-  if (sideBySide) {
+  const sideBySide = media && (tall || th !== 'center');
+  if (sideBySide && qrSvg) {
     const right = th === 'right';
     const colX0 = right ? ox + g.PAD + MW + 44 : ox + g.PAD;
     const colX1 = right ? ox + g.W - g.PAD : ox + g.W - g.PAD - MW - 44;
@@ -323,19 +327,37 @@ function placeContent(ox: number, g: Geo, o: CardOrientation, d: CardData, theme
     const dW = Math.min(colX1 - colX0, 360);
     const h = blockHeight(d, theme, big, step, withC);
     const y0 = (tv === 'middle' ? (g.H - h) / 2 : tv === 'bottom' ? g.H - g.PAD - h : g.PAD) + big * 0.7;
-    let y = renderHeader(parts, ax, y0, align, d, theme, pal, big, dW);
+    const y = renderHeader(parts, ax, y0, align, d, theme, pal, big, dW);
     if (withC) renderContacts(parts, ax, y, align, d, theme, pal, step);
-    if (media) pushMedia(parts, g, qrSvg, logoHref, d, theme, pal, right ? ox + g.PAD : ox + g.W - g.PAD - MW, (g.H - MW) / 2);
-  } else {
+    pushQr(parts, g, qrSvg, d, theme, pal, right ? ox + g.PAD : ox + g.W - g.PAD - MW, (g.H - MW) / 2);
+  } else if (qrSvg) {
     // Stacked, horizontally centred (short text only).
     const h = blockHeight(d, theme, big, step, false);
-    const groupH = h + (media ? 26 + MW + (qrSvg ? 36 : 0) : 0);
+    const groupH = h + 26 + MW + 36;
     const gy = tv === 'middle' ? (g.H - groupH) / 2 : tv === 'bottom' ? g.H - g.PAD - groupH : g.PAD;
     const cx = ox + g.W / 2;
     renderHeader(parts, cx, gy + big * 0.7, 'middle', d, theme, pal, big, 300);
-    if (media) pushMedia(parts, g, qrSvg, logoHref, d, theme, pal, ox + (g.W - MW) / 2, gy + h + 26);
+    pushQr(parts, g, qrSvg, d, theme, pal, ox + (g.W - MW) / 2, gy + h + 26);
+  } else {
+    // No QR (two-sided front): the text block fills the whole card, positioned.
+    const colX0 = ox + g.PAD, colX1 = ox + g.W - g.PAD;
+    const ax = align === 'middle' ? (colX0 + colX1) / 2 : align === 'end' ? colX1 : colX0;
+    const dW = Math.min(colX1 - colX0, 420);
+    const h = blockHeight(d, theme, big, step, withC);
+    const y0 = (tv === 'middle' ? (g.H - h) / 2 : tv === 'bottom' ? g.H - g.PAD - h : g.PAD) + big * 0.7;
+    const y = renderHeader(parts, ax, y0, align, d, theme, pal, big, dW);
+    if (withC) renderContacts(parts, ax, y, align, d, theme, pal, step);
   }
   return parts.join('');
+}
+
+/** A logo placed at one of nine spots with a chosen size (fraction of the card's
+ *  shorter side). Used on the two-sided front, independent of the text. */
+function logoAt(ox: number, g: Geo, href: string, v: CardTextV, h: CardTextH, frac: number): string {
+  const box = Math.min(g.W, g.H) * Math.max(0.15, Math.min(0.65, frac));
+  const x = h === 'left' ? ox + g.PAD : h === 'right' ? ox + g.W - g.PAD - box : ox + (g.W - box) / 2;
+  const y = v === 'top' ? g.PAD : v === 'bottom' ? g.H - g.PAD - box : (g.H - box) / 2;
+  return `<image x="${r3(x)}" y="${r3(y)}" width="${r3(box)}" height="${r3(box)}" preserveAspectRatio="xMidYMid meet" href="${esc(href)}"/>`;
 }
 
 /** Inner content (text + QR) for one single-sided face at offset ox. */
@@ -344,28 +366,24 @@ function singleContent(ox: number, g: Geo, o: CardOrientation, qrSvg: string, d:
     const qx = ox + (g.W - g.QR) / 2;
     return qrBlock(g, qrSvg, d, theme, pal, qx, (g.H - g.QR) / 2, ox + g.W / 2);
   }
-  return placeContent(ox, g, o, d, theme, pal, qrSvg, null);
+  return placeContent(ox, g, o, d, theme, pal, qrSvg);
 }
 
-/** Front face of a two-sided card: details + logo + watermark (no QR). */
+/** Front face of a two-sided card: details + an independently-placed logo +
+ *  watermark (no QR). The logo can be hidden, positioned and sized. */
 function frontContent(ox: number, g: Geo, o: CardOrientation, d: CardData, theme: CardTheme, pal: Palette, front: FrontOptions): string {
   const wm = watermarkLayer(ox, g, front.watermarkHref, front.watermarkOpacity);
-  if (!hasDetails(d) && !front.logoHref) return wm;
-  if (!hasDetails(d)) return wm + logoFace(ox, g, o, front.logoHref);
-  return wm + placeContent(ox, g, o, d, theme, pal, null, front.logoHref ?? null);
+  const txt = hasDetails(d) ? placeContent(ox, g, o, d, theme, pal, null) : '';
+  const logo =
+    front.showLogo !== false && front.logoHref
+      ? logoAt(ox, g, front.logoHref, front.logoV ?? 'bottom', front.logoH ?? 'right', front.logoSize ?? 0.42)
+      : '';
+  return wm + txt + logo;
 }
 
 function backContent(ox: number, g: Geo, qrSvg: string, d: CardData, theme: CardTheme, pal: Palette): string {
   const qx = ox + (g.W - g.QR) / 2;
   return qrBlock(g, qrSvg, d, theme, pal, qx, (g.H - g.QR) / 2, ox + g.W / 2);
-}
-
-function logoFace(ox: number, g: Geo, o: CardOrientation, href?: string | null): string {
-  if (!href) return '';
-  const box = o === 'portrait' ? 300 : 360;
-  const x = o === 'portrait' ? ox + (g.W - box) / 2 : ox + g.W - g.PAD - box;
-  const y = o === 'portrait' ? g.H - g.PAD - box - 40 : (g.H - box) / 2;
-  return `<image x="${x}" y="${y}" width="${box}" height="${box}" preserveAspectRatio="xMidYMid meet" href="${esc(href)}"/>`;
 }
 
 function watermarkLayer(ox: number, g: Geo, href?: string | null, opacity = 0.12): string {

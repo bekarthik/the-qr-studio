@@ -156,7 +156,9 @@ scans on any background.
 Tick **Two-sided** for a front/back card: the **front** carries your details
 plus your uploaded image as a **logo** (and a faint **watermark** if the
 Watermark toggle is on), and the **back** carries the QR alone — so the code
-prints on the second page. Two-sided **downloads as two separate files**
+prints on the second page. The front logo can be **shown or hidden**, **placed**
+at any of nine spots (independent of the text) and **sized** with a slider, so it
+never collides with the details. Two-sided **downloads as two separate files**
 (`-front` and `-back`) for both PNG and SVG; the preview shows them side by side.
 `npm run verify:card` rasterises the single card,
 two-sided sheet, gradient/pattern themes and the QR-only layout, and decodes the

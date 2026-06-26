@@ -30,6 +30,7 @@ const CAPTURE = [
   'cardBgStyle', 'cardBg1', 'cardBg2', 'cardGradAngle', 'cardPattern', 'cardAccentAuto', 'cardAccent',
   'cardText', 'cardAccentBar', 'cardBorder', 'cardPanel', 'cardOrientation', 'cardHeadingFont', 'cardBodyFont',
   'cardDivider', 'cardGraphic', 'cardTextV', 'cardTextH',
+  'cardLogoShow', 'cardLogoV', 'cardLogoH', 'cardLogoSize',
 ] as const;
 
 type Preset = { name: string; patch: Partial<Config> };
@@ -146,7 +147,15 @@ export function CardExport() {
       qrBg: cfg.bg,
       caption: cfg.cardShowCaption ? str(cfg.cardCaption).trim() || captionFor(cfg.type) : '',
     };
-    const frontOpts = { logoHref: cfg.image?.src ?? null, watermarkHref: cfg.watermark ? cfg.image?.src ?? null : null, watermarkOpacity: cfg.watermarkOpacity };
+    const frontOpts = {
+      logoHref: cfg.image?.src ?? null,
+      watermarkHref: cfg.watermark ? cfg.image?.src ?? null : null,
+      watermarkOpacity: cfg.watermarkOpacity,
+      showLogo: cfg.cardLogoShow,
+      logoV: cfg.cardLogoV,
+      logoH: cfg.cardLogoH,
+      logoSize: cfg.cardLogoSize,
+    };
     return {
       preview: twoSided ? buildCardSheetSVG(data, qrSvg, frontOpts, theme) : buildCardSVG(data, qrSvg, theme),
       single: buildCardSVG(data, qrSvg, theme),
@@ -221,6 +230,38 @@ export function CardExport() {
           <span className="field__label">Two-sided — <b>QR on the back</b>, logo/watermark on the front</span>
         </label>
       </div>
+
+      {twoSided && (
+        <>
+          <p className="subhead">Front logo</p>
+          <div className="grid2">
+            <label className="field field--check">
+              <input type="checkbox" checked={cfg.cardLogoShow} onChange={(e) => update({ cardLogoShow: e.target.checked })} />
+              <span className="field__label">Show logo on front</span>
+            </label>
+            <label className="field">
+              <span className="field__label">Logo size</span>
+              <input type="range" min={20} max={62} disabled={!cfg.cardLogoShow} value={Math.round(cfg.cardLogoSize * 100)} onChange={(e) => update({ cardLogoSize: Number(e.target.value) / 100 })} />
+            </label>
+            <label className="field">
+              <span className="field__label">Logo position — vertical</span>
+              <select value={cfg.cardLogoV} disabled={!cfg.cardLogoShow} onChange={(e) => update({ cardLogoV: e.target.value as CardTextV })}>
+                <option value="top">Top</option>
+                <option value="middle">Middle</option>
+                <option value="bottom">Bottom</option>
+              </select>
+            </label>
+            <label className="field">
+              <span className="field__label">Logo position — horizontal</span>
+              <select value={cfg.cardLogoH} disabled={!cfg.cardLogoShow} onChange={(e) => update({ cardLogoH: e.target.value as CardTextH })}>
+                <option value="left">Left</option>
+                <option value="center">Center</option>
+                <option value="right">Right</option>
+              </select>
+            </label>
+          </div>
+        </>
+      )}
 
       <p className="subhead">Design</p>
       <div className="preset-row">

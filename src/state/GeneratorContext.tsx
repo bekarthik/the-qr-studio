@@ -39,6 +39,10 @@ export interface Config {
   cardShowCaption: boolean;
   cardTextV: CardTextV;
   cardTextH: CardTextH;
+  cardLogoShow: boolean;
+  cardLogoV: CardTextV;
+  cardLogoH: CardTextH;
+  cardLogoSize: number;
   fg: string;
   bg: string;
   errorLevel: ErrorLevel;
@@ -101,6 +105,10 @@ const INITIAL: Config = {
   cardShowCaption: true,
   cardTextV: 'top',
   cardTextH: 'left',
+  cardLogoShow: true,
+  cardLogoV: 'bottom',
+  cardLogoH: 'right',
+  cardLogoSize: 0.42,
   fg: '#101418',
   bg: '#ffffff',
   errorLevel: 'H',
