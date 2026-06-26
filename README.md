@@ -18,6 +18,11 @@ Generate a correctly-formatted QR for any of:
 | SMS | `SMSTO:` |
 | WhatsApp | `https://wa.me/<number>?text=…` |
 | UPI Pay | `upi://pay?pa=…&pn=…&am=…&cu=INR` (India) |
+| PayPal | `https://paypal.me/<user>/<amount><cur>` |
+| Venmo | `https://venmo.com/?txn=pay&recipients=…` (US) |
+| Cash App | `https://cash.app/$<cashtag>/<amount>` (US/UK) |
+| Bitcoin | `bitcoin:<address>?amount=…` (BIP-21) |
+| Bank transfer (SEPA) | EPC “Girocode” credit-transfer (euro area) |
 | Wi-Fi | `WIFI:` (WPA/WEP/open, hidden) |
 | Visiting card | vCard 3.0 |
 | Location | `geo:lat,lng` |
