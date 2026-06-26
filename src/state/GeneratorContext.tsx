@@ -11,6 +11,9 @@ export interface Config {
   image: HTMLImageElement | null;
   resemble: boolean;
   embed: boolean;
+  watermark: boolean;
+  watermarkPos: 'across' | 'br';
+  watermarkOpacity: number;
   fg: string;
   bg: string;
   errorLevel: ErrorLevel;
@@ -46,6 +49,9 @@ const INITIAL: Config = {
   image: null,
   resemble: false,
   embed: false,
+  watermark: false,
+  watermarkPos: 'across',
+  watermarkOpacity: 0.12,
   fg: '#101418',
   bg: '#ffffff',
   errorLevel: 'H',

@@ -59,6 +59,14 @@ export interface RenderOptions {
   eyeShape?: EyeShape;
   /** Override colour for the finder eyes; falls back to the module dark colour. */
   eyeColor?: string | null;
+  /** Optional faint logo watermark: across the whole code, or bottom-right. */
+  watermark?: {
+    source: CanvasImageSource;
+    width: number;
+    height: number;
+    opacity: number;
+    position: 'across' | 'br';
+  } | null;
   /** Optional logo embedded into carved-out center space. */
   centerImage?: CenterImage | null;
 }
@@ -150,6 +158,34 @@ export function renderQR(opts: RenderOptions): HTMLCanvasElement {
     for (const [fr, fc] of finderOrigins(n)) {
       drawEye(ctx, (quietSub + fc * sub) * cellPx, (quietSub + fr * sub) * cellPx, m, eyeShapeR, eyeColor, bg);
     }
+  }
+
+  // Faint watermark (never the quiet zone), under any centre logo. Kept
+  // low-opacity so module contrast still reads.
+  if (opts.watermark) {
+    const qrPx = n * sub * cellPx;
+    const start = quietSub * cellPx;
+    const modulePx = sub * cellPx;
+    const { source, width, height, position } = opts.watermark;
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, Math.min(1, opts.watermark.opacity));
+    if (position === 'br') {
+      // Contain in a corner box, anchored bottom-right with a 1-module margin.
+      const box = qrPx * 0.3;
+      const scale = Math.min(box / width, box / height);
+      const dw = width * scale;
+      const dh = height * scale;
+      ctx.drawImage(source, start + qrPx - modulePx - dw, start + qrPx - modulePx - dh, dw, dh);
+    } else {
+      ctx.beginPath();
+      ctx.rect(start, start, qrPx, qrPx);
+      ctx.clip();
+      const scale = Math.max(qrPx / width, qrPx / height); // cover
+      const dw = width * scale;
+      const dh = height * scale;
+      ctx.drawImage(source, start + (qrPx - dw) / 2, start + (qrPx - dh) / 2, dw, dh);
+    }
+    ctx.restore();
   }
 
   if (centerImage) drawCenterImage(ctx, dim, n * sub * cellPx, sub * cellPx, bg, centerImage);

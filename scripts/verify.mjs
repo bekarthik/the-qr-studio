@@ -109,6 +109,21 @@ function rasterizeSVG(svg) {
   return { data: new Uint8ClampedArray(decoded.data), dim: decoded.width };
 }
 
+// A solid dark watermark PNG (worst case for contrast) as a data URL.
+function watermarkDataUrl() {
+  const s = 48;
+  const png = new PNG({ width: s, height: s });
+  for (let y = 0; y < s; y++)
+    for (let x = 0; x < s; x++) {
+      const i = (y * s + x) * 4;
+      const on = (x + y) % 12 < 6; // a coarse diagonal pattern, fully opaque
+      png.data[i] = png.data[i + 1] = png.data[i + 2] = on ? 10 : 60;
+      png.data[i + 3] = 255;
+    }
+  return 'data:image/png;base64,' + PNG.sync.write(png).toString('base64');
+}
+const WMARK = watermarkDataUrl();
+
 function svgFor(text, opts) {
   const m = buildMatrix(text, 'H');
   const sub = opts.sub || 3;
@@ -128,6 +143,7 @@ function svgFor(text, opts) {
     shape: opts.shape,
     eyeShape: opts.eyeShape,
     eyeColor: opts.eyeColor,
+    watermark: opts.watermark ? { href: WMARK, opacity: opts.watermarkOpacity ?? 0.12, position: opts.watermarkPos ?? 'across' } : null,
     centerImage: opts.embed ? { href: 'x', ratio: 0.22, plate: true } : null,
     pixelSize: 1024,
   });
@@ -187,6 +203,11 @@ const cases = [
   { name: 'halftone liquid 0.5', text: 'https://example.com/welcome', opts: { halftone: true, shape: 'liquid', dotScale: 0.5 } },
   { name: 'halftone liquid 0.8', text: 'https://example.com/welcome', opts: { halftone: true, shape: 'liquid', dotScale: 0.8 } },
   { name: 'image liquid eyes', text: VCARD, opts: { halftone: true, style: 'image', shape: 'liquid', dotScale: 0.6, eyeShape: 'circle' } },
+  // Logo watermark: faint across, and a stronger bottom-right corner.
+  { name: 'watermark across', text: 'https://example.com/welcome', opts: { watermark: true, watermarkOpacity: 0.14 } },
+  { name: 'watermark across vcard', text: VCARD, opts: { watermark: true, watermarkOpacity: 0.12 } },
+  { name: 'watermark br', text: 'https://example.com/welcome', opts: { watermark: true, watermarkPos: 'br', watermarkOpacity: 0.35 } },
+  { name: 'watermark br + liquid', text: 'https://chores.app/r/AB12CD', opts: { shape: 'liquid', watermark: true, watermarkPos: 'br', watermarkOpacity: 0.3 } },
 ];
 
 let pass = 0, total = 0;

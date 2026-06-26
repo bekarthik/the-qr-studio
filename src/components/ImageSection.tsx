@@ -41,6 +41,16 @@ export function ImageSection() {
           Embed the image in the <b>centre</b>
         </span>
       </label>
+      <label className="field field--check">
+        <input
+          type="checkbox"
+          checked={cfg.watermark}
+          onChange={(e) => update({ watermark: e.target.checked })}
+        />
+        <span className="field__label">
+          Add the image as a faint <b>watermark</b>
+        </span>
+      </label>
     </div>
   );
 }

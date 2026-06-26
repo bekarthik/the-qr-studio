@@ -24,6 +24,7 @@ interface Snapshot {
   sub: number;
   dotScale: number;
   centerHref: string | null;
+  watermark: { href: string; opacity: number; position: 'across' | 'br' } | null;
 }
 
 const BADGE_TEXT: Record<BadgeState, string> = {
@@ -113,6 +114,17 @@ export function Preview() {
           }
         : null;
 
+    const watermark =
+      cfg.watermark && cfg.image
+        ? {
+            source: cfg.image,
+            width: cfg.image.naturalWidth,
+            height: cfg.image.naturalHeight,
+            opacity: cfg.watermarkOpacity,
+            position: cfg.watermarkPos,
+          }
+        : null;
+
     const canvas = renderQR({
       matrix,
       targetPx: RES,
@@ -129,6 +141,7 @@ export function Preview() {
       shape: cfg.shape,
       eyeShape: cfg.eyeShape,
       eyeColor: eyeColorOverride,
+      watermark,
       centerImage,
     });
     canvas.className = 'qr';
@@ -148,10 +161,11 @@ export function Preview() {
       sub: detail,
       dotScale: cfg.dotSize,
       centerHref: centerImage && cfg.image ? cfg.image.src : null,
+      watermark: watermark && cfg.image ? { href: cfg.image.src, opacity: cfg.watermarkOpacity, position: cfg.watermarkPos } : null,
     };
     setReady(true);
 
-    const useImage = cfg.image && (cfg.resemble || cfg.embed);
+    const useImage = cfg.image && (cfg.resemble || cfg.embed || cfg.watermark);
     setHint(
       useImage
         ? 'Tip: image-styled codes use maximum error correction. Always test-scan before printing; lower the detail / dot size or logo size if a phone struggles.'
@@ -208,6 +222,7 @@ export function Preview() {
       shape: s.shape,
       eyeShape: s.eyeShape,
       eyeColor: s.eyeColor,
+      watermark: s.watermark,
       centerImage: s.centerHref ? { href: s.centerHref, ratio: cfg.logoRatio, plate: cfg.plate } : null,
       pixelSize: RES,
     });

@@ -52,7 +52,7 @@ every shape fills. Both PNG and SVG export the styling (SVG uses real
 `<circle>` / rounded-`<rect>` elements), and `npm run verify` decodes the styled
 output (including halftone + shaped dots + coloured eyes) to prove it scans.
 
-### Two independent image modes
+### Three independent image modes
 
 1. **Resemble the image (halftone).** Every QR module is expanded into a 3×3
    grid of sub-cells. The **centre** sub-cell always keeps the true module
@@ -63,6 +63,16 @@ output (including halftone + shaped dots + coloured eyes) to prove it scans.
 2. **Embed the image in the centre.** A square of modules in the middle is
    *carved out* (cleared to the background) and the logo is drawn into that
    empty space — embedded inside the code, not pasted on top of live modules.
+
+3. **Watermark the logo.** Draw the logo faintly over the code at a chosen
+   **opacity** — either **across** the whole code (cover-fit, clipped to the
+   modules, never the quiet zone) or in the **bottom-right corner** (which has
+   no finder pattern, so it's the safe place for a small badge). Opacity is kept
+   low by default so module contrast still reads; the live verify badge confirms
+   each code scans, and `npm run verify` decodes a worst-case dark watermark.
+
+These modes are independent and can be combined (e.g. a styled block code with a
+bottom-right watermark).
 
 **Detail & contrast (clarity).**
 

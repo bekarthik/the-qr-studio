@@ -191,6 +191,32 @@ export function Settings() {
           </label>
         </>
       )}
+
+      {cfg.watermark && (
+        <>
+          <p className="subhead">Watermark</p>
+          <label className="field">
+            <span className="field__label">Placement</span>
+            <select
+              value={cfg.watermarkPos}
+              onChange={(e) => update({ watermarkPos: e.target.value as 'across' | 'br' })}
+            >
+              <option value="across">Across the code</option>
+              <option value="br">Bottom-right corner</option>
+            </select>
+          </label>
+          <label className="field">
+            <span className="field__label">Opacity (keep low to stay scannable)</span>
+            <input
+              type="range"
+              min={4}
+              max={45}
+              value={Math.round(cfg.watermarkOpacity * 100)}
+              onChange={(e) => update({ watermarkOpacity: Number(e.target.value) / 100 })}
+            />
+          </label>
+        </>
+      )}
     </div>
   );
 }

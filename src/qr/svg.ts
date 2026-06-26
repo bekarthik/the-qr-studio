@@ -52,6 +52,8 @@ export interface SvgOptions {
   eyeShape?: EyeShape;
   /** Override colour for the finder eyes; falls back to the module dark colour. */
   eyeColor?: string | null;
+  /** Optional faint logo watermark: across the whole code, or bottom-right. */
+  watermark?: { href: string; opacity: number; position: 'across' | 'br' } | null;
   centerImage?: SvgCenterImage | null;
   /** Pixel size written to the width/height attributes (the SVG stays vector). */
   pixelSize: number;
@@ -117,6 +119,25 @@ export function renderSVG(opts: SvgOptions): string {
     }
   }
 
+  // Faint watermark: across (cover-fit, clipped) or bottom-right (contain).
+  let watermark = '';
+  if (opts.watermark) {
+    const op = r2(Math.max(0, Math.min(1, opts.watermark.opacity)));
+    const href = escapeAttr(opts.watermark.href);
+    if (opts.watermark.position === 'br') {
+      const box = total * 0.3;
+      const x = quietSub + total - sub - box;
+      const y = quietSub + total - sub - box;
+      watermark =
+        `<image x="${r2(x)}" y="${r2(y)}" width="${r2(box)}" height="${r2(box)}" ` +
+        `preserveAspectRatio="xMaxYMax meet" opacity="${op}" href="${href}"/>`;
+    } else {
+      watermark =
+        `<image x="${quietSub}" y="${quietSub}" width="${total}" height="${total}" ` +
+        `preserveAspectRatio="xMidYMid slice" opacity="${op}" href="${href}"/>`;
+    }
+  }
+
   let center = '';
   if (centerImage) {
     // Carve an empty region (snapped to the module grid) and inset the logo so
@@ -137,6 +158,7 @@ export function renderSVG(opts: SvgOptions): string {
     `viewBox="0 0 ${gridSide} ${gridSide}" shape-rendering="crispEdges">` +
     `<rect x="0" y="0" width="${gridSide}" height="${gridSide}" fill="${bg}"/>` +
     rects.join('') +
+    watermark +
     center +
     `</svg>`
   );
