@@ -100,9 +100,22 @@ function buildFunctionMask(size: number, version: number): Uint8Array {
  * for the encoding/masking; rendering is done entirely by us so we can carve
  * space for a logo and halftone the data modules while protecting the parts a
  * scanner needs to lock onto.
+ *
+ * We force a single Byte-mode segment instead of letting the library
+ * auto-optimise into mixed modes. Its optimiser likes to split payloads such as
+ * `tel:+911234567890` into a Byte run ("tel:+") followed by a Numeric run (the
+ * digits). Lenient decoders (jsQR) read that back fine, but strict ones
+ * (ZXing / Google Lens) can misparse the mode boundary and append phantom
+ * digits (the "…835" bug). One byte segment removes the boundary entirely and
+ * scans identically everywhere, at a negligible size cost.
  */
 export function buildMatrix(text: string, errorLevel: ErrorLevel): QrMatrix {
-  const qr = QRCode.create(text, { errorCorrectionLevel: errorLevel });
+  // @types/qrcode types a byte-mode segment's `data` as binary, but the library
+  // accepts (and UTF-8 encodes) a string at runtime — cast at the boundary.
+  const segments = [{ data: text, mode: 'byte' as const }] as unknown as Parameters<
+    typeof QRCode.create
+  >[0];
+  const qr = QRCode.create(segments, { errorCorrectionLevel: errorLevel });
   const modules = qr.modules;
   const size = modules.size;
   const version = qr.version;
