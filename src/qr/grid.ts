@@ -24,18 +24,16 @@ export function computeGrid(size: number, quietModules: number, sub = 3): GridSp
 }
 
 /**
- * Half-width of the central "data core" that carries the true module value
- * (the rest of the module follows the image). At the standard 3x3 detail this
- * is a single centre cell; at higher detail we keep a 3x3 core so a data module
- * over a same-brightness image area still reads correctly.
+ * True when (dr, dc) is the single centre sub-cell that carries the true module
+ * value; every other sub-cell follows the image. Keeping the core to ONE cell
+ * at all detail levels means raising the detail samples the image more finely
+ * (smaller dots, more of the picture visible) instead of enlarging the solid
+ * data dot — at standard 3x3 detail the core is 1/3 of the module, at 5x5 it is
+ * 1/5, and so on.
  */
-const coreRadius = (sub: number) => (sub <= 3 ? 0 : 1);
-
-/** True when (dr, dc) is inside the central data core for a given detail. */
 function inCore(dr: number, dc: number, sub: number): boolean {
   const mid = (sub - 1) / 2;
-  const cr = coreRadius(sub);
-  return Math.abs(dr - mid) <= cr && Math.abs(dc - mid) <= cr;
+  return dr === mid && dc === mid;
 }
 
 /**
