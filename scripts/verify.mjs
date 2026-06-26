@@ -11,6 +11,8 @@
  */
 import { register } from 'node:module';
 import jsQR from 'jsqr';
+import { Resvg } from '@resvg/resvg-js';
+import { PNG } from 'pngjs';
 
 register('./ts-loader.mjs', import.meta.url);
 const { buildMatrix } = await import('../src/qr/matrix.ts');
@@ -98,39 +100,13 @@ function renderRaster(text, opts) {
 /* ------------------------------------------------- SVG path (vector→raster) */
 
 function rasterizeSVG(svg) {
+  // Render the REAL vector output with resvg (handles rects, circles AND the
+  // <path> elements used by the liquid shape) — a faithful raster, not a replay.
   const G = Number(svg.match(/viewBox="0 0 ([\d.]+)/)[1]);
-  const S = 12;
-  const dim = Math.round(G * S);
-  const data = new Uint8ClampedArray(dim * dim * 4).fill(255);
-  // Replay rects and circles in document order so layered eyes paint correctly.
-  const re =
-    /<rect x="([-\d.]+)" y="([-\d.]+)" width="([-\d.]+)" height="([-\d.]+)"(?: rx="[-\d.]+")? fill="(#[0-9a-fA-F]{6})"\/>|<circle cx="([-\d.]+)" cy="([-\d.]+)" r="([-\d.]+)" fill="(#[0-9a-fA-F]{6})"\/>/g;
-  let m;
-  while ((m = re.exec(svg))) {
-    if (m[1] !== undefined) {
-      const v = lum(hexToRgb(m[5]));
-      const x0 = Math.round(+m[1] * S), y0 = Math.round(+m[2] * S);
-      const x1 = Math.round((+m[1] + +m[3]) * S), y1 = Math.round((+m[2] + +m[4]) * S);
-      for (let py = Math.max(0, y0); py < Math.min(dim, y1); py++)
-        for (let px = Math.max(0, x0); px < Math.min(dim, x1); px++) {
-          const i = (py * dim + px) * 4;
-          data[i] = data[i + 1] = data[i + 2] = v;
-        }
-    } else {
-      const v = lum(hexToRgb(m[9]));
-      const cx = +m[6] * S, cy = +m[7] * S, rr = +m[8] * S;
-      const y0 = Math.max(0, Math.floor(cy - rr)), y1 = Math.min(dim, Math.ceil(cy + rr));
-      const x0 = Math.max(0, Math.floor(cx - rr)), x1 = Math.min(dim, Math.ceil(cx + rr));
-      for (let py = y0; py < y1; py++)
-        for (let px = x0; px < x1; px++) {
-          const dx = px + 0.5 - cx, dy = py + 0.5 - cy;
-          if (dx * dx + dy * dy > rr * rr) continue;
-          const i = (py * dim + px) * 4;
-          data[i] = data[i + 1] = data[i + 2] = v;
-        }
-    }
-  }
-  return { data, dim };
+  const dim = Math.round(G * 12);
+  const png = new Resvg(svg, { fitTo: { mode: 'width', value: dim }, background: 'white' }).render().asPng();
+  const decoded = PNG.sync.read(Buffer.from(png));
+  return { data: new Uint8ClampedArray(decoded.data), dim: decoded.width };
 }
 
 function svgFor(text, opts) {
@@ -202,6 +178,11 @@ const cases = [
   { name: 'halftone dot eyes', text: 'https://example.com/welcome', opts: { halftone: true, shape: 'dot', dotScale: 0.6, eyeShape: 'circle' } },
   { name: 'halftone rounded eyes col', text: 'https://example.com/welcome', opts: { halftone: true, shape: 'rounded', dotScale: 0.5, eyeShape: 'rounded', eyeColor: '#1d4ed8' } },
   { name: 'image dot eyes', text: VCARD, opts: { halftone: true, style: 'image', shape: 'dot', dotScale: 0.6, eyeShape: 'circle' } },
+  // Liquid (connected blobs) — paths, verified by the real resvg raster.
+  { name: 'liquid url', text: 'https://example.com/welcome', opts: { shape: 'liquid' } },
+  { name: 'liquid brand url', text: 'https://example.com/welcome', opts: { shape: 'liquid', style: 'brand' } },
+  { name: 'liquid+circle eyes', text: 'https://chores.app/r/AB12CD', opts: { shape: 'liquid', eyeShape: 'circle' } },
+  { name: 'liquid vcard', text: VCARD, opts: { shape: 'liquid' } },
 ];
 
 let pass = 0, total = 0;

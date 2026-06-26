@@ -54,6 +54,7 @@ export function Settings() {
           <option value="dot">Dots (circles)</option>
           <option value="rounded">Rounded</option>
           <option value="extra">Extra rounded</option>
+          <option value="liquid">Liquid (connected)</option>
         </select>
       </label>
 

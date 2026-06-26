@@ -162,7 +162,7 @@ export type ColorStyle = 'solid' | 'brand' | 'image';
  * the timing/alignment patterns are kept as solid squares — a scanner samples
  * each module's centre, which every shape fills.
  */
-export type ModuleShape = 'square' | 'dot' | 'rounded' | 'extra';
+export type ModuleShape = 'square' | 'dot' | 'rounded' | 'extra' | 'liquid';
 
 /** How the three finder patterns ("eyes") are drawn. `auto` follows the module
  *  shape (dots → circular eyes, rounded/extra → rounded eyes, else square). */
@@ -172,13 +172,122 @@ export type EyeShape = 'auto' | 'square' | 'rounded' | 'circle';
 export function resolveEyeShape(eye: EyeShape, mod: ModuleShape): 'square' | 'rounded' | 'circle' {
   if (eye !== 'auto') return eye;
   if (mod === 'dot') return 'circle';
-  if (mod === 'rounded' || mod === 'extra') return 'rounded';
+  if (mod === 'rounded' || mod === 'extra' || mod === 'liquid') return 'rounded';
   return 'square';
 }
 
 /** Corner radius as a fraction of the module side for each module shape (dots
  *  are drawn as circles, not rounded rects). Shared so canvas + SVG match. */
-export const SHAPE_RX: Record<ModuleShape, number> = { square: 0, dot: 0, rounded: 0.32, extra: 0.46 };
+export const SHAPE_RX: Record<ModuleShape, number> = { square: 0, dot: 0, rounded: 0.32, extra: 0.46, liquid: 0.5 };
+
+/* ------------------------------------------------------------ liquid paths --- */
+
+/** Orthogonal-neighbour darkness used to decide where a liquid module merges. */
+export interface Neigh {
+  up: boolean;
+  down: boolean;
+  left: boolean;
+  right: boolean;
+}
+
+const p3 = (v: number) => Math.round(v * 1000) / 1000;
+
+/**
+ * SVG path `d` for a "liquid" (connected) data module at (x, y), side `m`.
+ * A corner is rounded by `rad` only when *both* of its adjacent edges are open
+ * (neighbour light); a shared edge stays square so neighbours merge into one
+ * smooth blob. The same string drives an SVG `<path d>` and a canvas `Path2D`,
+ * so the two renderers are pixel-identical.
+ */
+export function liquidModulePath(x: number, y: number, m: number, nb: Neigh, rad: number): string {
+  const r = Math.min(rad, m / 2);
+  const tl = !nb.up && !nb.left ? r : 0;
+  const tr = !nb.up && !nb.right ? r : 0;
+  const br = !nb.down && !nb.right ? r : 0;
+  const bl = !nb.down && !nb.left ? r : 0;
+  const a = (rr: number, ex: number, ey: number) => (rr ? ` A ${p3(rr)} ${p3(rr)} 0 0 1 ${p3(ex)} ${p3(ey)}` : '');
+  let d = `M ${p3(x + tl)} ${p3(y)}`;
+  d += ` L ${p3(x + m - tr)} ${p3(y)}` + a(tr, x + m, y + tr);
+  d += ` L ${p3(x + m)} ${p3(y + m - br)}` + a(br, x + m - br, y + m);
+  d += ` L ${p3(x + bl)} ${p3(y + m)}` + a(bl, x, y + m - bl);
+  d += ` L ${p3(x)} ${p3(y + tl)}` + a(tl, x + tl, y);
+  return d + ' Z';
+}
+
+/** A primitive to draw for a liquid code: a solid square or a filled path. */
+export type LiquidOp = { square: true; x: number; y: number; m: number } | { square: false; d: string };
+
+/**
+ * All geometry for a liquid (connected-blob) code, in the caller's coordinate
+ * system (origin + module size `m`). Data modules merge into smooth blobs;
+ * timing/alignment stay solid squares; finder patterns are skipped (drawn as
+ * styled eyes). Concave fillets round the inner armpits of L-junctions. Both
+ * renderers consume this list, so canvas and SVG are identical.
+ */
+export function liquidOps(
+  matrix: { size: number; get(r: number, c: number): boolean; isFunction(r: number, c: number): boolean },
+  n: number,
+  ox: number,
+  oy: number,
+  m: number,
+  rad: number,
+): LiquidOp[] {
+  const dark = (r: number, c: number) => r >= 0 && c >= 0 && r < n && c < n && matrix.get(r, c) && !inFinder(r, c, n);
+  const dataDark = (r: number, c: number) => dark(r, c) && !matrix.isFunction(r, c);
+  const ops: LiquidOp[] = [];
+
+  for (let r = 0; r < n; r++) {
+    for (let c = 0; c < n; c++) {
+      const x = ox + c * m;
+      const y = oy + r * m;
+      if (dark(r, c)) {
+        if (matrix.isFunction(r, c)) {
+          ops.push({ square: true, x, y, m });
+        } else {
+          const nb = { up: dark(r - 1, c), down: dark(r + 1, c), left: dark(r, c - 1), right: dark(r, c + 1) };
+          ops.push({ square: false, d: liquidModulePath(x, y, m, nb, rad) });
+        }
+        continue;
+      }
+      // Light data cell: round the inner armpit at any corner where both
+      // orthogonal neighbours and the diagonal are dark data, unless the cell is
+      // fully enclosed (which would erase a genuine light hole).
+      if (matrix.isFunction(r, c) || inFinder(r, c, n)) continue;
+      const u = dataDark(r - 1, c), d = dataDark(r + 1, c), l = dataDark(r, c - 1), ri = dataDark(r, c + 1);
+      const enclosed = u && d && l && ri;
+      if (enclosed) continue;
+      if (u && ri && dataDark(r - 1, c + 1)) ops.push({ square: false, d: liquidFilletPath(x, y, m, 'tr', rad) });
+      if (u && l && dataDark(r - 1, c - 1)) ops.push({ square: false, d: liquidFilletPath(x, y, m, 'tl', rad) });
+      if (d && ri && dataDark(r + 1, c + 1)) ops.push({ square: false, d: liquidFilletPath(x, y, m, 'br', rad) });
+      if (d && l && dataDark(r + 1, c - 1)) ops.push({ square: false, d: liquidFilletPath(x, y, m, 'bl', rad) });
+    }
+  }
+  return ops;
+}
+
+/** Which corner of a light cell a concave fillet rounds. */
+export type Corner = 'tl' | 'tr' | 'br' | 'bl';
+
+/**
+ * Dark concave fillet that fills a light cell's corner where the two orthogonal
+ * neighbours are dark — it rounds the inner "armpit" of a blob so L-junctions
+ * read as smooth rather than notched.
+ */
+export function liquidFilletPath(x: number, y: number, m: number, corner: Corner, rad: number): string {
+  const r = Math.min(rad, m / 2);
+  const A = (cx: number, cy: number, sx: number, sy: number, ex: number, ey: number) =>
+    `M ${p3(sx)} ${p3(sy)} L ${p3(cx)} ${p3(cy)} L ${p3(ex)} ${p3(ey)} A ${p3(r)} ${p3(r)} 0 0 0 ${p3(sx)} ${p3(sy)} Z`;
+  switch (corner) {
+    case 'tr':
+      return A(x + m, y, x + m - r, y, x + m, y + r);
+    case 'tl':
+      return A(x, y, x, y + r, x + r, y);
+    case 'br':
+      return A(x + m, y + m, x + m, y + m - r, x + m - r, y + m);
+    case 'bl':
+      return A(x, y + m, x + r, y + m, x, y + m - r);
+  }
+}
 /** Corner radius as a fraction of a finder-eye layer side, for rounded eyes. */
 export const EYE_RX = 0.28;
 

@@ -33,7 +33,9 @@ Generate a correctly-formatted QR for any of:
 Style the code with three independent controls:
 
 - **Module shape** — how each dark data module is drawn: **Square** (classic),
-  **Dots** (circles), **Rounded**, or **Extra rounded**.
+  **Dots** (circles), **Rounded**, **Extra rounded**, or **Liquid** — adjacent
+  modules merge into smooth connected blobs (rounded outer corners, filleted
+  inner junctions), rendered as SVG `<path>` / canvas `Path2D`.
 - **Finder eyes** — the three corner patterns drawn as a cohesive eye:
   **Auto** (follows the module shape), **Square**, **Rounded**, or **Circle**.
 - **Eye colour** — a separate colour for the eyes (or match the foreground),
@@ -162,12 +164,14 @@ are set, the button doesn't render.
 ## How scannability is verified
 
 `npm run verify` renders representative payloads (plain, halftone, halftone +
-centre-embed, long vCard, Wi-Fi) using the same function-pattern mask the app
-uses, then decodes each one with [`jsQR`](https://github.com/cozmo/jsQR) and
-asserts the decoded text matches the input. It checks **both** export paths —
-the canvas/PNG raster and the SVG vector output (rasterised by replaying its
-rects) — so a regression in either renderer fails the build. All cases must
-decode for the check to pass.
+centre-embed, every module/eye style, liquid, long vCard, Wi-Fi) using the same
+function-pattern mask the app uses, then decodes each one with
+[`jsQR`](https://github.com/cozmo/jsQR) and asserts the decoded text matches the
+input. It checks **both** export paths — the canvas/PNG raster, and the **real
+SVG output rasterised with [`@resvg/resvg-js`](https://github.com/yisibl/resvg-js)**
+(so `<path>`-based shapes like liquid are decoded faithfully, not approximated)
+— so a regression in either renderer fails the build. All cases must decode for
+the check to pass.
 
 > Always test-scan a printed code with a real phone before mass-printing. If a
 > phone struggles with a heavily-styled code, lower the **Image detail** or

@@ -10,6 +10,7 @@ import {
   moduleColor,
   dotHalfWidth,
   resolveEyeShape,
+  liquidOps,
   SHAPE_RX,
   EYE_RX,
   EYE_LAYERS,
@@ -193,6 +194,16 @@ function drawShapedModules(
   fillOpts: { style: ColorStyle; fg: string; bg: string; brand: string },
 ) {
   const dark = moduleColor(true, fillOpts);
+
+  if (shape === 'liquid') {
+    ctx.fillStyle = dark;
+    for (const op of liquidOps(matrix, n, origin, origin, m, m * 0.5)) {
+      if (op.square) ctx.fillRect(op.x, op.y, op.m, op.m);
+      else ctx.fill(new Path2D(op.d));
+    }
+    return;
+  }
+
   for (let r = 0; r < n; r++) {
     for (let c = 0; c < n; c++) {
       if (inFinder(r, c, n) || !matrix.get(r, c)) continue;

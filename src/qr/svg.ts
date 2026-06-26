@@ -10,6 +10,7 @@ import {
   moduleColor,
   dotHalfWidth,
   resolveEyeShape,
+  liquidOps,
   SHAPE_RX,
   EYE_RX,
   EYE_LAYERS,
@@ -182,6 +183,15 @@ function shapedModules(
   fillOpts: { style: ColorStyle; fg: string; bg: string; brand: string },
 ): string[] {
   const dark = moduleColor(true, fillOpts);
+
+  if (shape === 'liquid') {
+    return liquidOps(matrix, n, quietSub, quietSub, sub, sub * 0.5).map((op) =>
+      op.square
+        ? `<rect x="${r2(op.x)}" y="${r2(op.y)}" width="${r2(op.m)}" height="${r2(op.m)}" fill="${dark}"/>`
+        : `<path d="${op.d}" fill="${dark}"/>`,
+    );
+  }
+
   const out: string[] = [];
   for (let r = 0; r < n; r++) {
     for (let c = 0; c < n; c++) {
