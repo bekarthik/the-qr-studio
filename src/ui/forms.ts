@@ -14,6 +14,8 @@ export interface SourceDef {
   label: string;
   icon: string;
   fields: Field[];
+  /** Optional guidance shown under the form (e.g. scanner caveats). */
+  note?: string;
 }
 
 export const SOURCES: SourceDef[] = [
@@ -28,6 +30,7 @@ export const SOURCES: SourceDef[] = [
     label: 'Text',
     icon: '📝',
     fields: [{ key: 'text', label: 'Text', type: 'textarea', placeholder: 'Any text…' }],
+    note: 'Plain-text codes show the text but don’t trigger an action — many phone cameras (and Google Lens) won’t pop a result. Use “Web link” if you need a tap-through.',
   },
   {
     type: 'email',
@@ -73,6 +76,7 @@ export const SOURCES: SourceDef[] = [
       { key: 'amount', label: 'Amount ₹ (optional)', type: 'number', placeholder: 'Blank = payer enters' },
       { key: 'note', label: 'Note (optional)', type: 'text', placeholder: 'Order #123' },
     ],
+    note: 'Scan UPI codes inside a UPI app (GPay, PhonePe, Paytm) — a plain camera or Google Lens won’t open them. Use a real VPA; test payee IDs show as “invalid”.',
   },
   {
     type: 'appstore',

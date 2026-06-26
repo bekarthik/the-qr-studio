@@ -22,7 +22,8 @@ const state = {
   threshold: 0.5,
   autoThreshold: true,
   invert: false,
-  detail: 3, // sub-cells per module (3 standard, 5/7 = finer)
+  detail: 3, // sub-cells per module (3 standard, 5 = finer)
+  autotune: true, // raise halftone detail for dense codes so they still scan
   colorStyle: 'solid' as 'solid' | 'brand' | 'image',
   brandColor: '#2563eb',
   autoBrand: false,
@@ -178,6 +179,13 @@ function renderForm() {
     }
     formEl.appendChild(wrap);
   });
+
+  if (def.note) {
+    const note = document.createElement('p');
+    note.className = 'form__note';
+    note.textContent = def.note;
+    formEl.appendChild(note);
+  }
 }
 
 /* ----------------------------------------------------------- style inputs */
@@ -205,6 +213,10 @@ $('#autoThreshold').addEventListener('change', (e) => {
 });
 $('#detail').addEventListener('change', (e) => {
   state.detail = Number((e.target as HTMLSelectElement).value);
+  update();
+});
+$('#autotune').addEventListener('change', (e) => {
+  state.autotune = (e.target as HTMLInputElement).checked;
   update();
 });
 $('#autoBrand').addEventListener('change', (e) => {
@@ -351,6 +363,13 @@ function update() {
 
   const useImage = state.image && (state.resemble || state.embed);
 
+  // Optional auto-tune: dense codes (higher versions) lose too much data at
+  // standard halftone detail — only the centre 1/9 of each module stays true.
+  // Bump to High detail (protected centre 3×3 = 9/25) so they keep scanning.
+  // Only escalates; never lowers a manual choice, and only when halftoning.
+  const autoTuned = state.resemble && state.autotune && matrix.version >= 4;
+  const detail = autoTuned ? Math.max(state.detail, 5) : state.detail;
+
   // Auto-detect brand colour from the uploaded image when requested.
   if (state.autoBrand && state.image && state.colorStyle === 'brand') {
     state.brandColor = extractBrandColor(state.image, state.image.naturalWidth, state.image.naturalHeight);
@@ -359,12 +378,12 @@ function update() {
 
   // At High detail, low-pass the source so background texture doesn't alias
   // into speckle (which image-colours' compressed contrast can't absorb).
-  const smooth = state.detail >= 5 ? 1 : 0;
+  const smooth = detail >= 5 ? 1 : 0;
 
   const sampler =
     state.resemble && state.image
       ? sampleImage(state.image, state.image.naturalWidth, state.image.naturalHeight, {
-          gridSize: matrix.size * state.detail,
+          gridSize: matrix.size * detail,
           threshold: state.threshold,
           invert: state.invert,
           auto: state.autoThreshold,
@@ -393,7 +412,7 @@ function update() {
     protectPatterns: state.protectPatterns,
     colorStyle: state.colorStyle,
     brandColor: state.brandColor,
-    sub: state.detail,
+    sub: detail,
     centerImage,
   });
 
@@ -406,7 +425,7 @@ function update() {
     protectPatterns: state.protectPatterns,
     colorStyle: state.colorStyle,
     brandColor: state.brandColor,
-    sub: state.detail,
+    sub: detail,
     centerHref: centerImage && state.image ? state.image.src : null,
   };
   previewEl.innerHTML = '';
@@ -417,8 +436,9 @@ function update() {
 
   // Scannability guidance.
   if (useImage) {
-    hintEl.textContent =
-      'Tip: image-styled codes use maximum error correction. Always test-scan before printing; lower the “Image detail” or logo size if a phone struggles.';
+    hintEl.textContent = autoTuned
+      ? 'Auto-tuned to High detail so this denser code stays scannable. Turn off “Auto-tune detail” to override. Always test-scan before printing.'
+      : 'Tip: image-styled codes use maximum error correction. Always test-scan before printing; lower the “Image detail” or logo size if a phone struggles.';
   } else {
     hintEl.textContent = `Version ${matrix.version} · ${matrix.size}×${matrix.size} modules · error correction ${state.errorLevel}.`;
   }
