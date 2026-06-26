@@ -28,6 +28,8 @@ export type CardText = 'auto' | 'dark' | 'light';
 export type CardOrientation = 'landscape' | 'portrait';
 export type CardDivider = 'line' | 'none' | 'short' | 'dotted' | 'double' | 'thick';
 export type CardGraphic = 'none' | 'arc' | 'ring' | 'dots' | 'wave' | 'corner';
+export type CardTextV = 'top' | 'middle' | 'bottom';
+export type CardTextH = 'left' | 'center' | 'right';
 
 export interface CardTheme {
   bgStyle: CardBgStyle;
@@ -45,6 +47,8 @@ export interface CardTheme {
   bodyFont: string;
   divider: CardDivider;
   graphic: CardGraphic;
+  textV: CardTextV;
+  textH: CardTextH;
 }
 
 export interface FrontOptions {
@@ -216,20 +220,50 @@ function divider(parts: string[], tx: number, y: number, w: number, theme: CardT
   }
 }
 
-/** Heading + title + org block; returns the next free y. */
-function heading(parts: string[], tx: number, y: number, d: CardData, theme: CardTheme, pal: Palette, big: number): number {
-  if (d.name.trim()) { parts.push(text(tx, y, d.name, { size: big, weight: '700', font: theme.headingFont, fill: pal.ink })); y += big * 0.8; }
-  if (d.title.trim()) { parts.push(text(tx, y, d.title, { size: big * 0.5, font: theme.bodyFont, italic: true, fill: theme.accent })); y += big * 0.7; }
-  if (d.org.trim()) { parts.push(text(tx, y, d.org, { size: big * 0.48, font: theme.bodyFont, fill: pal.muted })); y += big * 0.7; }
-  return y;
+type Align = 'start' | 'middle' | 'end';
+const alignOf = (h: CardTextH): Align => (h === 'center' ? 'middle' : h === 'right' ? 'end' : 'start');
+
+const contactLines = (d: CardData) =>
+  [d.phone, d.email, d.url, d.address].map((s) => s.trim()).filter(Boolean);
+
+/** Total height of the text block (name/title/org/divider/contacts). */
+function blockHeight(d: CardData, theme: CardTheme, big: number, step: number, withContacts: boolean): number {
+  let h = 0;
+  if (d.name.trim()) h += big * 0.8;
+  if (d.title.trim()) h += big * 0.7;
+  if (d.org.trim()) h += big * 0.7;
+  h += theme.divider === 'none' ? 16 : 40;
+  if (withContacts) h += contactLines(d).length * step;
+  return h;
 }
 
-function contacts(parts: string[], tx: number, y: number, d: CardData, theme: CardTheme, pal: Palette, step: number): void {
-  for (const line of [d.phone, d.email, d.url, d.address].map((s) => s.trim()).filter(Boolean)) {
-    parts.push(`<rect x="${tx}" y="${y - 14}" width="9" height="9" fill="${theme.accent}"/>`);
-    parts.push(text(tx + 24, y, fit(line, 34), { size: 24, font: theme.bodyFont, fill: pal.ink }));
+/** Name / title / org / divider, aligned at anchorX. Returns the next free y. */
+function renderHeader(parts: string[], ax: number, y: number, align: Align, d: CardData, theme: CardTheme, pal: Palette, big: number, dW: number): number {
+  if (d.name.trim()) { parts.push(text(ax, y, d.name, { size: big, weight: '700', font: theme.headingFont, fill: pal.ink, anchor: align })); y += big * 0.8; }
+  if (d.title.trim()) { parts.push(text(ax, y, d.title, { size: big * 0.5, font: theme.bodyFont, italic: true, fill: theme.accent, anchor: align })); y += big * 0.7; }
+  if (d.org.trim()) { parts.push(text(ax, y, d.org, { size: big * 0.48, font: theme.bodyFont, fill: pal.muted, anchor: align })); y += big * 0.7; }
+  const dx = align === 'start' ? ax : align === 'end' ? ax - dW : ax - dW / 2;
+  divider(parts, dx, y + 4, dW, theme);
+  return y + (theme.divider === 'none' ? 16 : 40);
+}
+
+/** Contact lines, aligned at anchorX (bullets only for left alignment). */
+function renderContacts(parts: string[], ax: number, y: number, align: Align, d: CardData, theme: CardTheme, pal: Palette, step: number): void {
+  for (const line of contactLines(d)) {
+    if (align === 'start') {
+      parts.push(`<rect x="${ax}" y="${y - 14}" width="9" height="9" fill="${theme.accent}"/>`);
+      parts.push(text(ax + 24, y, fit(line, 34), { size: 24, font: theme.bodyFont, fill: pal.ink }));
+    } else {
+      parts.push(text(ax, y, fit(line, 34), { size: 24, font: theme.bodyFont, fill: pal.ink, anchor: align }));
+    }
     y += step;
   }
+}
+
+/** Draw the media element (QR or logo) at (x, y) within a QR-sized box. */
+function pushMedia(parts: string[], g: Geo, qrSvg: string | null, logoHref: string | null | undefined, d: CardData, theme: CardTheme, pal: Palette, x: number, y: number): void {
+  if (qrSvg) parts.push(qrBlock(g, qrSvg, d, theme, pal, x, y, x + g.QR / 2));
+  else if (logoHref) parts.push(`<image x="${x}" y="${y}" width="${g.QR}" height="${g.QR}" preserveAspectRatio="xMidYMid meet" href="${esc(logoHref)}"/>`);
 }
 
 function qrBlock(g: Geo, qrSvg: string, d: CardData, theme: CardTheme, pal: Palette, qx: number, qy: number, capCx: number): string {
@@ -242,55 +276,83 @@ function qrBlock(g: Geo, qrSvg: string, d: CardData, theme: CardTheme, pal: Pale
   return panel + placeQr(qrSvg, qx, qy) + caption;
 }
 
+/**
+ * Lays out the text block and a media element (QR for a single card, logo for a
+ * two-sided front, or none) at the chosen text position. Tall text blocks (a
+ * vCard with contacts) are forced to the top so they never collide with the
+ * media; short blocks (just a name) honour all nine positions.
+ */
+function placeContent(ox: number, g: Geo, o: CardOrientation, d: CardData, theme: CardTheme, pal: Palette, qrSvg: string | null, logoHref: string | null): string {
+  const parts: string[] = [];
+  const big = o === 'portrait' ? 46 : 54;
+  const step = o === 'portrait' ? 40 : 42;
+  const withC = contactLines(d).length > 0;
+  const media = Boolean(qrSvg || logoHref);
+  const tall = withC; // a vCard-style block: pin to top, side-by-side
+  const tv: CardTextV = tall ? 'top' : theme.textV;
+  const th = theme.textH;
+  const align = alignOf(th);
+  const MW = g.QR;
+
+  // PORTRAIT: split vCard (header above media, contacts below), else a vertical
+  // group anchored by textV.
+  if (o === 'portrait') {
+    const cx = ox + (align === 'middle' ? g.W / 2 : align === 'end' ? g.W - g.PAD : g.PAD);
+    if (tall) {
+      renderHeader(parts, cx, 132, align, d, theme, pal, big, 300);
+      const qy = 300;
+      if (media) pushMedia(parts, g, qrSvg, logoHref, d, theme, pal, ox + (g.W - MW) / 2, qy);
+      renderContacts(parts, cx, qy + MW + (qrSvg ? 96 : 60), align, d, theme, pal, step);
+      return parts.join('');
+    }
+    const h = blockHeight(d, theme, big, step, false);
+    const groupH = h + (media ? 26 + MW + (qrSvg ? 36 : 0) : 0);
+    const gy = tv === 'middle' ? (g.H - groupH) / 2 : tv === 'bottom' ? g.H - g.PAD - groupH : g.PAD;
+    renderHeader(parts, cx, gy + big * 0.7, align, d, theme, pal, big, 300);
+    if (media) pushMedia(parts, g, qrSvg, logoHref, d, theme, pal, ox + (g.W - MW) / 2, gy + h + 26);
+    return parts.join('');
+  }
+
+  // LANDSCAPE.
+  const sideBySide = tall || th !== 'center';
+  if (sideBySide) {
+    const right = th === 'right';
+    const colX0 = right ? ox + g.PAD + MW + 44 : ox + g.PAD;
+    const colX1 = right ? ox + g.W - g.PAD : ox + g.W - g.PAD - MW - 44;
+    const ax = align === 'middle' ? (colX0 + colX1) / 2 : align === 'end' ? colX1 : colX0;
+    const dW = Math.min(colX1 - colX0, 360);
+    const h = blockHeight(d, theme, big, step, withC);
+    const y0 = (tv === 'middle' ? (g.H - h) / 2 : tv === 'bottom' ? g.H - g.PAD - h : g.PAD) + big * 0.7;
+    let y = renderHeader(parts, ax, y0, align, d, theme, pal, big, dW);
+    if (withC) renderContacts(parts, ax, y, align, d, theme, pal, step);
+    if (media) pushMedia(parts, g, qrSvg, logoHref, d, theme, pal, right ? ox + g.PAD : ox + g.W - g.PAD - MW, (g.H - MW) / 2);
+  } else {
+    // Stacked, horizontally centred (short text only).
+    const h = blockHeight(d, theme, big, step, false);
+    const groupH = h + (media ? 26 + MW + (qrSvg ? 36 : 0) : 0);
+    const gy = tv === 'middle' ? (g.H - groupH) / 2 : tv === 'bottom' ? g.H - g.PAD - groupH : g.PAD;
+    const cx = ox + g.W / 2;
+    renderHeader(parts, cx, gy + big * 0.7, 'middle', d, theme, pal, big, 300);
+    if (media) pushMedia(parts, g, qrSvg, logoHref, d, theme, pal, ox + (g.W - MW) / 2, gy + h + 26);
+  }
+  return parts.join('');
+}
+
 /** Inner content (text + QR) for one single-sided face at offset ox. */
 function singleContent(ox: number, g: Geo, o: CardOrientation, qrSvg: string, d: CardData, theme: CardTheme, pal: Palette): string {
   if (!hasDetails(d)) {
     const qx = ox + (g.W - g.QR) / 2;
     return qrBlock(g, qrSvg, d, theme, pal, qx, (g.H - g.QR) / 2, ox + g.W / 2);
   }
-  const parts: string[] = [];
-  const tx = ox + g.PAD;
-  if (o === 'portrait') {
-    let y = heading(parts, tx, 116, d, theme, pal, 46);
-    y += 6;
-    divider(parts, tx, y, 300, theme);
-    const qx = ox + (g.W - g.QR) / 2;
-    const qy = 296;
-    parts.push(qrBlock(g, qrSvg, d, theme, pal, qx, qy, ox + g.W / 2));
-    contacts(parts, tx, qy + g.QR + 96, d, theme, pal, 40);
-  } else {
-    let y = heading(parts, tx, 168, d, theme, pal, 54);
-    y += 8;
-    divider(parts, tx, y, Math.min(g.W - 2 * g.PAD - g.QR - 44, 360), theme);
-    y += 40;
-    contacts(parts, tx, y, d, theme, pal, 42);
-    const qx = ox + g.W - g.PAD - g.QR;
-    parts.push(qrBlock(g, qrSvg, d, theme, pal, qx, (g.H - g.QR) / 2, qx + g.QR / 2));
-  }
-  return parts.join('');
+  return placeContent(ox, g, o, d, theme, pal, qrSvg, null);
 }
 
 /** Front face of a two-sided card: details + logo + watermark (no QR). */
 function frontContent(ox: number, g: Geo, o: CardOrientation, d: CardData, theme: CardTheme, pal: Palette, front: FrontOptions): string {
-  const parts: string[] = [];
-  parts.push(watermarkLayer(ox, g, front.watermarkHref, front.watermarkOpacity));
-  const tx = ox + g.PAD;
-  if (hasDetails(d)) {
-    if (o === 'portrait') {
-      let y = heading(parts, tx, 116, d, theme, pal, 46);
-      y += 6;
-      divider(parts, tx, y, 300, theme);
-      contacts(parts, tx, 760, d, theme, pal, 40);
-    } else {
-      let y = heading(parts, tx, 168, d, theme, pal, 54);
-      y += 8;
-      divider(parts, tx, y, 360, theme);
-      y += 40;
-      contacts(parts, tx, y, d, theme, pal, 42);
-    }
-  }
-  parts.push(logoFace(ox, g, o, front.logoHref));
-  return parts.join('');
+  const wm = watermarkLayer(ox, g, front.watermarkHref, front.watermarkOpacity);
+  if (!hasDetails(d) && !front.logoHref) return wm;
+  if (!hasDetails(d)) return wm + logoFace(ox, g, o, front.logoHref);
+  return wm + placeContent(ox, g, o, d, theme, pal, null, front.logoHref ?? null);
 }
 
 function backContent(ox: number, g: Geo, qrSvg: string, d: CardData, theme: CardTheme, pal: Palette): string {
@@ -382,7 +444,7 @@ interface TextOpts {
   fill: string;
   weight?: string;
   italic?: boolean;
-  anchor?: 'start' | 'middle';
+  anchor?: 'start' | 'middle' | 'end';
   spacing?: number;
 }
 

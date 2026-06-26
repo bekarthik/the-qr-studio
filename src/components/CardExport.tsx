@@ -8,7 +8,7 @@ import { sampleImage, extractBrandColor } from '../qr/halftone';
 import {
   buildCardSVG, buildCardSheetSVG, buildCardFrontSVG, buildCardBackSVG, cardDims, CARD_FONTS,
   type CardData, type CardTheme, type CardBgStyle, type CardPattern, type CardText, type CardOrientation,
-  type CardDivider, type CardGraphic,
+  type CardDivider, type CardGraphic, type CardTextV, type CardTextH,
 } from '../card/card';
 
 const str = (v: unknown) => (v == null ? '' : String(v));
@@ -29,7 +29,7 @@ function captionFor(type: SourceType): string {
 const CAPTURE = [
   'cardBgStyle', 'cardBg1', 'cardBg2', 'cardGradAngle', 'cardPattern', 'cardAccentAuto', 'cardAccent',
   'cardText', 'cardAccentBar', 'cardBorder', 'cardPanel', 'cardOrientation', 'cardHeadingFont', 'cardBodyFont',
-  'cardDivider', 'cardGraphic',
+  'cardDivider', 'cardGraphic', 'cardTextV', 'cardTextH',
 ] as const;
 
 type Preset = { name: string; patch: Partial<Config> };
@@ -133,6 +133,7 @@ export function CardExport() {
       text: cfg.cardText, accentBar: cfg.cardAccentBar, border: cfg.cardBorder, qrPanel: cfg.cardPanel,
       orientation: cfg.cardOrientation, headingFont: cfg.cardHeadingFont, bodyFont: cfg.cardBodyFont,
       divider: cfg.cardDivider, graphic: cfg.cardGraphic,
+      textV: isVcard ? 'top' : cfg.cardTextV, textH: cfg.cardTextH,
     };
     const data: CardData = {
       name: displayName,
@@ -249,6 +250,28 @@ export function CardExport() {
             <option value="solid">Solid</option>
             <option value="gradient">Gradient</option>
             <option value="pattern">Pattern</option>
+          </select>
+        </label>
+
+        <label className="field">
+          <span className="field__label">Text position — vertical</span>
+          <select
+            value={isVcard ? 'top' : cfg.cardTextV}
+            disabled={isVcard}
+            title={isVcard ? 'A Visiting card lays details at the top; only horizontal varies' : undefined}
+            onChange={(e) => update({ cardTextV: e.target.value as CardTextV })}
+          >
+            <option value="top">Top</option>
+            <option value="middle">Middle</option>
+            <option value="bottom">Bottom</option>
+          </select>
+        </label>
+        <label className="field">
+          <span className="field__label">Text position — horizontal</span>
+          <select value={cfg.cardTextH} onChange={(e) => update({ cardTextH: e.target.value as CardTextH })}>
+            <option value="left">Left</option>
+            <option value="center">Center</option>
+            <option value="right">Right</option>
           </select>
         </label>
 

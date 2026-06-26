@@ -39,7 +39,7 @@ for (const [i, v] of vcards.entries()) {
   });
   const data = { name: `${v.first} ${v.last}`.trim(), title: v.title, org: v.org, phone: v.phone, email: v.email, url: v.url, address: v.address, qrBg: '#ffffff', caption: 'SCAN TO SAVE CONTACT' };
   // Exercise solid, gradient and pattern themes (the QR keeps its own panel).
-  const base = { gradAngle: 135, pattern: 'dots', text: 'auto', accentBar: true, border: true, qrPanel: true, orientation: 'landscape', headingFont: 'Arial, sans-serif', bodyFont: 'Georgia, serif', divider: 'double', graphic: 'wave' };
+  const base = { gradAngle: 135, pattern: 'dots', text: 'auto', accentBar: true, border: true, qrPanel: true, orientation: 'landscape', headingFont: 'Arial, sans-serif', bodyFont: 'Georgia, serif', divider: 'double', graphic: 'wave', textV: 'top', textH: 'left' };
   const themes = {
     solid: { ...base, bgStyle: 'solid', bg1: '#fffdf8', bg2: '#efe7d6', accent: '#e0522e' },
     gradient: { ...base, bgStyle: 'gradient', bg1: '#16324f', bg2: '#2f7d8f', accent: '#7fe3d0', text: 'light', accentBar: false },
