@@ -23,8 +23,6 @@ const state = {
   autoThreshold: true,
   invert: false,
   detail: 3, // sub-cells per module (3 standard, 5 = finer)
-  autotune: true, // raise halftone detail for dense codes so they still scan
-  dither: true, // Floyd–Steinberg dither for smoother halftone tone
   colorStyle: 'solid' as 'solid' | 'brand' | 'image',
   brandColor: '#2563eb',
   autoBrand: false,
@@ -232,14 +230,6 @@ on('#detail', 'change', (e) => {
   state.detail = Number((e.target as HTMLSelectElement).value);
   update();
 });
-on('#autotune', 'change', (e) => {
-  state.autotune = (e.target as HTMLInputElement).checked;
-  update();
-});
-on('#dither', 'change', (e) => {
-  state.dither = (e.target as HTMLInputElement).checked;
-  update();
-});
 on('#autoBrand', 'change', (e) => {
   state.autoBrand = (e.target as HTMLInputElement).checked;
   ($('#brandColor') as HTMLInputElement).disabled = state.autoBrand;
@@ -386,13 +376,7 @@ function update() {
   }
 
   const useImage = state.image && (state.resemble || state.embed);
-
-  // Optional auto-tune: dense codes (higher versions) lose too much data at
-  // standard halftone detail — only the centre 1/9 of each module stays true.
-  // Bump to High detail (protected centre 3×3 = 9/25) so they keep scanning.
-  // Only escalates; never lowers a manual choice, and only when halftoning.
-  const autoTuned = state.resemble && state.autotune && matrix.version >= 4;
-  const detail = autoTuned ? Math.max(state.detail, 5) : state.detail;
+  const detail = state.detail;
 
   // Auto-detect brand colour from the uploaded image when requested.
   if (state.autoBrand && state.image && state.colorStyle === 'brand') {
@@ -412,7 +396,6 @@ function update() {
           invert: state.invert,
           auto: state.autoThreshold,
           smooth,
-          dither: state.dither,
         })
       : null;
 
@@ -461,9 +444,8 @@ function update() {
 
   // Scannability guidance.
   if (useImage) {
-    hintEl.textContent = autoTuned
-      ? 'Auto-tuned to High detail so this denser code stays scannable. Turn off “Auto-tune detail” to override. Always test-scan before printing.'
-      : 'Tip: image-styled codes use maximum error correction. Always test-scan before printing; lower the “Image detail” or logo size if a phone struggles.';
+    hintEl.textContent =
+      'Tip: image-styled codes use maximum error correction. Always test-scan before printing; lower the “Image detail” or logo size if a phone struggles.';
   } else {
     hintEl.textContent = `Version ${matrix.version} · ${matrix.size}×${matrix.size} modules · error correction ${state.errorLevel}.`;
   }
