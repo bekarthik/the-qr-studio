@@ -265,6 +265,42 @@ h3 {
   background: var(--ink, #1c1916);
   color: var(--paper-2, #fffdf8);
 }
+.preset--custom {
+  display: inline-flex;
+  align-items: stretch;
+  padding: 0;
+  overflow: hidden;
+}
+.preset--custom .preset__apply {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  padding: 7px 6px 7px 12px;
+  cursor: pointer;
+}
+.preset--custom .preset__del {
+  border: 0;
+  border-left: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  padding: 0 9px;
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+}
+.preset--custom:hover {
+  background: transparent;
+  color: var(--ink, #1c1916);
+}
+.preset--custom:hover .preset__apply:hover,
+.preset--custom:hover .preset__del:hover {
+  background: var(--ink, #1c1916);
+  color: var(--paper-2, #fffdf8);
+}
+.preset--save {
+  border-style: dashed;
+}
 .output {
   grid-area: preview;
   position: sticky;

@@ -135,11 +135,13 @@ source lays out the full contact details.
 
 **Design.** The card is fully themeable — pick a one-click **preset** (Paper,
 Ink, Mono, Vermilion, Ocean, Sunset, Mint, Blueprint) or set it yourself:
-**background** (solid / gradient with an angle / pattern — dots, grid, diagonal,
-crosshatch), **two colours**, **accent colour** (or match the QR), **text**
-(auto-contrast / dark / light), and toggles for the **accent bar**, **border**
-and **QR panel**. The QR always keeps its own light panel, so it scans on any
-background.
+**orientation** (landscape / portrait), **background** (solid / gradient with an
+angle / pattern — dots, grid, diagonal, crosshatch), **two colours**, **accent
+colour** (or match the QR), **text** (auto-contrast / dark / light), **per-element
+fonts** (heading + body, from web-safe stacks), a **custom caption**, and toggles
+for the **accent bar**, **border** and **QR panel**. Save your own design as a
+named **preset** (kept in the browser). The QR always keeps its own light panel,
+so it scans on any background.
 
 Tick **Two-sided** for a front/back sheet: the **front** carries your details
 plus your uploaded image as a **logo** (and a faint **watermark** if the

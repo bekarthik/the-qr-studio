@@ -1,20 +1,12 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useGen, type Config } from '../state/GeneratorContext';
 import { buildPayload, type SourceType } from '../content/payloads';
 import { buildMatrix } from '../qr/matrix';
 import { renderSVG } from '../qr/svg';
 import { brandDarkHex } from '../qr/grid';
 import {
-  buildCardSVG,
-  buildCardSheetSVG,
-  CARD_W,
-  CARD_H,
-  sheetWidth,
-  type CardData,
-  type CardTheme,
-  type CardBgStyle,
-  type CardPattern,
-  type CardText,
+  buildCardSVG, buildCardSheetSVG, cardDims, CARD_FONTS,
+  type CardData, type CardTheme, type CardBgStyle, type CardPattern, type CardText, type CardOrientation,
 } from '../card/card';
 
 const str = (v: unknown) => (v == null ? '' : String(v));
@@ -31,8 +23,15 @@ function captionFor(type: SourceType): string {
   }
 }
 
-/** One-click design starting points. Each applies a bundle of card settings. */
-const PRESETS: Array<{ name: string; patch: Partial<Config> }> = [
+/** Card-design fields captured by a saved preset. */
+const CAPTURE = [
+  'cardBgStyle', 'cardBg1', 'cardBg2', 'cardGradAngle', 'cardPattern', 'cardAccentAuto', 'cardAccent',
+  'cardText', 'cardAccentBar', 'cardBorder', 'cardPanel', 'cardOrientation', 'cardHeadingFont', 'cardBodyFont',
+] as const;
+
+type Preset = { name: string; patch: Partial<Config> };
+
+const BUILTIN: Preset[] = [
   { name: 'Paper', patch: { cardBgStyle: 'solid', cardBg1: '#fffdf8', cardAccentAuto: true, cardText: 'auto', cardAccentBar: true, cardBorder: true, cardPanel: true } },
   { name: 'Ink', patch: { cardBgStyle: 'solid', cardBg1: '#1c1916', cardText: 'light', cardAccentAuto: false, cardAccent: '#e0522e', cardAccentBar: true } },
   { name: 'Mono', patch: { cardBgStyle: 'solid', cardBg1: '#ffffff', cardText: 'dark', cardAccentAuto: false, cardAccent: '#1c1916', cardAccentBar: true, cardBorder: true } },
@@ -43,10 +42,8 @@ const PRESETS: Array<{ name: string; patch: Partial<Config> }> = [
   { name: 'Blueprint', patch: { cardBgStyle: 'pattern', cardPattern: 'grid', cardBg1: '#0f2436', cardBg2: '#24465f', cardText: 'light', cardAccentAuto: false, cardAccent: '#7fb3ff', cardAccentBar: false } },
 ];
 
-/**
- * Visiting-card export. Works for any source: embeds a styled QR of the active
- * code, an optional display name, and an extensive, themeable card design.
- */
+const LS_KEY = 'qrstudio.cardPresets';
+
 export function CardExport() {
   const { cfg, update } = useGen();
   const v = cfg.values.vcard ?? {};
@@ -57,6 +54,32 @@ export function CardExport() {
   const payload = buildPayload(cfg.type, cfg.values[cfg.type] ?? {});
   const hasData = Boolean(payload);
   const twoSided = cfg.cardTwoSided;
+
+  const [custom, setCustom] = useState<Preset[]>([]);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw) setCustom(JSON.parse(raw));
+    } catch {
+      /* ignore */
+    }
+  }, []);
+  const persist = (next: Preset[]) => {
+    setCustom(next);
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify(next));
+    } catch {
+      /* ignore */
+    }
+  };
+  const savePreset = () => {
+    const name = window.prompt('Save this design as a preset named:')?.trim();
+    if (!name) return;
+    const patch: Partial<Config> = {};
+    for (const k of CAPTURE) (patch as Record<string, unknown>)[k] = cfg[k];
+    persist([...custom.filter((p) => p.name !== name), { name, patch }]);
+  };
+  const deletePreset = (name: string) => persist(custom.filter((p) => p.name !== name));
 
   const svg = useMemo(() => {
     if (!payload) return '';
@@ -72,16 +95,10 @@ export function CardExport() {
       shape: cfg.shape, eyeShape: cfg.eyeShape, eyeColor: cfg.autoEyeColor ? null : cfg.eyeColor, pixelSize: 420,
     });
     const theme: CardTheme = {
-      bgStyle: cfg.cardBgStyle,
-      bg1: cfg.cardBg1,
-      bg2: cfg.cardBg2,
-      gradAngle: cfg.cardGradAngle,
-      pattern: cfg.cardPattern,
+      bgStyle: cfg.cardBgStyle, bg1: cfg.cardBg1, bg2: cfg.cardBg2, gradAngle: cfg.cardGradAngle, pattern: cfg.cardPattern,
       accent: cfg.cardAccentAuto ? (cfg.colorStyle === 'brand' ? brandDarkHex(cfg.brandColor) : '#e0522e') : cfg.cardAccent,
-      text: cfg.cardText,
-      accentBar: cfg.cardAccentBar,
-      border: cfg.cardBorder,
-      qrPanel: cfg.cardPanel,
+      text: cfg.cardText, accentBar: cfg.cardAccentBar, border: cfg.cardBorder, qrPanel: cfg.cardPanel,
+      orientation: cfg.cardOrientation, headingFont: cfg.cardHeadingFont, bodyFont: cfg.cardBodyFont,
     };
     const data: CardData = {
       name: displayName,
@@ -92,7 +109,7 @@ export function CardExport() {
       url: isVcard ? str(v.url) : '',
       address: isVcard ? str(v.address) : '',
       qrBg: cfg.bg,
-      caption: captionFor(cfg.type),
+      caption: str(cfg.cardCaption).trim() || captionFor(cfg.type),
     };
     return twoSided
       ? buildCardSheetSVG(data, qrSvg, { logoHref: cfg.image?.src ?? null, watermarkHref: cfg.watermark ? cfg.image?.src ?? null : null, watermarkOpacity: cfg.watermarkOpacity }, theme)
@@ -103,12 +120,13 @@ export function CardExport() {
   const baseName = (displayName || 'card').replace(/\s+/g, '-').toLowerCase() || 'card';
   const downloadSvg = () => save(new Blob([svg], { type: 'image/svg+xml' }), `${baseName}.svg`);
   const downloadPng = () => {
+    const { w, h } = cardDims(cfg.cardOrientation, twoSided);
     const img = new Image();
     img.onload = () => {
       const scale = 2;
       const canvas = document.createElement('canvas');
-      canvas.width = (twoSided ? sheetWidth() : CARD_W) * scale;
-      canvas.height = CARD_H * scale;
+      canvas.width = w * scale;
+      canvas.height = h * scale;
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
@@ -119,6 +137,9 @@ export function CardExport() {
   };
 
   const showBg2 = cfg.cardBgStyle === 'gradient' || cfg.cardBgStyle === 'pattern';
+  const fontOpts = CARD_FONTS.map((f) => (
+    <option key={f.label} value={f.stack}>{f.label}</option>
+  ));
 
   return (
     <div className="cardx">
@@ -129,29 +150,41 @@ export function CardExport() {
 
       <div className="grid2">
         <label className="field">
-          <span className="field__label">
-            Name on card <span className="h__opt">optional</span>
-          </span>
+          <span className="field__label">Name on card <span className="h__opt">optional</span></span>
           <input type="text" placeholder={vcardName || 'e.g. Asha Rao'} value={cfg.cardName} onChange={(e) => update({ cardName: e.target.value })} />
+        </label>
+        <label className="field">
+          <span className="field__label">Caption <span className="h__opt">optional</span></span>
+          <input type="text" placeholder={captionFor(cfg.type)} value={cfg.cardCaption} onChange={(e) => update({ cardCaption: e.target.value })} />
         </label>
         <label className="field field--check">
           <input type="checkbox" checked={twoSided} onChange={(e) => update({ cardTwoSided: e.target.checked })} />
-          <span className="field__label">
-            Two-sided — <b>QR on the back</b>, logo/watermark on the front
-          </span>
+          <span className="field__label">Two-sided — <b>QR on the back</b>, logo/watermark on the front</span>
         </label>
       </div>
 
       <p className="subhead">Design</p>
       <div className="preset-row">
-        {PRESETS.map((p) => (
-          <button key={p.name} type="button" className="preset" onClick={() => update(p.patch)}>
-            {p.name}
-          </button>
+        {BUILTIN.map((p) => (
+          <button key={p.name} type="button" className="preset" onClick={() => update(p.patch)}>{p.name}</button>
         ))}
+        {custom.map((p) => (
+          <span key={p.name} className="preset preset--custom">
+            <button type="button" className="preset__apply" onClick={() => update(p.patch)}>{p.name}</button>
+            <button type="button" className="preset__del" title="Delete preset" onClick={() => deletePreset(p.name)}>×</button>
+          </span>
+        ))}
+        <button type="button" className="preset preset--save" onClick={savePreset}>＋ Save</button>
       </div>
 
       <div className="grid2">
+        <label className="field">
+          <span className="field__label">Orientation</span>
+          <select value={cfg.cardOrientation} onChange={(e) => update({ cardOrientation: e.target.value as CardOrientation })}>
+            <option value="landscape">Landscape</option>
+            <option value="portrait">Portrait</option>
+          </select>
+        </label>
         <label className="field">
           <span className="field__label">Background</span>
           <select value={cfg.cardBgStyle} onChange={(e) => update({ cardBgStyle: e.target.value as CardBgStyle })}>
@@ -160,23 +193,33 @@ export function CardExport() {
             <option value="pattern">Pattern</option>
           </select>
         </label>
+
         <label className="field">
-          <span className="field__label">Text</span>
-          <select value={cfg.cardText} onChange={(e) => update({ cardText: e.target.value as CardText })}>
-            <option value="auto">Auto contrast</option>
-            <option value="dark">Dark</option>
-            <option value="light">Light</option>
-          </select>
+          <span className="field__label">Heading font</span>
+          <select value={cfg.cardHeadingFont} onChange={(e) => update({ cardHeadingFont: e.target.value })}>{fontOpts}</select>
+        </label>
+        <label className="field">
+          <span className="field__label">Body font</span>
+          <select value={cfg.cardBodyFont} onChange={(e) => update({ cardBodyFont: e.target.value })}>{fontOpts}</select>
         </label>
 
         <label className="field">
           <span className="field__label">{showBg2 ? 'Colour 1' : 'Background colour'}</span>
           <input type="color" value={cfg.cardBg1} onChange={(e) => update({ cardBg1: e.target.value })} />
         </label>
-        {showBg2 && (
+        {showBg2 ? (
           <label className="field">
             <span className="field__label">{cfg.cardBgStyle === 'gradient' ? 'Colour 2' : 'Pattern colour'}</span>
             <input type="color" value={cfg.cardBg2} onChange={(e) => update({ cardBg2: e.target.value })} />
+          </label>
+        ) : (
+          <label className="field">
+            <span className="field__label">Text</span>
+            <select value={cfg.cardText} onChange={(e) => update({ cardText: e.target.value as CardText })}>
+              <option value="auto">Auto contrast</option>
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select>
           </label>
         )}
 
@@ -194,6 +237,16 @@ export function CardExport() {
               <option value="grid">Grid</option>
               <option value="diagonal">Diagonal</option>
               <option value="crosshatch">Crosshatch</option>
+            </select>
+          </label>
+        )}
+        {showBg2 && (
+          <label className="field">
+            <span className="field__label">Text</span>
+            <select value={cfg.cardText} onChange={(e) => update({ cardText: e.target.value as CardText })}>
+              <option value="auto">Auto contrast</option>
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
             </select>
           </label>
         )}
@@ -229,9 +282,8 @@ export function CardExport() {
             <button className="download download--alt" onClick={downloadSvg}>Download card SVG</button>
           </div>
           <p className="finehint">
-            The QR encodes your current source. With no name it’s a clean QR-only card; add a{' '}
-            <b>Name on card</b> to title it, and a <b>Visiting card</b> source lays out
-            title/company/contacts. The QR keeps its own background so it always scans.
+            The QR encodes your current source. With no name it’s a clean QR-only card. The QR keeps
+            its own background so it always scans.
             {twoSided && <> The sheet is <b>front</b> (left) | <b>back</b> (right, QR).</>}
           </p>
         </>
