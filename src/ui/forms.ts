@@ -142,7 +142,7 @@ export const SOURCES: SourceDef[] = [
         ],
       },
     ],
-    note: 'Shares account details for NEFT/IMPS/RTGS or adding a beneficiary — it’s not a tap-to-pay link (no universal scan-to-pay standard exists for account+IFSC). For instant payment, use UPI. Scanning shows the details as text.',
+    note: 'Shares account details for NEFT/IMPS/RTGS or adding a beneficiary — it’s not a tap-to-pay link (no scan-to-pay standard exists for account+IFSC). Scan it with your phone camera or Google Lens to see every line. A UPI app like GPay/PhonePe can’t pay a raw account and shows only the first line — so the code now leads with the A/C + IFSC. For instant tap-to-pay, use UPI instead.',
   },
   {
     type: 'paypal',

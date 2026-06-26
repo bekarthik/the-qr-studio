@@ -99,15 +99,17 @@ export function buildPayload(type: SourceType, f: PayloadInput): string {
       const acc = String(f.account || '').replace(/\s+/g, '');
       const ifsc = String(f.ifsc || '').replace(/\s+/g, '').toUpperCase();
       if (!acc || !ifsc) return '';
-      const lines = ['Bank transfer (India)'];
       const name = String(f.name || '').trim();
-      if (name) lines.push(`Name: ${name}`);
-      lines.push(`A/C: ${acc}`);
-      lines.push(`IFSC: ${ifsc}`);
       const bank = String(f.bank || '').trim();
-      if (bank) lines.push(`Bank: ${bank}`);
       const type = String(f.acctype || '').trim();
-      if (type) lines.push(`Type: ${type}`);
+      // Lead with the actionable account + IFSC: some scanners (notably UPI
+      // apps like GPay/PhonePe, which can't pay a raw account) surface only the
+      // QR's first line, so the essentials must come first. A generic camera /
+      // Google Lens scan shows every line.
+      const lines = [`A/C ${acc}  IFSC ${ifsc}`];
+      const who = [name, bank, type].filter(Boolean).join(', ');
+      if (who) lines.push(who);
+      lines.push('Bank transfer (India) - NEFT/IMPS/RTGS');
       return lines.join('\n');
     }
 
