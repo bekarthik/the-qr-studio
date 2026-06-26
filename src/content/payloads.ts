@@ -8,6 +8,8 @@ export type SourceType =
   | 'sms'
   | 'whatsapp'
   | 'upi'
+  | 'appstore'
+  | 'playstore'
   | 'wifi'
   | 'vcard'
   | 'geo';
@@ -78,6 +80,35 @@ export function buildPayload(type: SourceType, f: PayloadInput): string {
       parts.push('cu=INR');
       if (f.note) parts.push(`tn=${encodeURIComponent(String(f.note))}`);
       return `upi://pay?${parts.join('&')}`;
+    }
+
+    case 'appstore': {
+      // Apple App Store. Accept a full URL, an "apps.apple.com/…" path, or just
+      // the numeric app ID (with or without a leading "id"). The app-name slug
+      // is optional — Apple redirects /app/id<ID> to the right listing.
+      const raw = String(f.app || '').trim();
+      if (!raw) return '';
+      if (/^https?:\/\//i.test(raw)) return raw;
+      if (/^apps\.apple\.com\//i.test(raw)) return `https://${raw}`;
+      const id = raw.replace(/^id/i, '').replace(/[^\d]/g, '');
+      if (!id) return '';
+      const cc = String(f.country || '').trim().toLowerCase().replace(/[^a-z]/g, '');
+      return `https://apps.apple.com/${cc ? `${cc}/` : ''}app/id${id}`;
+    }
+
+    case 'playstore': {
+      // Google Play. Accept a full URL, a "play.google.com/…" path, or just the
+      // application/package id (e.g. com.example.app).
+      const raw = String(f.app || '').trim();
+      if (!raw) return '';
+      if (/^https?:\/\//i.test(raw)) return raw;
+      if (/^play\.google\.com\//i.test(raw)) return `https://${raw}`;
+      const pkg = raw.replace(/[^a-zA-Z0-9._]/g, '');
+      if (!pkg) return '';
+      const params = new URLSearchParams({ id: pkg });
+      const hl = String(f.lang || '').trim();
+      if (hl) params.set('hl', hl);
+      return `https://play.google.com/store/apps/details?${params.toString()}`;
     }
 
     case 'wifi': {

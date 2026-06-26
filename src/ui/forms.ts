@@ -75,6 +75,24 @@ export const SOURCES: SourceDef[] = [
     ],
   },
   {
+    type: 'appstore',
+    label: 'App Store',
+    icon: '🍎',
+    fields: [
+      { key: 'app', label: 'App ID or URL', type: 'text', placeholder: '310633997 or apps.apple.com link' },
+      { key: 'country', label: 'Country code (optional)', type: 'text', placeholder: 'in, us, gb…' },
+    ],
+  },
+  {
+    type: 'playstore',
+    label: 'Play Store',
+    icon: '▶️',
+    fields: [
+      { key: 'app', label: 'Package ID or URL', type: 'text', placeholder: 'com.whatsapp or play.google.com link' },
+      { key: 'lang', label: 'Language (optional)', type: 'text', placeholder: 'en, hi…' },
+    ],
+  },
+  {
     type: 'wifi',
     label: 'Wi-Fi',
     icon: '📶',
