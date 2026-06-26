@@ -111,6 +111,40 @@ export function hexToRgb(hex: string): RGB {
  */
 export const brandDarkHex = (hex: string): string => rgbToHex(clampDark(hexToRgb(hex)));
 
+/** Fraction of the carved centre region actually filled by the logo; the rest
+ * is a quiet margin so the logo sits *inside* empty space, never touching live
+ * modules. */
+const LOGO_FILL = 0.72;
+
+export interface CenterHole {
+  /** Side of the carved-out (background-filled) square, in the caller's units. */
+  holeSide: number;
+  /** Side of the inner box the logo is contain-fitted into (< holeSide). */
+  logoBox: number;
+  /** Corner radius to use when a rounded plate is requested. */
+  radius: number;
+}
+
+/**
+ * Geometry for the empty region carved in the centre of the code to hold a
+ * logo. The hole is snapped to an *odd* number of modules so its edges land on
+ * module boundaries (crisp, deliberate-looking) and stay symmetric about the
+ * centre module; the logo is then drawn smaller than the hole, leaving a real
+ * quiet margin all around instead of being pasted over the modules.
+ *
+ * @param qrSide     QR side length (excluding quiet zone) in the caller's units
+ * @param moduleUnit size of one module in those same units
+ * @param ratio      requested logo size as a fraction of the QR side (0.1–0.3)
+ */
+export function centerHole(qrSide: number, moduleUnit: number, ratio: number): CenterHole {
+  const r = Math.min(0.3, Math.max(0.1, ratio));
+  let mods = Math.round((qrSide * r) / moduleUnit);
+  if (mods % 2 === 0) mods += 1; // odd → edges align with module grid, symmetric
+  mods = Math.max(3, mods);
+  const holeSide = mods * moduleUnit;
+  return { holeSide, logoBox: holeSide * LOGO_FILL, radius: holeSide * 0.16 };
+}
+
 /** How data cells are coloured. */
 export type ColorStyle = 'solid' | 'brand' | 'image';
 

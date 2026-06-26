@@ -1,14 +1,14 @@
 import type { QrMatrix } from './matrix';
 import type { ImageSampler } from './halftone';
-import { computeGrid, subCellFill, brandDarkHex, type ColorStyle } from './grid';
+import { computeGrid, subCellFill, brandDarkHex, centerHole, type ColorStyle } from './grid';
 
 export interface CenterImage {
   source: CanvasImageSource;
   width: number;
   height: number;
-  /** Fraction of the QR side covered by the logo box (0.1 - 0.3). */
+  /** Fraction of the QR side carved out for the logo region (0.1 - 0.3). */
   ratio: number;
-  /** Draw a rounded background plate behind the logo. */
+  /** Round the corners of the carved-out region (vs a square hole). */
   plate: boolean;
 }
 
@@ -73,43 +73,40 @@ export function renderQR(opts: RenderOptions): HTMLCanvasElement {
     }
   }
 
-  if (centerImage) drawCenterImage(ctx, dim, quietSub * cellPx, n * sub * cellPx, bg, centerImage);
+  if (centerImage) drawCenterImage(ctx, dim, n * sub * cellPx, sub * cellPx, bg, centerImage);
 
   return canvas;
 }
 
 /**
- * Carves an empty square in the middle of the QR (snapped to module bounds)
- * and embeds the logo into that space — the image sits *inside* the code, not
- * pasted over live modules.
+ * Carves an empty region in the middle of the QR (snapped to module bounds) and
+ * embeds the logo *inside* it with a quiet margin — the image sits in cleared
+ * space, never pasted over live modules.
  */
 function drawCenterImage(
   ctx: CanvasRenderingContext2D,
   dim: number,
-  quietPx: number,
   qrPx: number,
+  modulePx: number,
   bg: string,
   logo: CenterImage,
 ) {
-  const ratio = Math.min(0.3, Math.max(0.1, logo.ratio));
-  const boxSide = qrPx * ratio;
-  const start = quietPx + (qrPx - boxSide) / 2;
+  const { holeSide, logoBox, radius } = centerHole(qrPx, modulePx, logo.ratio);
   const center = dim / 2;
+  const holeStart = center - holeSide / 2;
 
-  // Carve out (clear modules under the logo to the background colour).
-  const plateSide = logo.plate ? boxSide * 1.18 : boxSide;
-  const plateStart = center - plateSide / 2;
+  // Clear the region (rounded corners when a plate is requested, else a square
+  // hole) so the modules underneath are removed, not just covered.
+  ctx.fillStyle = bg;
   if (logo.plate) {
-    ctx.fillStyle = bg;
-    roundRect(ctx, plateStart, plateStart, plateSide, plateSide, plateSide * 0.14);
+    roundRect(ctx, holeStart, holeStart, holeSide, holeSide, radius);
     ctx.fill();
   } else {
-    ctx.fillStyle = bg;
-    ctx.fillRect(start, start, boxSide, boxSide);
+    ctx.fillRect(holeStart, holeStart, holeSide, holeSide);
   }
 
-  // Embed the logo, preserving aspect ratio (contain fit) within the box.
-  const scale = Math.min(boxSide / logo.width, boxSide / logo.height);
+  // Embed the logo (contain fit) within the inner box, leaving the margin clear.
+  const scale = Math.min(logoBox / logo.width, logoBox / logo.height);
   const dw = logo.width * scale;
   const dh = logo.height * scale;
   ctx.drawImage(logo.source, center - dw / 2, center - dh / 2, dw, dh);

@@ -1,13 +1,13 @@
 import type { QrMatrix } from './matrix';
 import type { ImageSampler } from './halftone';
-import { computeGrid, subCellFill, brandDarkHex, type ColorStyle } from './grid';
+import { computeGrid, subCellFill, brandDarkHex, centerHole, type ColorStyle } from './grid';
 
 export interface SvgCenterImage {
   /** Data URL (or any URL) of the logo to embed. */
   href: string;
-  /** Fraction of the QR side covered by the logo box (0.1 - 0.3). */
+  /** Fraction of the QR side carved out for the logo region (0.1 - 0.3). */
   ratio: number;
-  /** Draw a rounded background plate behind the logo. */
+  /** Round the corners of the carved-out region (vs a square hole). */
   plate: boolean;
 }
 
@@ -70,22 +70,16 @@ export function renderSVG(opts: SvgOptions): string {
 
   let center = '';
   if (centerImage) {
-    const ratio = Math.min(0.3, Math.max(0.1, centerImage.ratio));
-    const qr = total;
-    const box = qr * ratio;
+    // Carve an empty region (snapped to the module grid) and inset the logo so
+    // it sits in cleared space with a quiet margin, never over live modules.
+    const { holeSide, logoBox, radius } = centerHole(total, sub, centerImage.ratio);
     const mid = gridSide / 2;
-    if (centerImage.plate) {
-      const side = box * 1.18;
-      const s = mid - side / 2;
-      const rx = side * 0.14;
-      center += `<rect x="${r2(s)}" y="${r2(s)}" width="${r2(side)}" height="${r2(side)}" rx="${r2(rx)}" fill="${bg}"/>`;
-    } else {
-      const s = mid - box / 2;
-      center += `<rect x="${r2(s)}" y="${r2(s)}" width="${r2(box)}" height="${r2(box)}" fill="${bg}"/>`;
-    }
-    const ix = mid - box / 2;
+    const hs = mid - holeSide / 2;
+    const rx = centerImage.plate ? ` rx="${r2(radius)}"` : '';
+    center += `<rect x="${r2(hs)}" y="${r2(hs)}" width="${r2(holeSide)}" height="${r2(holeSide)}"${rx} fill="${bg}"/>`;
+    const ib = mid - logoBox / 2;
     center +=
-      `<image x="${r2(ix)}" y="${r2(ix)}" width="${r2(box)}" height="${r2(box)}" ` +
+      `<image x="${r2(ib)}" y="${r2(ib)}" width="${r2(logoBox)}" height="${r2(logoBox)}" ` +
       `href="${escapeAttr(centerImage.href)}" preserveAspectRatio="xMidYMid meet"/>`;
   }
 
