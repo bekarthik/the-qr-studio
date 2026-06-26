@@ -3,29 +3,81 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>QR Studio — image-styled QR code generator</title>
+    <title>QR Studio — image-styled, verified-scannable QR codes</title>
     <meta
       name="description"
-      content="Generate scannable QR codes for links, email, WhatsApp, Wi-Fi, visiting cards and more — styled to resemble your logo or with an image embedded in the centre."
+      content="Free, in-browser generator for scannable QR codes — links, UPI, Wi-Fi, vCards and more. Style them with your brand colour or your image, and verify they scan before you download. Nothing is uploaded."
     />
+    <meta name="theme-color" content="#0a0e16" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+
+    <!-- Social cards -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="QR Studio — QR codes that look like your brand and actually scan" />
+    <meta
+      property="og:description"
+      content="Free, in-browser QR generator. Style codes with your colour or image, verify they scan, export PNG & SVG. Nothing uploaded."
+    />
+    <meta property="og:image" content="favicon.svg" />
+    <meta name="twitter:card" content="summary" />
   </head>
   <body>
-    <header class="topbar">
-      <div class="brand"><span class="logo">▣</span> QR Studio</div>
-      <p class="tagline">QR codes that look like your logo — and actually scan</p>
-      <p class="trust">Free forever · No sign-up · Runs 100% in your browser — nothing is uploaded</p>
+    <!-- ------------------------------------------------------------- nav -->
+    <header class="nav">
+      <div class="nav__inner">
+        <a class="nav__brand" href="#top">
+          <span class="nav__logo" aria-hidden="true">▣</span>
+          <span class="nav__name">QR&nbsp;Studio</span>
+        </a>
+        <nav class="nav__links">
+          <a href="#features">Features</a>
+          <a href="#app">Generator</a>
+          <a
+            class="nav__cta"
+            href="https://github.com/bekarthik/chores"
+            target="_blank"
+            rel="noopener"
+            >★ GitHub</a
+          >
+        </nav>
+      </div>
     </header>
 
-    <main class="app">
+    <span id="top"></span>
+
+    <!-- ------------------------------------------------------------ hero -->
+    <section class="hero">
+      <p class="hero__eyebrow"><span class="dot"></span> Free · No sign-up · 100% in your browser</p>
+      <h1 class="hero__title">
+        QR codes that look like your brand —<br /><span class="grad">and actually scan</span>
+      </h1>
+      <p class="hero__sub">
+        Links, UPI, Wi-Fi, visiting cards and more — styled with your colour or your own image, and
+        verified scannable right in your browser. Nothing is ever uploaded.
+      </p>
+      <ul class="hero__pills" id="features">
+        <li>🔒 Nothing uploaded</li>
+        <li>✓ Verified scannable</li>
+        <li>🖼️ Image halftone</li>
+        <li>⬇️ PNG &amp; SVG</li>
+      </ul>
+    </section>
+
+    <main class="app" id="app">
       <!-- ----------------------------------------------------- controls -->
-      <section class="controls">
-        <h2 class="h">1 · Choose a source</h2>
+      <section class="controls card">
+        <div class="card__head">
+          <h2>Build your code</h2>
+          <p>Pick a source, fill in the details, then make it yours.</p>
+        </div>
+
+        <h3 class="h"><span class="h__num">1</span> Choose a source</h3>
         <div id="sourceTabs" class="tabs"></div>
 
-        <h2 class="h">2 · Enter the details</h2>
+        <h3 class="h"><span class="h__num">2</span> Enter the details</h3>
         <div id="formFields" class="form"></div>
 
-        <h2 class="h">3 · Make it yours</h2>
+        <h3 class="h"><span class="h__num">3</span> Make it yours</h3>
 
         <div class="image-block">
           <label class="upload">
@@ -121,7 +173,11 @@
       </section>
 
       <!-- ------------------------------------------------------ preview -->
-      <section class="output">
+      <section class="output card">
+        <div class="card__head">
+          <h2>Preview</h2>
+          <p>Updates live · decoded in-browser to prove it scans.</p>
+        </div>
         <div id="preview" class="preview">
           <div class="empty">Fill in the details to generate a QR code.</div>
         </div>
@@ -132,15 +188,25 @@
           <button id="downloadSvg" class="download download--alt" disabled>Download SVG</button>
         </div>
         <p class="finehint">
-          PNG is 1600&nbsp;px — crisp for print up to ~13&nbsp;cm at 300&nbsp;dpi. Use SVG for
-          larger or vector print. Always test-scan with a real phone before mass printing.
+          PNG is 1600&nbsp;px — crisp for print up to ~13&nbsp;cm at 300&nbsp;dpi. Use SVG for larger
+          or vector print. Always test-scan with a real phone before mass printing.
         </p>
       </section>
     </main>
 
+    <!-- ---------------------------------------------------------- footer -->
     <footer class="foot">
-      You're responsible for where your codes lead — don't create QR codes for phishing,
-      scams or anything you wouldn't put your name to.
+      <div class="foot__inner">
+        <div class="foot__top">
+          <span class="foot__brand"><span class="nav__logo" aria-hidden="true">▣</span> QR Studio</span>
+          <a href="https://github.com/bekarthik/chores" target="_blank" rel="noopener">Source</a>
+        </div>
+        <p>
+          Runs entirely in your browser — no accounts, no tracking, no uploads. You're responsible
+          for where your codes lead; don't create QR codes for phishing, scams or anything you
+          wouldn't put your name to.
+        </p>
+      </div>
     </footer>
 
     <script type="module" src="/src/main.ts"></script>

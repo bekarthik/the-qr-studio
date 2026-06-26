@@ -94,6 +94,29 @@ npm run example    # write sample halftone PNGs (OUT=dir) and decode-check them
                    # IMAGE=logo.jpg uses a real image (.png/.jpg) as the source
 ```
 
+## Deploy
+
+QR Studio is a fully static, client-side app — `npm run build` emits a
+self-contained `dist/` (HTML, hashed JS/CSS, favicon) that any static host can
+serve. The Vite `base` is `./`, so it also works from a sub-path.
+
+In a monorepo this project lives in `qr-studio/`, so point the host at this
+folder as the **base / root directory**:
+
+| Host | Settings |
+| --- | --- |
+| **Cloudflare Pages** | Root dir `qr-studio` · Build `npm run build` · Output `dist` |
+| **Netlify** | Base dir `qr-studio` (a `netlify.toml` here sets build `npm run build` + publish `dist`) |
+| **Vercel** | Root dir `qr-studio` · Framework “Vite” · Output `dist` |
+| **GitHub Pages** | Build locally/CI, publish `qr-studio/dist` |
+
+Any static server works too:
+
+```bash
+npm run build
+npx serve dist        # or: python -m http.server -d dist
+```
+
 ## How scannability is verified
 
 `npm run verify` renders representative payloads (plain, halftone, halftone +
