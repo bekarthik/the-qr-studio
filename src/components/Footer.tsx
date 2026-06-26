@@ -1,3 +1,5 @@
+import { SupportButton } from './Support';
+
 export function Footer() {
   return (
     <footer className="foot">
@@ -6,9 +8,12 @@ export function Footer() {
           <span className="foot__brand">
             <span className="nav__logo" aria-hidden="true">▣</span> QR Studio
           </span>
-          <a href="https://github.com/bekarthik/chores" target="_blank" rel="noopener">
-            Source
-          </a>
+          <span className="foot__links">
+            <SupportButton className="foot__link">☕ Support</SupportButton>
+            <a href="https://github.com/bekarthik/chores" target="_blank" rel="noopener">
+              Source
+            </a>
+          </span>
         </div>
         <p>
           Runs entirely in your browser — no accounts, no tracking, no uploads. You're responsible

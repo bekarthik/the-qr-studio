@@ -117,6 +117,22 @@ npm run build
 npx serve dist        # or: python -m http.server -d dist
 ```
 
+## Support / payments (configurable)
+
+A **☕ Support** button in the nav/footer opens a small dialog with whatever
+payment options you enable — Buy Me a Coffee, Stripe (card), Ko-fi, GitHub
+Sponsors, PayPal, UPI. Everything is a plain public link, so it stays a static
+app with **no backend and no secret keys**:
+
+- **Stripe** uses a hosted **Payment Link** (Dashboard → Payment links) — paste
+  the `https://buy.stripe.com/…` URL. Never put a Stripe secret/restricted key
+  in the frontend.
+- The rest are just handles (`buymeacoffee.com/<handle>`, etc.).
+
+Configure by editing `src/config/support.ts`, or set `VITE_SUPPORT_*` env vars
+at build time (copy `.env.example` → `.env`). Blank entries are hidden; if none
+are set, the button doesn't render.
+
 ## How scannability is verified
 
 `npm run verify` renders representative payloads (plain, halftone, halftone +

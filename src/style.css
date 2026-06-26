@@ -111,6 +111,20 @@ a:hover {
 .nav__cta:hover {
   border-color: var(--accent);
 }
+.nav__support {
+  padding: 7px 13px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: rgba(99, 102, 241, 0.16);
+  color: var(--accent-ink);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.15s;
+}
+.nav__support:hover {
+  background: rgba(99, 102, 241, 0.28);
+}
 
 /* -------------------------------------------------------------- hero --- */
 .hero {
@@ -683,6 +697,148 @@ body.brand-on .opt-brand {
   color: var(--text);
   font-weight: 700;
   font-size: 15px;
+}
+.foot__links {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+}
+.foot__link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent-ink);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.foot__link:hover {
+  text-decoration: underline;
+}
+
+/* ------------------------------------------------------ support modal --- */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(5, 8, 14, 0.66);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: modal-fade 0.15s ease;
+}
+@keyframes modal-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.modal__box {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  background: var(--panel);
+  border: 1px solid var(--line-2);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 30px 24px 22px;
+  text-align: center;
+}
+.modal__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 13px;
+}
+.modal__close:hover {
+  color: var(--text);
+  border-color: var(--line-2);
+}
+.modal__emoji {
+  font-size: 40px;
+  line-height: 1;
+}
+.modal__title {
+  margin: 12px 0 6px;
+  font-size: 20px;
+  font-weight: 750;
+}
+.modal__blurb {
+  margin: 0 auto 18px;
+  max-width: 330px;
+  color: var(--muted);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.modal__methods {
+  display: grid;
+  gap: 10px;
+  text-align: left;
+}
+.support-method {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 11px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  color: var(--text);
+  text-decoration: none;
+  transition: 0.15s;
+}
+.support-method:hover {
+  border-color: var(--accent);
+  background: var(--panel-3);
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+.support-method:first-child {
+  background: var(--grad);
+  border-color: transparent;
+  color: #fff;
+}
+.support-method:first-child:hover {
+  background: var(--grad);
+}
+.support-method__ico {
+  font-size: 20px;
+}
+.support-method__text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  font-weight: 600;
+  font-size: 14px;
+}
+.support-method__text small {
+  margin-top: 2px;
+  font-weight: 400;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.support-method:first-child .support-method__text small,
+.support-method:first-child .support-method__arrow {
+  color: rgba(255, 255, 255, 0.85);
+}
+.support-method__arrow {
+  color: var(--muted);
+}
+.modal__fineprint {
+  margin: 16px 0 0;
+  color: var(--faint);
+  font-size: 11px;
 }
 .foot__inner p {
   margin: 0;

@@ -1,3 +1,5 @@
+import { SupportButton } from './Support';
+
 export function Nav() {
   return (
     <header className="nav">
@@ -9,6 +11,7 @@ export function Nav() {
         <nav className="nav__links">
           <a href="#features">Features</a>
           <a href="#app">Generator</a>
+          <SupportButton className="nav__support">☕ Support</SupportButton>
           <a className="nav__cta" href="https://github.com/bekarthik/chores" target="_blank" rel="noopener">
             ★ GitHub
           </a>
