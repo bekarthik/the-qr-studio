@@ -20,7 +20,7 @@ interface Snapshot {
   shape: 'square' | 'dot' | 'rounded';
   brandColor: string;
   sub: number;
-  core: number;
+  dotScale: number;
   centerHref: string | null;
 }
 
@@ -121,7 +121,8 @@ export function Preview() {
       colorStyle: cfg.colorStyle,
       brandColor,
       sub: detail,
-      core: cfg.dotSize,
+      core: 0,
+      dotScale: cfg.dotSize,
       shape: cfg.shape,
       centerImage,
     });
@@ -138,7 +139,7 @@ export function Preview() {
       shape: cfg.shape,
       brandColor,
       sub: detail,
-      core: cfg.dotSize,
+      dotScale: cfg.dotSize,
       centerHref: centerImage && cfg.image ? cfg.image.src : null,
     };
     setReady(true);
@@ -195,7 +196,8 @@ export function Preview() {
       colorStyle: s.colorStyle,
       brandColor: s.brandColor,
       sub: s.sub,
-      core: s.core,
+      core: 0,
+      dotScale: s.dotScale,
       shape: s.shape,
       centerImage: s.centerHref ? { href: s.centerHref, ratio: cfg.logoRatio, plate: cfg.plate } : null,
       pixelSize: RES,

@@ -187,6 +187,20 @@ export function moduleColor(dark: boolean, opts: Pick<FillOpts, 'style' | 'fg' |
   return opts.style === 'brand' ? opts.brand : opts.fg;
 }
 
+/**
+ * Half-width (in sub-cell units) of the solid data dot drawn at a halftone
+ * module's centre. `scale` is a continuous 0–1 control so the dot grows
+ * *linearly*, independent of the sub-cell granularity:
+ *   - 0 → half a sub-cell (a single centre cell — finest image, smallest dot)
+ *   - 1 → half a module (the whole module solid — most scannable)
+ * This replaces the old integer sub-cell "core", which could only step in whole
+ * sub-cells (just two usable sizes at standard detail).
+ */
+export function dotHalfWidth(sub: number, scale: number): number {
+  const s = Math.max(0, Math.min(1, scale));
+  return 0.5 + s * (sub / 2 - 0.5);
+}
+
 export interface FillOpts {
   style: ColorStyle;
   fg: string;

@@ -99,10 +99,10 @@ export function Settings() {
             <input
               type="range"
               min={0}
-              max={3}
+              max={100}
               step={1}
-              value={cfg.dotSize}
-              onChange={(e) => update({ dotSize: Number(e.target.value) })}
+              value={Math.round(cfg.dotSize * 100)}
+              onChange={(e) => update({ dotSize: Number(e.target.value) / 100 })}
             />
           </label>
           <label className="field field--check">

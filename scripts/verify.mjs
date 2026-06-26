@@ -148,6 +148,7 @@ function svgFor(text, opts) {
     brandColor: '#1d4ed8',
     sub,
     core: 0,
+    dotScale: opts.dotScale,
     shape: opts.shape,
     centerImage: opts.embed ? { href: 'x', ratio: 0.22, plate: true } : null,
     pixelSize: 1024,
@@ -186,6 +187,10 @@ const cases = [
   { name: 'rounded+embed url', text: 'https://chores.app/r/AB12CD', opts: { shape: 'rounded', embed: true } },
   { name: 'dot vcard', text: VCARD, opts: { shape: 'dot' } },
   { name: 'rounded vcard', text: VCARD, opts: { shape: 'rounded' } },
+  // Continuous data-dot overlay (halftone): mid + large dot scale.
+  { name: 'halftone dot 0.4', text: 'https://example.com/welcome', opts: { halftone: true, dotScale: 0.4 } },
+  { name: 'halftone dot 0.8', text: 'https://example.com/welcome', opts: { halftone: true, dotScale: 0.8 } },
+  { name: 'image dot 0.6', text: 'https://example.com/welcome', opts: { halftone: true, style: 'image', dotScale: 0.6 } },
 ];
 
 let pass = 0, total = 0;

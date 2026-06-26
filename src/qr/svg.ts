@@ -8,6 +8,7 @@ import {
   inFinder,
   finderOrigins,
   moduleColor,
+  dotHalfWidth,
   type ColorStyle,
   type ModuleShape,
 } from './grid';
@@ -36,6 +37,8 @@ export interface SvgOptions {
   sub: number;
   /** Half-width of the protected data dot in sub-cells (0 = finest image). */
   core: number;
+  /** Continuous 0–1 size of the solid data dot over a halftone module's centre. */
+  dotScale?: number;
   /** Shape of each dark module (block codes only; ignored when halftoning). */
   shape?: ModuleShape;
   centerImage?: SvgCenterImage | null;
@@ -60,6 +63,24 @@ export function renderSVG(opts: SvgOptions): string {
   const rects: string[] = shaped
     ? shapedModules(matrix, n, quietSub, sub, opts.shape!, fillOpts)
     : mergedRects(matrix, sampler, fillOpts, n, sub, quietSub, bg);
+
+  // Linear data-dot overlay (halftone only): a solid square at each data
+  // module's centre, sized continuously by dotScale. Drawn after the sub-cells
+  // so it sits on top; function patterns are already solid and skipped.
+  const dotScale = opts.dotScale ?? 0;
+  if (sampler && dotScale > 0) {
+    const hw = dotHalfWidth(sub, dotScale);
+    for (let r = 0; r < n; r++) {
+      for (let c = 0; c < n; c++) {
+        if (matrix.isFunction(r, c)) continue;
+        const cx = quietSub + c * sub + sub / 2;
+        const cy = quietSub + r * sub + sub / 2;
+        rects.push(
+          `<rect x="${r2(cx - hw)}" y="${r2(cy - hw)}" width="${r2(2 * hw)}" height="${r2(2 * hw)}" fill="${moduleColor(matrix.get(r, c), fillOpts)}"/>`,
+        );
+      }
+    }
+  }
 
   let center = '';
   if (centerImage) {

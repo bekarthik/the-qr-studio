@@ -8,6 +8,7 @@ import {
   inFinder,
   finderOrigins,
   moduleColor,
+  dotHalfWidth,
   type ColorStyle,
   type ModuleShape,
 } from './grid';
@@ -42,6 +43,9 @@ export interface RenderOptions {
   sub: number;
   /** Half-width of the protected data dot in sub-cells (0 = finest image). */
   core: number;
+  /** Continuous 0–1 size of the solid data dot drawn over a halftone module's
+   *  centre (0 = single centre cell, 1 = whole module). Linear, detail-agnostic. */
+  dotScale?: number;
   /** Shape of each dark module (block codes only; ignored when halftoning). */
   shape?: ModuleShape;
   /** Optional logo embedded into carved-out center space. */
@@ -91,6 +95,24 @@ export function renderQR(opts: RenderOptions): HTMLCanvasElement {
             ctx.fillRect((baseSubCol + dc) * cellPx, (baseSubRow + dr) * cellPx, cellPx, cellPx);
           }
         }
+      }
+    }
+  }
+
+  // Linear data-dot overlay: a solid square at each halftone *data* module's
+  // centre whose size scales continuously with dotScale (function patterns are
+  // already kept solid, so they're skipped).
+  const dotScale = opts.dotScale ?? 0;
+  if (sampler && dotScale > 0) {
+    const hw = dotHalfWidth(sub, dotScale) * cellPx;
+    const moduleUnit = sub * cellPx;
+    for (let r = 0; r < n; r++) {
+      for (let c = 0; c < n; c++) {
+        if (matrix.isFunction(r, c)) continue;
+        const cx = (quietSub + c * sub) * cellPx + moduleUnit / 2;
+        const cy = (quietSub + r * sub) * cellPx + moduleUnit / 2;
+        ctx.fillStyle = moduleColor(matrix.get(r, c), fillOpts);
+        ctx.fillRect(cx - hw, cy - hw, 2 * hw, 2 * hw);
       }
     }
   }
