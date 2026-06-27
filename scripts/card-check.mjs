@@ -27,6 +27,8 @@ const LOGO = logoUrl();
 const vcards = [
   { first: 'Asha', last: 'Rao', org: 'Acme Pvt Ltd', title: 'Founder', phone: '+919876543210', email: 'asha@acme.com', url: 'https://acme.com', address: 'MG Road, Bengaluru' },
   { first: 'A', last: '', org: '', title: '', phone: '+10000000000', email: 'a@b.co', url: '', address: '' },
+  // A very long name + title to exercise header auto-fit (must not overlap QR).
+  { first: 'Karthikeyan', last: 'Venkataraghavan', org: 'Synthetic Intelligence Labs', title: 'Principal Solutions Architect', phone: '+917200159000', email: 'karthik@synai.in', url: 'https://synai.in', address: 'Vadodara, Gujarat' },
 ];
 
 let pass = 0, total = 0;
@@ -39,7 +41,7 @@ for (const [i, v] of vcards.entries()) {
   });
   const data = { name: `${v.first} ${v.last}`.trim(), title: v.title, org: v.org, phone: v.phone, email: v.email, url: v.url, address: v.address, qrBg: '#ffffff', caption: 'SCAN TO SAVE CONTACT' };
   // Exercise solid, gradient and pattern themes (the QR keeps its own panel).
-  const base = { gradAngle: 135, pattern: 'dots', text: 'auto', accentBar: true, border: true, qrPanel: true, orientation: 'landscape', headingFont: 'Arial, sans-serif', bodyFont: 'Georgia, serif', divider: 'double', graphic: 'wave', textV: 'top', textH: 'left' };
+  const base = { gradAngle: 135, pattern: 'dots', text: 'auto', accentBar: true, border: true, qrPanel: true, orientation: 'landscape', headingFont: 'Arial, sans-serif', bodyFont: 'Georgia, serif', divider: 'double', graphic: 'wave', textV: 'top', textH: 'left', qrScale: 1 };
   const themes = {
     solid: { ...base, bgStyle: 'solid', bg1: '#fffdf8', bg2: '#efe7d6', accent: '#e0522e' },
     gradient: { ...base, bgStyle: 'gradient', bg1: '#16324f', bg2: '#2f7d8f', accent: '#7fe3d0', text: 'light', accentBar: false },
@@ -47,16 +49,20 @@ for (const [i, v] of vcards.entries()) {
     portrait: { ...base, bgStyle: 'solid', bg1: '#fffdf8', bg2: '#efe7d6', accent: '#e0522e', orientation: 'portrait' },
   };
 
-  for (const variant of ['single', 'two-sided', 'gradient', 'pattern', 'qr-only', 'portrait', 'portrait-2s']) {
-    const theme =
+  for (const variant of ['single', 'two-sided', 'gradient', 'pattern', 'qr-only', 'portrait', 'portrait-2s', 'qr-small', 'qr-large']) {
+    const baseTheme =
       variant === 'gradient' ? themes.gradient :
       variant === 'pattern' ? themes.pattern :
       variant === 'portrait' || variant === 'portrait-2s' ? themes.portrait : themes.solid;
+    const theme =
+      variant === 'qr-small' ? { ...baseTheme, qrScale: 0.6 } :
+      variant === 'qr-large' ? { ...baseTheme, qrScale: 1.2 } : baseTheme;
     const faceData = variant === 'qr-only' ? { ...data, name: '', title: '', org: '', phone: '', email: '', url: '', address: '' } : data;
     const sheet = variant === 'two-sided' || variant === 'portrait-2s';
+    const front = { logoHref: LOGO, watermarkHref: LOGO, watermarkOpacity: 0.12 };
     const card = sheet
-      ? buildCardSheetSVG(faceData, qrSvg, { logoHref: LOGO, watermarkHref: LOGO, watermarkOpacity: 0.12 }, theme)
-      : buildCardSVG(faceData, qrSvg, theme);
+      ? buildCardSheetSVG(faceData, qrSvg, front, theme)
+      : buildCardSVG(faceData, qrSvg, front, theme);
     const width = Math.round(cardDims(theme.orientation, sheet).w * 2);
     const png = new Resvg(card, { fitTo: { mode: 'width', value: width }, background: 'white' }).render().asPng();
     const dec = PNG.sync.read(Buffer.from(png));

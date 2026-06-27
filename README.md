@@ -151,6 +151,10 @@ card** row of checkboxes lets you choose exactly which contact fields are printe
 (name, title, company, phone, email, website, address) — only fields you’ve
 filled in are offered, and hiding one drops just its printed line.
 
+All controls live in a compact **ribbon** (à la a word processor) with three
+tabs so the section stays tidy: **Content** (name, caption, which fields to show,
+two-sided), **Design** (theme), and **Logo & QR** (logo, watermark, QR size).
+
 **Design.** The card is fully themeable — pick a one-click **preset** (Paper,
 Ink, Mono, Vermilion, Ocean, Sunset, Mint, Blueprint) or set it yourself:
 **orientation** (landscape / portrait), **background** (solid / gradient with an
@@ -165,15 +169,20 @@ left/center/right = nine spots; the QR repositions to avoid the text). A
 position varies there. Toggles for the **accent bar**, **border** and **QR
 panel**. Save your own design as a named
 **preset** (kept in the browser). The QR always keeps its own light panel, so it
-scans on any background.
+scans on any background. Long names **auto-shrink to fit** their column so they
+never overlap the QR, and a **QR size** slider (60–120%) scales the code if you
+want more or less room.
 
-Tick **Two-sided** for a front/back card: the **front** carries your details
-plus your uploaded image as a **logo** (and a faint **watermark** if the
-Watermark toggle is on), and the **back** carries the QR alone — so the code
-prints on the second page. The front logo can be **shown or hidden**, **placed**
-at any of nine spots (independent of the text) and **sized** with a slider, so it
-never collides with the details. Two-sided **downloads as two separate files**
-(`-front` and `-back`) for both PNG and SVG; the preview shows them side by side.
+**Logo & watermark — on any card.** The uploaded **logo** and a faint
+**watermark** can be placed on *every* card, not just two-sided ones and in
+either orientation: show/hide the logo, position it at any of nine spots, size it
+with a slider, and set the watermark’s opacity. On a single-sided card the logo
+is drawn **behind the QR’s panel**, so wherever you put it the code still scans.
+
+Tick **Two-sided** for a front/back card: the **front** carries your details plus
+the logo/watermark, and the **back** carries the QR alone — so the code prints on
+the second page. Two-sided **downloads as two separate files** (`-front` and
+`-back`) for both PNG and SVG; the preview shows them side by side.
 `npm run verify:card` rasterises the single card,
 two-sided sheet, gradient/pattern themes and the QR-only layout, and decodes the
 embedded QR to prove they all scan.

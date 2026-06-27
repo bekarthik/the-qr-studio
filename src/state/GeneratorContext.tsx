@@ -59,6 +59,9 @@ export interface Config {
   cardShowEmail: boolean;
   cardShowUrl: boolean;
   cardShowAddress: boolean;
+  cardQrScale: number;
+  cardWatermarkShow: boolean;
+  cardWatermarkOpacity: number;
   fg: string;
   bg: string;
   errorLevel: ErrorLevel;
@@ -135,6 +138,9 @@ const INITIAL: Config = {
   cardShowEmail: true,
   cardShowUrl: true,
   cardShowAddress: true,
+  cardQrScale: 1,
+  cardWatermarkShow: false,
+  cardWatermarkOpacity: 0.12,
   fg: '#101418',
   bg: '#ffffff',
   errorLevel: 'H',

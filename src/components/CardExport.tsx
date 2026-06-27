@@ -48,8 +48,16 @@ const BUILTIN: Preset[] = [
 
 const LS_KEY = 'qrstudio.cardPresets';
 
+type CardTab = 'content' | 'design' | 'logo';
+const CARD_TABS: { id: CardTab; icon: string; label: string }[] = [
+  { id: 'content', icon: '👤', label: 'Content' },
+  { id: 'design', icon: '🎨', label: 'Design' },
+  { id: 'logo', icon: '🖼️', label: 'Logo & QR' },
+];
+
 export function CardExport() {
   const { cfg, update } = useGen();
+  const [tab, setTab] = useState<CardTab>('content');
   const v = cfg.values.vcard ?? {};
   const isVcard = cfg.type === 'vcard';
   const vcardName = `${str(v.first)} ${str(v.last)}`.trim();
@@ -152,6 +160,7 @@ export function CardExport() {
       orientation: cfg.cardOrientation, headingFont: cfg.cardHeadingFont, bodyFont: cfg.cardBodyFont,
       divider: cfg.cardDivider, graphic: cfg.cardGraphic,
       textV: isVcard ? 'top' : cfg.cardTextV, textH: cfg.cardTextH,
+      qrScale: cfg.cardQrScale,
     };
     const data: CardData = {
       name: cfg.cardShowName ? displayName : '',
@@ -166,16 +175,16 @@ export function CardExport() {
     };
     const frontOpts = {
       logoHref: roleImage(cfg, 'logo')?.src ?? null,
-      watermarkHref: cfg.watermark ? roleImage(cfg, 'watermark')?.src ?? null : null,
-      watermarkOpacity: cfg.watermarkOpacity,
+      watermarkHref: cfg.cardWatermarkShow ? roleImage(cfg, 'watermark')?.src ?? null : null,
+      watermarkOpacity: cfg.cardWatermarkOpacity,
       showLogo: cfg.cardLogoShow,
       logoV: cfg.cardLogoV,
       logoH: cfg.cardLogoH,
       logoSize: cfg.cardLogoSize,
     };
     return {
-      preview: twoSided ? buildCardSheetSVG(data, qrSvg, frontOpts, theme) : buildCardSVG(data, qrSvg, theme),
-      single: buildCardSVG(data, qrSvg, theme),
+      preview: twoSided ? buildCardSheetSVG(data, qrSvg, frontOpts, theme) : buildCardSVG(data, qrSvg, frontOpts, theme),
+      single: buildCardSVG(data, qrSvg, frontOpts, theme),
       front: buildCardFrontSVG(data, frontOpts, theme),
       back: buildCardBackSVG(data, qrSvg, theme),
     };
@@ -233,46 +242,69 @@ export function CardExport() {
         <p>A print-ready business card (3.5×2″) with your QR — for any source.</p>
       </div>
 
-      <div className="grid2">
-        <label className="field">
-          <span className="field__label">Name on card <span className="h__opt">optional</span></span>
-          <input type="text" placeholder={vcardName || 'e.g. Asha Rao'} value={cfg.cardName} onChange={(e) => update({ cardName: e.target.value })} />
-        </label>
-        <label className="field">
-          <span className="field__label">Caption <span className="h__opt">optional</span></span>
-          <input type="text" placeholder={captionFor(cfg.type)} value={cfg.cardCaption} disabled={!cfg.cardShowCaption} onChange={(e) => update({ cardCaption: e.target.value })} />
-        </label>
-        <label className="field field--check">
-          <input type="checkbox" checked={twoSided} onChange={(e) => update({ cardTwoSided: e.target.checked })} />
-          <span className="field__label">Two-sided — <b>QR on the back</b>, logo/watermark on the front</span>
-        </label>
-      </div>
+      <div className="ribbon">
+        <div className="ribbon__tabs" role="tablist" aria-label="Card controls">
+          {CARD_TABS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={tab === t.id}
+              className={'ribbon__tab' + (tab === t.id ? ' is-active' : '')}
+              onClick={() => setTab(t.id)}
+            >
+              <span aria-hidden="true">{t.icon}</span> {t.label}
+            </button>
+          ))}
+        </div>
 
-      {isVcard && cardFields.length > 0 && (
-        <>
-          <p className="subhead">Show on card</p>
-          <div className="field-toggles">
-            {cardFields.map((f) => (
-              <label className="field field--check field-toggles__item" key={f.key}>
-                <input
-                  type="checkbox"
-                  checked={cfg[f.key]}
-                  onChange={(e) => update({ [f.key]: e.target.checked } as Partial<Config>)}
-                />
-                <span className="field__label">{f.label}</span>
+        {tab === 'content' && (
+          <div className="ribbon__panel">
+            <div className="grid2">
+              <label className="field">
+                <span className="field__label">Name on card <span className="h__opt">optional</span></span>
+                <input type="text" placeholder={vcardName || 'e.g. Asha Rao'} value={cfg.cardName} onChange={(e) => update({ cardName: e.target.value })} />
               </label>
-            ))}
+              <label className="field">
+                <span className="field__label">Caption <span className="h__opt">optional</span></span>
+                <input type="text" placeholder={captionFor(cfg.type)} value={cfg.cardCaption} disabled={!cfg.cardShowCaption} onChange={(e) => update({ cardCaption: e.target.value })} />
+              </label>
+              <label className="field field--check">
+                <input type="checkbox" checked={cfg.cardShowCaption} onChange={(e) => update({ cardShowCaption: e.target.checked })} />
+                <span className="field__label">Show caption</span>
+              </label>
+              <label className="field field--check">
+                <input type="checkbox" checked={twoSided} onChange={(e) => update({ cardTwoSided: e.target.checked })} />
+                <span className="field__label">Two-sided — <b>QR on the back</b>, logo/watermark on the front</span>
+              </label>
+            </div>
+            {isVcard && cardFields.length > 0 && (
+              <>
+                <p className="subhead">Show on card</p>
+                <div className="field-toggles">
+                  {cardFields.map((f) => (
+                    <label className="field field--check field-toggles__item" key={f.key}>
+                      <input
+                        type="checkbox"
+                        checked={cfg[f.key]}
+                        onChange={(e) => update({ [f.key]: e.target.checked } as Partial<Config>)}
+                      />
+                      <span className="field__label">{f.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
-        </>
-      )}
+        )}
 
-      {twoSided && (
-        <>
-          <p className="subhead">Front logo</p>
+        {tab === 'logo' && (
+          <div className="ribbon__panel">
+          <p className="subhead">Logo {twoSided ? '(front)' : ''}</p>
           <div className="grid2">
             <label className="field field--check">
               <input type="checkbox" checked={cfg.cardLogoShow} onChange={(e) => update({ cardLogoShow: e.target.checked })} />
-              <span className="field__label">Show logo on front</span>
+              <span className="field__label">Show logo on card</span>
             </label>
             <label className="field">
               <span className="field__label">Logo size</span>
@@ -295,10 +327,31 @@ export function CardExport() {
               </select>
             </label>
           </div>
-        </>
-      )}
 
-      <p className="subhead">Design</p>
+          <p className="subhead">Watermark &amp; QR</p>
+          <div className="grid2">
+            <label className="field field--check">
+              <input type="checkbox" checked={cfg.cardWatermarkShow} onChange={(e) => update({ cardWatermarkShow: e.target.checked })} />
+              <span className="field__label">Show faint watermark</span>
+            </label>
+            <label className="field">
+              <span className="field__label">Watermark opacity</span>
+              <input type="range" min={3} max={40} disabled={!cfg.cardWatermarkShow} value={Math.round(cfg.cardWatermarkOpacity * 100)} onChange={(e) => update({ cardWatermarkOpacity: Number(e.target.value) / 100 })} />
+            </label>
+            <label className="field">
+              <span className="field__label">QR size</span>
+              <input type="range" min={60} max={120} value={Math.round(cfg.cardQrScale * 100)} onChange={(e) => update({ cardQrScale: Number(e.target.value) / 100 })} />
+            </label>
+            <label className="field field--check">
+              <input type="checkbox" checked={cfg.cardExactQr} onChange={(e) => update({ cardExactQr: e.target.checked })} />
+              <span className="field__label">Match QR’s exact design (halftone, logo, watermark)</span>
+            </label>
+          </div>
+          </div>
+        )}
+
+        {tab === 'design' && (
+          <div className="ribbon__panel">
       <div className="preset-row">
         {BUILTIN.map((p) => (
           <button key={p.name} type="button" className="preset" onClick={() => update(p.patch)}>{p.name}</button>
@@ -452,14 +505,9 @@ export function CardExport() {
           <input type="checkbox" checked={cfg.cardPanel} onChange={(e) => update({ cardPanel: e.target.checked })} />
           <span className="field__label">Panel behind QR</span>
         </label>
-        <label className="field field--check">
-          <input type="checkbox" checked={cfg.cardShowCaption} onChange={(e) => update({ cardShowCaption: e.target.checked })} />
-          <span className="field__label">Show caption</span>
-        </label>
-        <label className="field field--check">
-          <input type="checkbox" checked={cfg.cardExactQr} onChange={(e) => update({ cardExactQr: e.target.checked })} />
-          <span className="field__label">Match QR’s exact design (halftone, logo, watermark)</span>
-        </label>
+      </div>
+          </div>
+        )}
       </div>
 
       {hasData && svg ? (

@@ -49,6 +49,8 @@ export interface CardTheme {
   graphic: CardGraphic;
   textV: CardTextV;
   textH: CardTextH;
+  /** QR size as a fraction of its default (≈0.6–1.2); 1 = default. */
+  qrScale: number;
 }
 
 export interface FrontOptions {
@@ -82,6 +84,12 @@ const GEO = {
 export function cardDims(o: CardOrientation, twoSided: boolean): { w: number; h: number } {
   const g = GEO[o];
   return { w: twoSided ? g.W * 2 + SHEET_GAP : g.W, h: g.H };
+}
+
+/** The QR draw size for an orientation, scaled & clamped so it stays on-card. */
+function qrPx(g: Geo, theme: CardTheme): number {
+  const scale = Math.max(0.6, Math.min(1.2, theme.qrScale || 1));
+  return Math.round(Math.min(g.QR * scale, g.W - g.PAD * 2, g.H - g.PAD * 2));
 }
 
 const esc = (s: string) =>
@@ -241,11 +249,21 @@ function blockHeight(d: CardData, theme: CardTheme, big: number, step: number, w
   return h;
 }
 
-/** Name / title / org / divider, aligned at anchorX. Returns the next free y. */
-function renderHeader(parts: string[], ax: number, y: number, align: Align, d: CardData, theme: CardTheme, pal: Palette, big: number, dW: number): number {
-  if (d.name.trim()) { parts.push(text(ax, y, d.name, { size: big, weight: '700', font: theme.headingFont, fill: pal.ink, anchor: align })); y += big * 0.8; }
-  if (d.title.trim()) { parts.push(text(ax, y, d.title, { size: big * 0.5, font: theme.bodyFont, italic: true, fill: theme.accent, anchor: align })); y += big * 0.7; }
-  if (d.org.trim()) { parts.push(text(ax, y, d.org, { size: big * 0.48, font: theme.bodyFont, fill: pal.muted, anchor: align })); y += big * 0.7; }
+/** Largest font ≤ base that keeps `s` within `maxW` (so a long name can't spill
+ *  into the QR); never shrinks below ~46% of base. */
+function fitSize(s: string, base: number, maxW: number, factor: number): number {
+  const t = s.trim();
+  if (!t || maxW <= 0) return base;
+  const est = t.length * base * factor;
+  return est <= maxW ? base : Math.max(base * 0.46, (maxW / est) * base);
+}
+
+/** Name / title / org / divider, aligned at anchorX. Header text auto-shrinks to
+ *  fit `maxW` so it never overlaps the QR. Returns the next free y. */
+function renderHeader(parts: string[], ax: number, y: number, align: Align, d: CardData, theme: CardTheme, pal: Palette, big: number, dW: number, maxW: number): number {
+  if (d.name.trim()) { parts.push(text(ax, y, d.name, { size: fitSize(d.name, big, maxW, 0.58), weight: '700', font: theme.headingFont, fill: pal.ink, anchor: align })); y += big * 0.8; }
+  if (d.title.trim()) { parts.push(text(ax, y, d.title, { size: fitSize(d.title, big * 0.5, maxW, 0.5), font: theme.bodyFont, italic: true, fill: theme.accent, anchor: align })); y += big * 0.7; }
+  if (d.org.trim()) { parts.push(text(ax, y, d.org, { size: fitSize(d.org, big * 0.48, maxW, 0.5), font: theme.bodyFont, fill: pal.muted, anchor: align })); y += big * 0.7; }
   const dx = align === 'start' ? ax : align === 'end' ? ax - dW : ax - dW / 2;
   divider(parts, dx, y + 4, dW, theme);
   return y + (theme.divider === 'none' ? 16 : 40);
@@ -264,18 +282,18 @@ function renderContacts(parts: string[], ax: number, y: number, align: Align, d:
   }
 }
 
-function pushQr(parts: string[], g: Geo, qrSvg: string, d: CardData, theme: CardTheme, pal: Palette, x: number, y: number): void {
-  parts.push(qrBlock(g, qrSvg, d, theme, pal, x, y, x + g.QR / 2));
+function pushQr(parts: string[], qr: number, qrSvg: string, d: CardData, theme: CardTheme, pal: Palette, x: number, y: number): void {
+  parts.push(qrBlock(qr, qrSvg, d, theme, pal, x, y, x + qr / 2));
 }
 
-function qrBlock(g: Geo, qrSvg: string, d: CardData, theme: CardTheme, pal: Palette, qx: number, qy: number, capCx: number): string {
+function qrBlock(qr: number, qrSvg: string, d: CardData, theme: CardTheme, pal: Palette, qx: number, qy: number, capCx: number): string {
   const panel = theme.qrPanel
-    ? `<rect x="${qx - 16}" y="${qy - 16}" width="${g.QR + 32}" height="${g.QR + 32}" rx="18" fill="${d.qrBg}" stroke="${pal.border}" stroke-width="2"/>`
+    ? `<rect x="${qx - 16}" y="${qy - 16}" width="${qr + 32}" height="${qr + 32}" rx="18" fill="${d.qrBg}" stroke="${pal.border}" stroke-width="2"/>`
     : '';
   const caption = d.caption.trim()
-    ? text(capCx, qy + g.QR + 40, d.caption, { size: 20, font: theme.bodyFont, weight: '600', fill: pal.muted, anchor: 'middle', spacing: 2 })
+    ? text(capCx, qy + qr + 40, d.caption, { size: 20, font: theme.bodyFont, weight: '600', fill: pal.muted, anchor: 'middle', spacing: 2 })
     : '';
-  return panel + placeQr(qrSvg, qx, qy) + caption;
+  return panel + placeQr(qrSvg, qx, qy, qr) + caption;
 }
 
 /**
@@ -284,7 +302,7 @@ function qrBlock(g: Geo, qrSvg: string, d: CardData, theme: CardTheme, pal: Pale
  * separately). Tall blocks (a vCard with contacts) pin to the top so they never
  * collide with the QR; short blocks (just a name) honour all nine positions.
  */
-function placeContent(ox: number, g: Geo, o: CardOrientation, d: CardData, theme: CardTheme, pal: Palette, qrSvg: string | null): string {
+function placeContent(ox: number, g: Geo, o: CardOrientation, d: CardData, theme: CardTheme, pal: Palette, qrSvg: string | null, qr: number): string {
   const parts: string[] = [];
   const big = o === 'portrait' ? 46 : 54;
   const step = o === 'portrait' ? 40 : 42;
@@ -294,15 +312,16 @@ function placeContent(ox: number, g: Geo, o: CardOrientation, d: CardData, theme
   const tv: CardTextV = tall ? 'top' : theme.textV;
   const th = theme.textH;
   const align = alignOf(th);
-  const MW = g.QR;
+  const MW = qr;
 
   if (o === 'portrait') {
     const cx = ox + (align === 'middle' ? g.W / 2 : align === 'end' ? g.W - g.PAD : g.PAD);
+    const fullW = g.W - g.PAD * 2;
     if (tall) {
-      const y = renderHeader(parts, cx, 132, align, d, theme, pal, big, 300);
+      const y = renderHeader(parts, cx, 132, align, d, theme, pal, big, 300, fullW);
       if (qrSvg) {
         const qy = 300;
-        pushQr(parts, g, qrSvg, d, theme, pal, ox + (g.W - MW) / 2, qy);
+        pushQr(parts, qr, qrSvg, d, theme, pal, ox + (g.W - MW) / 2, qy);
         renderContacts(parts, cx, qy + MW + 96, align, d, theme, pal, step);
       } else {
         renderContacts(parts, cx, y + 8, align, d, theme, pal, step);
@@ -312,8 +331,8 @@ function placeContent(ox: number, g: Geo, o: CardOrientation, d: CardData, theme
     const h = blockHeight(d, theme, big, step, false);
     const groupH = h + (qrSvg ? 26 + MW + 36 : 0);
     const gy = tv === 'middle' ? (g.H - groupH) / 2 : tv === 'bottom' ? g.H - g.PAD - groupH : g.PAD;
-    renderHeader(parts, cx, gy + big * 0.7, align, d, theme, pal, big, 300);
-    if (qrSvg) pushQr(parts, g, qrSvg, d, theme, pal, ox + (g.W - MW) / 2, gy + h + 26);
+    renderHeader(parts, cx, gy + big * 0.7, align, d, theme, pal, big, 300, fullW);
+    if (qrSvg) pushQr(parts, qr, qrSvg, d, theme, pal, ox + (g.W - MW) / 2, gy + h + 26);
     return parts.join('');
   }
 
@@ -324,28 +343,30 @@ function placeContent(ox: number, g: Geo, o: CardOrientation, d: CardData, theme
     const colX0 = right ? ox + g.PAD + MW + 44 : ox + g.PAD;
     const colX1 = right ? ox + g.W - g.PAD : ox + g.W - g.PAD - MW - 44;
     const ax = align === 'middle' ? (colX0 + colX1) / 2 : align === 'end' ? colX1 : colX0;
-    const dW = Math.min(colX1 - colX0, 360);
+    const colW = colX1 - colX0;
+    const dW = Math.min(colW, 360);
     const h = blockHeight(d, theme, big, step, withC);
     const y0 = (tv === 'middle' ? (g.H - h) / 2 : tv === 'bottom' ? g.H - g.PAD - h : g.PAD) + big * 0.7;
-    const y = renderHeader(parts, ax, y0, align, d, theme, pal, big, dW);
+    const y = renderHeader(parts, ax, y0, align, d, theme, pal, big, dW, colW);
     if (withC) renderContacts(parts, ax, y, align, d, theme, pal, step);
-    pushQr(parts, g, qrSvg, d, theme, pal, right ? ox + g.PAD : ox + g.W - g.PAD - MW, (g.H - MW) / 2);
+    pushQr(parts, qr, qrSvg, d, theme, pal, right ? ox + g.PAD : ox + g.W - g.PAD - MW, (g.H - MW) / 2);
   } else if (qrSvg) {
     // Stacked, horizontally centred (short text only).
     const h = blockHeight(d, theme, big, step, false);
     const groupH = h + 26 + MW + 36;
     const gy = tv === 'middle' ? (g.H - groupH) / 2 : tv === 'bottom' ? g.H - g.PAD - groupH : g.PAD;
     const cx = ox + g.W / 2;
-    renderHeader(parts, cx, gy + big * 0.7, 'middle', d, theme, pal, big, 300);
-    pushQr(parts, g, qrSvg, d, theme, pal, ox + (g.W - MW) / 2, gy + h + 26);
+    renderHeader(parts, cx, gy + big * 0.7, 'middle', d, theme, pal, big, 300, g.W - g.PAD * 2);
+    pushQr(parts, qr, qrSvg, d, theme, pal, ox + (g.W - MW) / 2, gy + h + 26);
   } else {
     // No QR (two-sided front): the text block fills the whole card, positioned.
     const colX0 = ox + g.PAD, colX1 = ox + g.W - g.PAD;
     const ax = align === 'middle' ? (colX0 + colX1) / 2 : align === 'end' ? colX1 : colX0;
-    const dW = Math.min(colX1 - colX0, 420);
+    const colW = colX1 - colX0;
+    const dW = Math.min(colW, 420);
     const h = blockHeight(d, theme, big, step, withC);
     const y0 = (tv === 'middle' ? (g.H - h) / 2 : tv === 'bottom' ? g.H - g.PAD - h : g.PAD) + big * 0.7;
-    const y = renderHeader(parts, ax, y0, align, d, theme, pal, big, dW);
+    const y = renderHeader(parts, ax, y0, align, d, theme, pal, big, dW, colW);
     if (withC) renderContacts(parts, ax, y, align, d, theme, pal, step);
   }
   return parts.join('');
@@ -360,20 +381,29 @@ function logoAt(ox: number, g: Geo, href: string, v: CardTextV, h: CardTextH, fr
   return `<image x="${r3(x)}" y="${r3(y)}" width="${r3(box)}" height="${r3(box)}" preserveAspectRatio="xMidYMid meet" href="${esc(href)}"/>`;
 }
 
-/** Inner content (text + QR) for one single-sided face at offset ox. */
-function singleContent(ox: number, g: Geo, o: CardOrientation, qrSvg: string, d: CardData, theme: CardTheme, pal: Palette): string {
-  if (!hasDetails(d)) {
-    const qx = ox + (g.W - g.QR) / 2;
-    return qrBlock(g, qrSvg, d, theme, pal, qx, (g.H - g.QR) / 2, ox + g.W / 2);
-  }
-  return placeContent(ox, g, o, d, theme, pal, qrSvg);
+/** Inner content for one single-sided face at offset ox: an optional faint
+ *  watermark behind, the text + QR, then an optional placed logo on top. The
+ *  watermark/logo apply in either orientation (independent of the QR). */
+function singleContent(ox: number, g: Geo, o: CardOrientation, qrSvg: string, d: CardData, theme: CardTheme, pal: Palette, front: FrontOptions): string {
+  const qr = qrPx(g, theme);
+  const wm = watermarkLayer(ox, g, front.watermarkHref, front.watermarkOpacity);
+  const body = !hasDetails(d)
+    ? qrBlock(qr, qrSvg, d, theme, pal, ox + (g.W - qr) / 2, (g.H - qr) / 2, ox + g.W / 2)
+    : placeContent(ox, g, o, d, theme, pal, qrSvg, qr);
+  const logo =
+    front.showLogo !== false && front.logoHref
+      ? logoAt(ox, g, front.logoHref, front.logoV ?? 'bottom', front.logoH ?? 'right', front.logoSize ?? 0.42)
+      : '';
+  // Logo sits *behind* the QR body so the opaque QR panel masks any overlap —
+  // the card always scans regardless of where the logo is placed.
+  return wm + logo + body;
 }
 
 /** Front face of a two-sided card: details + an independently-placed logo +
  *  watermark (no QR). The logo can be hidden, positioned and sized. */
 function frontContent(ox: number, g: Geo, o: CardOrientation, d: CardData, theme: CardTheme, pal: Palette, front: FrontOptions): string {
   const wm = watermarkLayer(ox, g, front.watermarkHref, front.watermarkOpacity);
-  const txt = hasDetails(d) ? placeContent(ox, g, o, d, theme, pal, null) : '';
+  const txt = hasDetails(d) ? placeContent(ox, g, o, d, theme, pal, null, qrPx(g, theme)) : '';
   const logo =
     front.showLogo !== false && front.logoHref
       ? logoAt(ox, g, front.logoHref, front.logoV ?? 'bottom', front.logoH ?? 'right', front.logoSize ?? 0.42)
@@ -382,8 +412,9 @@ function frontContent(ox: number, g: Geo, o: CardOrientation, d: CardData, theme
 }
 
 function backContent(ox: number, g: Geo, qrSvg: string, d: CardData, theme: CardTheme, pal: Palette): string {
-  const qx = ox + (g.W - g.QR) / 2;
-  return qrBlock(g, qrSvg, d, theme, pal, qx, (g.H - g.QR) / 2, ox + g.W / 2);
+  const qr = qrPx(g, theme);
+  const qx = ox + (g.W - qr) / 2;
+  return qrBlock(qr, qrSvg, d, theme, pal, qx, (g.H - qr) / 2, ox + g.W / 2);
 }
 
 function watermarkLayer(ox: number, g: Geo, href?: string | null, opacity = 0.12): string {
@@ -397,14 +428,14 @@ function watermarkLayer(ox: number, g: Geo, href?: string | null, opacity = 0.12
 const open = (w: number, h: number) =>
   `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">`;
 
-export function buildCardSVG(d: CardData, qrSvg: string, theme: CardTheme): string {
+export function buildCardSVG(d: CardData, qrSvg: string, front: FrontOptions, theme: CardTheme): string {
   const g = GEO[theme.orientation];
   const pal = palette(theme);
   const { defs, fill } = paint(theme);
   return (
     open(g.W, g.H) +
     (defs ? `<defs>${defs}</defs>` : '') +
-    faceWrap(0, g, theme, fill, pal, singleContent(0, g, theme.orientation, qrSvg, d, theme, pal)) +
+    faceWrap(0, g, theme, fill, pal, singleContent(0, g, theme.orientation, qrSvg, d, theme, pal, front)) +
     '</svg>'
   );
 }
@@ -452,8 +483,11 @@ export function buildCardSheetSVG(d: CardData, qrSvg: string, front: FrontOption
 
 /* ------------------------------------------------------------------ utils */
 
-function placeQr(qrSvg: string, x: number, y: number): string {
-  return qrSvg.replace('<svg ', `<svg x="${x}" y="${y}" `);
+function placeQr(qrSvg: string, x: number, y: number, size: number): string {
+  return qrSvg
+    .replace('<svg ', `<svg x="${r3(x)}" y="${r3(y)}" `)
+    .replace(/width="[^"]*"/, `width="${r3(size)}"`)
+    .replace(/height="[^"]*"/, `height="${r3(size)}"`);
 }
 
 interface TextOpts {
