@@ -51,6 +51,14 @@ export interface Config {
   cardLogoV: CardTextV;
   cardLogoH: CardTextH;
   cardLogoSize: number;
+  // Which contact fields are printed on the card.
+  cardShowName: boolean;
+  cardShowTitle: boolean;
+  cardShowOrg: boolean;
+  cardShowPhone: boolean;
+  cardShowEmail: boolean;
+  cardShowUrl: boolean;
+  cardShowAddress: boolean;
   fg: string;
   bg: string;
   errorLevel: ErrorLevel;
@@ -120,6 +128,13 @@ const INITIAL: Config = {
   cardLogoV: 'bottom',
   cardLogoH: 'right',
   cardLogoSize: 0.42,
+  cardShowName: true,
+  cardShowTitle: true,
+  cardShowOrg: true,
+  cardShowPhone: true,
+  cardShowEmail: true,
+  cardShowUrl: true,
+  cardShowAddress: true,
   fg: '#101418',
   bg: '#ffffff',
   errorLevel: 'H',

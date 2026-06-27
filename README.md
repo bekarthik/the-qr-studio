@@ -56,12 +56,12 @@ output (including halftone + shaped dots + coloured eyes) to prove it scans.
 
 Upload **several images** and assign each effect its own: pick which image is the
 **halftone** source, which is the **embedded logo**, and which is the
-**watermark** — or point all three at a single upload. Each effect shows a small
-*uses Image N* picker (only when more than one image is present), and every
-thumbnail is badged with the roles it currently drives (**H** halftone · **L**
-logo · **W** watermark). The card front logo and watermark follow the same logo /
-watermark assignments. Remove any image and the role assignments re-map
-automatically.
+**watermark** — or point all three at a single upload. With one image you just
+tick the roles to use it for; with more than one you get a compact **assignment
+matrix** — rows are your thumbnails, columns are the three roles (each with its
+own enable checkbox), and you click a cell to choose which image fills that role.
+The card front logo and watermark follow the same logo / watermark assignments.
+Remove any image and the role assignments re-map automatically.
 
 ### Three independent image modes
 
@@ -146,7 +146,10 @@ source lays out the full contact details. By default the card QR uses just your
 colour/shape style so it always scans; tick **Match QR’s exact design** to
 replicate the live code exactly — halftone, centre logo and watermark included
 (then watch the main code’s badge for scannability). The **caption** under the QR
-is optional (custom text or hidden).
+is optional (custom text or hidden). For a **Visiting card** source, a **Show on
+card** row of checkboxes lets you choose exactly which contact fields are printed
+(name, title, company, phone, email, website, address) — only fields you’ve
+filled in are offered, and hiding one drops just its printed line.
 
 **Design.** The card is fully themeable — pick a one-click **preset** (Paper,
 Ink, Mono, Vermilion, Ocean, Sunset, Mint, Blueprint) or set it yourself:

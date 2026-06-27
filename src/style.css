@@ -622,16 +622,21 @@ h3 {
   display: block;
 }
 
-/* multi-image gallery */
-.img-gallery {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+/* multi-image roles */
+.img-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+.img-role__desc {
+  color: var(--ink-soft);
+  font-weight: 400;
 }
 .img-tile {
   position: relative;
   width: 56px;
   height: 56px;
+  flex: 0 0 auto;
 }
 .img-tile__thumb {
   width: 56px;
@@ -656,20 +661,6 @@ h3 {
   line-height: 17px;
   text-align: center;
 }
-.img-tile__roles {
-  position: absolute;
-  bottom: 2px;
-  left: 2px;
-  right: 2px;
-  padding: 1px 0;
-  border-radius: 4px;
-  background: rgba(224, 82, 46, 0.92);
-  color: #fff;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  text-align: center;
-}
 .img-tile__rm {
   position: absolute;
   top: -7px;
@@ -691,29 +682,71 @@ h3 {
   background: #e0522e;
   color: #fff;
 }
-.img-hint {
-  margin: 0;
-  font-size: 12px;
-  color: var(--ink-soft);
-}
-.img-feature {
-  display: grid;
-  gap: 6px;
-}
-.img-pick {
+
+/* single image: thumbnail beside the three role checkboxes */
+.img-single {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  gap: 14px;
+}
+.img-single__roles {
+  display: grid;
   gap: 8px;
-  margin-left: 28px;
+  flex: 1 1 auto;
 }
-.img-pick .field__label {
+
+/* >1 image: assignment matrix (rows = images, cols = roles) */
+.img-matrix {
+  display: grid;
+  grid-template-columns: auto repeat(3, minmax(56px, 1fr));
+  gap: 8px 8px;
+  align-items: center;
+}
+.img-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
   font-size: 12px;
-  color: var(--ink-soft);
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
 }
-.img-pick select {
+.img-col input {
+  accent-color: var(--accent);
+}
+.img-cell {
+  height: 56px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+  color: var(--line-2);
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.12s;
+}
+.img-cell:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+.img-cell.is-sel {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent-2);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.img-cell:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* card field-visibility chips */
+.field-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+.field-toggles__item {
   flex: 0 0 auto;
-  width: auto;
-  min-width: 110px;
 }
 
 /* preview */

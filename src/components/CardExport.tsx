@@ -59,6 +59,19 @@ export function CardExport() {
   const hasData = Boolean(payload);
   const twoSided = cfg.cardTwoSided;
 
+  // Per-field visibility toggles (only those with an actual value are offered).
+  const cardFields = (
+    [
+      { key: 'cardShowName', label: 'Name', val: displayName },
+      { key: 'cardShowTitle', label: 'Title', val: str(v.title) },
+      { key: 'cardShowOrg', label: 'Company', val: str(v.org) },
+      { key: 'cardShowPhone', label: 'Phone', val: str(v.phone) },
+      { key: 'cardShowEmail', label: 'Email', val: str(v.email) },
+      { key: 'cardShowUrl', label: 'Website', val: str(v.url) },
+      { key: 'cardShowAddress', label: 'Address', val: str(v.address) },
+    ] as const
+  ).filter((f) => f.val.trim());
+
   const [custom, setCustom] = useState<Preset[]>([]);
   useEffect(() => {
     try {
@@ -141,13 +154,13 @@ export function CardExport() {
       textV: isVcard ? 'top' : cfg.cardTextV, textH: cfg.cardTextH,
     };
     const data: CardData = {
-      name: displayName,
-      title: isVcard ? str(v.title) : '',
-      org: isVcard ? str(v.org) : '',
-      phone: isVcard ? str(v.phone) : '',
-      email: isVcard ? str(v.email) : '',
-      url: isVcard ? str(v.url) : '',
-      address: isVcard ? str(v.address) : '',
+      name: cfg.cardShowName ? displayName : '',
+      title: isVcard && cfg.cardShowTitle ? str(v.title) : '',
+      org: isVcard && cfg.cardShowOrg ? str(v.org) : '',
+      phone: isVcard && cfg.cardShowPhone ? str(v.phone) : '',
+      email: isVcard && cfg.cardShowEmail ? str(v.email) : '',
+      url: isVcard && cfg.cardShowUrl ? str(v.url) : '',
+      address: isVcard && cfg.cardShowAddress ? str(v.address) : '',
       qrBg: cfg.bg,
       caption: cfg.cardShowCaption ? str(cfg.cardCaption).trim() || captionFor(cfg.type) : '',
     };
@@ -234,6 +247,24 @@ export function CardExport() {
           <span className="field__label">Two-sided — <b>QR on the back</b>, logo/watermark on the front</span>
         </label>
       </div>
+
+      {isVcard && cardFields.length > 0 && (
+        <>
+          <p className="subhead">Show on card</p>
+          <div className="field-toggles">
+            {cardFields.map((f) => (
+              <label className="field field--check field-toggles__item" key={f.key}>
+                <input
+                  type="checkbox"
+                  checked={cfg[f.key]}
+                  onChange={(e) => update({ [f.key]: e.target.checked } as Partial<Config>)}
+                />
+                <span className="field__label">{f.label}</span>
+              </label>
+            ))}
+          </div>
+        </>
+      )}
 
       {twoSided && (
         <>
