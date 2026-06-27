@@ -55,6 +55,54 @@ const CARD_TABS: { id: CardTab; icon: string; label: string }[] = [
   { id: 'logo', icon: '🖼️', label: 'Logo & QR' },
 ];
 
+const V3: CardTextV[] = ['top', 'middle', 'bottom'];
+const H3: CardTextH[] = ['left', 'center', 'right'];
+
+/** A compact 3×3 position picker (replaces two vertical/horizontal dropdowns). */
+function PosGrid(props: {
+  v: CardTextV;
+  h: CardTextH;
+  onPick: (v: CardTextV, h: CardTextH) => void;
+  lockTop?: boolean;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="posgrid" role="group" aria-label="Position">
+      {V3.map((vv) =>
+        H3.map((hh) => {
+          const sel = props.v === vv && props.h === hh;
+          const dis = props.disabled || (props.lockTop && vv !== 'top');
+          return (
+            <button
+              key={vv + hh}
+              type="button"
+              disabled={dis}
+              aria-pressed={sel}
+              title={`${vv} ${hh}`}
+              className={'posgrid__c' + (sel ? ' is-sel' : '')}
+              onClick={() => props.onPick(vv, hh)}
+            />
+          );
+        }),
+      )}
+    </div>
+  );
+}
+
+/** Orientation as two icon buttons instead of a dropdown. */
+function Orient({ value, onPick }: { value: CardOrientation; onPick: (o: CardOrientation) => void }) {
+  return (
+    <div className="seg" role="group" aria-label="Orientation">
+      <button type="button" title="Landscape" aria-pressed={value === 'landscape'} className={'seg__b' + (value === 'landscape' ? ' is-on' : '')} onClick={() => onPick('landscape')}>
+        <svg width="22" height="16" viewBox="0 0 22 16" aria-hidden="true"><rect x="1" y="3" width="20" height="10" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.6" /></svg>
+      </button>
+      <button type="button" title="Portrait" aria-pressed={value === 'portrait'} className={'seg__b' + (value === 'portrait' ? ' is-on' : '')} onClick={() => onPick('portrait')}>
+        <svg width="16" height="20" viewBox="0 0 16 20" aria-hidden="true"><rect x="3" y="1" width="10" height="18" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.6" /></svg>
+      </button>
+    </div>
+  );
+}
+
 export function CardExport() {
   const { cfg, update } = useGen();
   const [tab, setTab] = useState<CardTab>('content');
@@ -70,13 +118,13 @@ export function CardExport() {
   // Per-field visibility toggles (only those with an actual value are offered).
   const cardFields = (
     [
-      { key: 'cardShowName', label: 'Name', val: displayName },
-      { key: 'cardShowTitle', label: 'Title', val: str(v.title) },
-      { key: 'cardShowOrg', label: 'Company', val: str(v.org) },
-      { key: 'cardShowPhone', label: 'Phone', val: str(v.phone) },
-      { key: 'cardShowEmail', label: 'Email', val: str(v.email) },
-      { key: 'cardShowUrl', label: 'Website', val: str(v.url) },
-      { key: 'cardShowAddress', label: 'Address', val: str(v.address) },
+      { key: 'cardShowName', label: 'Name', icon: '👤', val: displayName },
+      { key: 'cardShowTitle', label: 'Title', icon: '🏷️', val: str(v.title) },
+      { key: 'cardShowOrg', label: 'Company', icon: '🏢', val: str(v.org) },
+      { key: 'cardShowPhone', label: 'Phone', icon: '📞', val: str(v.phone) },
+      { key: 'cardShowEmail', label: 'Email', icon: '✉️', val: str(v.email) },
+      { key: 'cardShowUrl', label: 'Website', icon: '🌐', val: str(v.url) },
+      { key: 'cardShowAddress', label: 'Address', icon: '📍', val: str(v.address) },
     ] as const
   ).filter((f) => f.val.trim());
 
@@ -281,16 +329,19 @@ export function CardExport() {
             {isVcard && cardFields.length > 0 && (
               <>
                 <p className="subhead">Show on card</p>
-                <div className="field-toggles">
+                <div className="icon-toggles">
                   {cardFields.map((f) => (
-                    <label className="field field--check field-toggles__item" key={f.key}>
-                      <input
-                        type="checkbox"
-                        checked={cfg[f.key]}
-                        onChange={(e) => update({ [f.key]: e.target.checked } as Partial<Config>)}
-                      />
-                      <span className="field__label">{f.label}</span>
-                    </label>
+                    <button
+                      key={f.key}
+                      type="button"
+                      aria-pressed={cfg[f.key]}
+                      title={`${cfg[f.key] ? 'Hide' : 'Show'} ${f.label.toLowerCase()}`}
+                      className={'itog' + (cfg[f.key] ? ' is-on' : '')}
+                      onClick={() => update({ [f.key]: !cfg[f.key] } as Partial<Config>)}
+                    >
+                      <span className="itog__i" aria-hidden="true">{f.icon}</span>
+                      <span className="itog__t">{f.label}</span>
+                    </button>
                   ))}
                 </div>
               </>
@@ -311,20 +362,13 @@ export function CardExport() {
               <input type="range" min={20} max={62} disabled={!cfg.cardLogoShow} value={Math.round(cfg.cardLogoSize * 100)} onChange={(e) => update({ cardLogoSize: Number(e.target.value) / 100 })} />
             </label>
             <label className="field">
-              <span className="field__label">Logo position — vertical</span>
-              <select value={cfg.cardLogoV} disabled={!cfg.cardLogoShow} onChange={(e) => update({ cardLogoV: e.target.value as CardTextV })}>
-                <option value="top">Top</option>
-                <option value="middle">Middle</option>
-                <option value="bottom">Bottom</option>
-              </select>
-            </label>
-            <label className="field">
-              <span className="field__label">Logo position — horizontal</span>
-              <select value={cfg.cardLogoH} disabled={!cfg.cardLogoShow} onChange={(e) => update({ cardLogoH: e.target.value as CardTextH })}>
-                <option value="left">Left</option>
-                <option value="center">Center</option>
-                <option value="right">Right</option>
-              </select>
+              <span className="field__label">Logo position</span>
+              <PosGrid
+                v={cfg.cardLogoV}
+                h={cfg.cardLogoH}
+                disabled={!cfg.cardLogoShow}
+                onPick={(vv, hh) => update({ cardLogoV: vv, cardLogoH: hh })}
+              />
             </label>
           </div>
 
@@ -368,10 +412,7 @@ export function CardExport() {
       <div className="grid2">
         <label className="field">
           <span className="field__label">Orientation</span>
-          <select value={cfg.cardOrientation} onChange={(e) => update({ cardOrientation: e.target.value as CardOrientation })}>
-            <option value="landscape">Landscape</option>
-            <option value="portrait">Portrait</option>
-          </select>
+          <Orient value={cfg.cardOrientation} onPick={(o) => update({ cardOrientation: o })} />
         </label>
         <label className="field">
           <span className="field__label">Background</span>
@@ -383,25 +424,13 @@ export function CardExport() {
         </label>
 
         <label className="field">
-          <span className="field__label">Text position — vertical</span>
-          <select
-            value={isVcard ? 'top' : cfg.cardTextV}
-            disabled={isVcard}
-            title={isVcard ? 'A Visiting card lays details at the top; only horizontal varies' : undefined}
-            onChange={(e) => update({ cardTextV: e.target.value as CardTextV })}
-          >
-            <option value="top">Top</option>
-            <option value="middle">Middle</option>
-            <option value="bottom">Bottom</option>
-          </select>
-        </label>
-        <label className="field">
-          <span className="field__label">Text position — horizontal</span>
-          <select value={cfg.cardTextH} onChange={(e) => update({ cardTextH: e.target.value as CardTextH })}>
-            <option value="left">Left</option>
-            <option value="center">Center</option>
-            <option value="right">Right</option>
-          </select>
+          <span className="field__label">Text position{isVcard ? ' (top row only)' : ''}</span>
+          <PosGrid
+            v={isVcard ? 'top' : cfg.cardTextV}
+            h={cfg.cardTextH}
+            lockTop={isVcard}
+            onPick={(vv, hh) => update({ cardTextV: vv, cardTextH: hh })}
+          />
         </label>
 
         <label className="field">

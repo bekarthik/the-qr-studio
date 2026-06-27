@@ -796,6 +796,118 @@ h3 {
   margin: 2px 0 -4px;
 }
 
+/* compact 3×3 position picker */
+.posgrid {
+  display: grid;
+  grid-template-columns: repeat(3, 26px);
+  grid-template-rows: repeat(3, 26px);
+  gap: 4px;
+  width: max-content;
+}
+.posgrid__c {
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  background: var(--paper-2);
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  transition: 0.1s;
+}
+.posgrid__c::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--line-2);
+}
+.posgrid__c:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+.posgrid__c.is-sel {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.posgrid__c.is-sel::after {
+  background: var(--accent);
+}
+.posgrid__c:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* segmented icon control (orientation) */
+.seg {
+  display: inline-flex;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  width: max-content;
+}
+.seg__b {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  padding: 7px 12px;
+  background: var(--paper-2);
+  color: var(--ink-soft);
+  border: none;
+  cursor: pointer;
+  transition: 0.1s;
+}
+.seg__b + .seg__b {
+  border-left: 1px solid var(--line-2);
+}
+.seg__b:hover {
+  color: var(--ink-2);
+}
+.seg__b.is-on {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* icon toggle chips (show-on-card) */
+.icon-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.itog {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px 6px 9px;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  background: var(--paper-2);
+  color: var(--ink-soft);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.12s;
+}
+.itog__i {
+  font-size: 14px;
+  line-height: 1;
+  filter: grayscale(1);
+  opacity: 0.5;
+}
+.itog:hover {
+  border-color: var(--accent);
+}
+.itog.is-on {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--ink);
+}
+.itog.is-on .itog__i {
+  filter: none;
+  opacity: 1;
+}
+
 /* preview */
 .preview {
   background: #fff;

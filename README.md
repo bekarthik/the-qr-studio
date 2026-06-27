@@ -163,10 +163,11 @@ colour** (or match the QR), **text** (auto-contrast / dark / light), **per-eleme
 fonts** (heading + body, from web-safe stacks), a **custom caption**, a
 **divider** style under the name (line, short, thick, double, dotted, none), a
 decorative **graphic** (arcs, ring, dots, wave footer, corner), and a **text
-position** (two dropdowns — vertical top/middle/bottom × horizontal
-left/center/right = nine spots; the QR repositions to avoid the text). A
-**Visiting card** source lays its details at the top, so only the horizontal
-position varies there. Toggles for the **accent bar**, **border** and **QR
+position** picked from a compact **3×3 grid** (nine spots; the QR repositions to
+avoid the text). A **Visiting card** source lays its details at the top, so only
+the top row is active there. Space-saving **icon controls** keep the ribbon tight
+— the position grids, an orientation **icon toggle**, and the *Show on card*
+fields as labelled **icon chips**. Toggles for the **accent bar**, **border** and **QR
 panel**. Save your own design as a named
 **preset** (kept in the browser). The QR always keeps its own light panel, so it
 scans on any background. Long names **auto-shrink to fit** their column so they
