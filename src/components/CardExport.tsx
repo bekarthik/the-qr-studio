@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useGen, roleImage, primaryImage, type Config } from '../state/GeneratorContext';
 import { buildPayload, type SourceType } from '../content/payloads';
 import { buildMatrix } from '../qr/matrix';
@@ -25,12 +25,14 @@ function captionFor(type: SourceType): string {
   }
 }
 
-/** Card-design fields captured by a saved preset. */
+/** Card-design fields captured by a saved preset / design file (design only —
+ *  never the contact data, caption text, or which fields are shown). */
 const CAPTURE = [
   'cardBgStyle', 'cardBg1', 'cardBg2', 'cardGradAngle', 'cardPattern', 'cardAccentAuto', 'cardAccent',
   'cardText', 'cardAccentBar', 'cardBorder', 'cardPanel', 'cardOrientation', 'cardHeadingFont', 'cardBodyFont',
   'cardDivider', 'cardGraphic', 'cardTextV', 'cardTextH',
   'cardLogoShow', 'cardLogoV', 'cardLogoH', 'cardLogoSize',
+  'cardQrScale', 'cardWatermarkShow', 'cardWatermarkOpacity', 'cardShowCaption',
 ] as const;
 
 type Preset = { name: string; patch: Partial<Config> };
@@ -153,6 +155,34 @@ export function CardExport() {
     persist([...custom.filter((p) => p.name !== name), { name, patch }]);
   };
   const deletePreset = (name: string) => persist(custom.filter((p) => p.name !== name));
+
+  // Download / load the design (theme only — no contact data, caption or which
+  // fields are shown), so a design travels between cards and people.
+  const fileRef = useRef<HTMLInputElement>(null);
+  const exportDesign = () => {
+    const design: Record<string, unknown> = {};
+    for (const k of CAPTURE) design[k] = cfg[k];
+    const doc = { app: 'qr-studio', kind: 'card-design', version: 1, design };
+    save(new Blob([JSON.stringify(doc, null, 2)], { type: 'application/json' }), 'qr-card-design.json');
+  };
+  const importDesign = async (file: File) => {
+    try {
+      const obj = JSON.parse(await file.text());
+      const src = (obj && typeof obj === 'object' && obj.design && typeof obj.design === 'object' ? obj.design : obj) as Record<string, unknown>;
+      const allowed = new Set<string>(CAPTURE);
+      const patch: Partial<Config> = {};
+      for (const [k, val] of Object.entries(src)) {
+        if (allowed.has(k) && val !== undefined) (patch as Record<string, unknown>)[k] = val;
+      }
+      if (Object.keys(patch).length === 0) {
+        window.alert('No card-design properties found in that file.');
+        return;
+      }
+      update(patch);
+    } catch {
+      window.alert('Could not read that file — expected a QR Studio card-design JSON.');
+    }
+  };
 
   const out = useMemo(() => {
     if (!payload) return null;
@@ -407,6 +437,19 @@ export function CardExport() {
           </span>
         ))}
         <button type="button" className="preset preset--save" onClick={savePreset}>＋ Save</button>
+        <button type="button" className="preset preset--io" title="Download this design as a JSON file (no data)" onClick={exportDesign}>⤓ Export</button>
+        <button type="button" className="preset preset--io" title="Load a design from a JSON file" onClick={() => fileRef.current?.click()}>⤒ Import</button>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="application/json,.json"
+          hidden
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            e.target.value = '';
+            if (f) void importDesign(f);
+          }}
+        />
       </div>
 
       <div className="grid2">

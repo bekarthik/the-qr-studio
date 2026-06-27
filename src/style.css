@@ -301,6 +301,14 @@ h3 {
 .preset--save {
   border-style: dashed;
 }
+.preset--io {
+  border-style: dashed;
+  color: var(--ink-soft);
+}
+.preset--io:hover {
+  color: var(--accent-2);
+  border-color: var(--accent);
+}
 .output {
   grid-area: preview;
   position: sticky;

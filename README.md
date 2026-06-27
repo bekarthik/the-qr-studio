@@ -169,7 +169,11 @@ the top row is active there. Space-saving **icon controls** keep the ribbon tigh
 — the position grids, an orientation **icon toggle**, and the *Show on card*
 fields as labelled **icon chips**. Toggles for the **accent bar**, **border** and **QR
 panel**. Save your own design as a named
-**preset** (kept in the browser). The QR always keeps its own light panel, so it
+**preset** (kept in the browser), or **Export** the design to a small **JSON
+file** and **Import** it on another card or machine. The file holds the **design
+properties only** — never your contact data, caption text, or which fields are
+shown — so a look travels safely between people; importing applies just the
+known design keys and leaves your data untouched. The QR always keeps its own light panel, so it
 scans on any background. Long names **auto-shrink to fit** their column so they
 never overlap the QR, and a **QR size** slider (60–120%) scales the code if you
 want more or less room.
