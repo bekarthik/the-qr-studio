@@ -16,7 +16,11 @@ export function Hero() {
           Links, UPI, Wi-Fi, visiting cards and more — styled with your colour or your own image, and
           verified scannable right in your browser. Nothing is ever uploaded.
         </p>
-        <ul className="hero__pills" id="features">
+        <div className="hero__cta">
+          <a className="hero__btn" href="#app">Create your code →</a>
+          <a className="hero__btn hero__btn--ghost" href="#features">See what it does</a>
+        </div>
+        <ul className="hero__pills">
           {PILLS.map((p) => (
             <li key={p}>{p}</li>
           ))}

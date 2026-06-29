@@ -32,10 +32,16 @@ export function SourcePicker() {
   }, [open]);
 
   const pickCategory = (cat: (typeof CATEGORY_ORDER)[number]) => {
-    setOpen(false);
-    if (cat === currentCat) return;
+    const count = SOURCES.filter((s) => SOURCE_CATEGORY[s.type] === cat).length;
+    if (cat === currentCat) {
+      // same category — just toggle the list of its types
+      setOpen((o) => (count > 1 ? !o : false));
+      return;
+    }
     const first = SOURCES.find((s) => SOURCE_CATEGORY[s.type] === cat);
     if (first) update({ type: first.type });
+    // reveal the choices so the two-step picker is discoverable
+    setOpen(count > 1);
   };
 
   return (

@@ -7,8 +7,8 @@
   --paper-2: #ffffff; /* elevated surfaces (cards, inputs, menus) */
   --paper-3: #f1ede5; /* hover wash */
   --ink: #211d18;
-  --ink-2: #5a5247;
-  --ink-soft: #9a9184;
+  --ink-2: #574f44;
+  --ink-soft: #786f61;
   --line: rgba(33, 29, 24, 0.08);
   --line-2: rgba(33, 29, 24, 0.15);
   --accent: #e85431;
@@ -48,8 +48,8 @@
   --paper-2: #ffffff;
   --paper-3: #eef1f5;
   --ink: #1b2330;
-  --ink-2: #58616f;
-  --ink-soft: #99a1b0;
+  --ink-2: #545d6b;
+  --ink-soft: #767f8e;
   --line: rgba(20, 28, 40, 0.08);
   --line-2: rgba(20, 28, 40, 0.15);
   --accent: #ff5a36;
@@ -71,8 +71,8 @@
   --paper-2: #1c2230;
   --paper-3: #252c3c;
   --ink: #eef1f7;
-  --ink-2: #a9b2c1;
-  --ink-soft: #6e7787;
+  --ink-2: #b3bccb;
+  --ink-soft: #8b94a4;
   --line: rgba(255, 255, 255, 0.08);
   --line-2: rgba(255, 255, 255, 0.14);
   --accent: #ff6a42;
@@ -120,6 +120,38 @@ a:hover {
   text-decoration: underline;
 }
 
+/* Consistent, never-clipped keyboard focus ring on every interactive control.
+   `outline-offset: -2px` draws the ring INSIDE the element so an `overflow:
+   hidden` ancestor (ribbon, segmented controls, output card) can't clip it. */
+button:focus-visible,
+a:focus-visible,
+select:focus-visible,
+summary:focus-visible,
+[role='tab']:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: inherit;
+}
+/* inputs already show a soft ring — keep their offset outside */
+.field input:focus-visible,
+.field textarea:focus-visible {
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
 h1,
 h2,
 h3 {
@@ -135,6 +167,12 @@ h3 {
   backdrop-filter: saturate(160%) blur(14px);
   -webkit-backdrop-filter: saturate(160%) blur(14px);
   border-bottom: 1px solid var(--line);
+}
+/* opaque fallback where backdrop blur isn't available, so content can't bleed */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .nav {
+    background: var(--bg);
+  }
 }
 .nav__inner {
   max-width: var(--maxw);
@@ -310,11 +348,46 @@ h3 {
   font-size: 13px;
   font-weight: 500;
   box-shadow: var(--shadow-1);
-  transition: transform 0.14s ease, box-shadow 0.14s ease;
 }
-.hero__pills li:hover {
-  transform: translateY(-2px);
+
+/* hero call-to-action */
+.hero__cta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 28px;
+}
+.hero__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 22px;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  background: var(--ink);
+  color: var(--paper-2);
+  border: 1px solid transparent;
   box-shadow: var(--shadow-2);
+  transition: transform 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease;
+}
+.hero__btn:hover {
+  text-decoration: none;
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+  box-shadow: var(--shadow-3);
+}
+.hero__btn--ghost {
+  background: var(--paper-2);
+  color: var(--ink);
+  border-color: var(--line-2);
+  box-shadow: var(--shadow-1);
+}
+.hero__btn--ghost:hover {
+  filter: none;
+  border-color: var(--ink-soft);
 }
 
 /* ----------------------------------------------------------- workspace --- */
@@ -326,6 +399,7 @@ h3 {
   max-width: var(--maxw);
   margin: 0 auto;
   align-items: start;
+  scroll-margin-top: 72px;
 }
 .studio__controls {
   min-width: 0;
@@ -512,44 +586,70 @@ h3 {
 @media (max-width: 880px) {
   .studio {
     grid-template-columns: 1fr;
-    gap: 14px;
+    gap: 12px;
+    padding-bottom: 88px; /* room for the fixed mobile download bar */
   }
-  /* Stacked: keep the result pinned at the top so editing any control below
-     stays in view — no scrolling back up to see the change. */
+  /* Stacked: a compact result stays pinned at the top so editing any control
+     below keeps it in view — and it's small enough to leave room for them. */
   .studio__output {
     position: sticky;
-    top: 56px;
+    top: 54px;
     order: -1;
     z-index: 5;
   }
   .output-card {
     box-shadow: var(--shadow-3);
   }
-  .output-card__body {
-    padding: 12px 14px;
+  .output-card__bar {
+    padding: 10px 12px;
   }
-  /* compact, capped preview so controls remain reachable beneath it */
+  .output-card__body {
+    padding: 10px 12px;
+  }
+  /* small capped preview — leaves most of the screen for the controls */
   .output-card__body .preview {
-    max-width: 38vh;
-    max-height: 38vh;
+    max-width: 30vh;
+    max-height: 30vh;
     margin: 0 auto;
   }
   .cardx__preview {
-    max-height: 34vh;
+    max-height: 28vh;
     width: auto;
   }
   .output-card__body .hint,
   .output-card__body .finehint {
     display: none;
   }
+  .output-card__body .badge {
+    margin-top: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  /* downloads float in a fixed bottom action bar, out of the pinned preview */
+  .output-card__body .downloads {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    margin: 0;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+    background: var(--paper-2);
+    border-top: 1px solid var(--line-2);
+    box-shadow: 0 -8px 24px -14px rgba(0, 0, 0, 0.4);
+  }
   .section-nav {
-    display: none; /* on mobile the pinned preview handles visibility */
+    display: none; /* the compact pinned preview handles visibility on mobile */
   }
   .nav__links > a:not(.nav__cta) {
     display: none;
   }
   .hero {
-    padding-top: 46px;
+    padding-top: 42px;
+  }
+  .hero__btn {
+    padding: 12px 18px;
+    font-size: 14px;
   }
 }
 
@@ -822,6 +922,11 @@ h3 {
 }
 .field input[type='color']::-webkit-color-swatch {
   border: none;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px var(--line-2);
+}
+.field input[type='color']::-moz-color-swatch {
+  border: 1px solid var(--line-2);
   border-radius: 6px;
 }
 .field input[type='color']::-webkit-color-swatch-wrapper {
@@ -1283,11 +1388,13 @@ h3 {
 }
 .download {
   flex: 1;
+  min-width: 0;
+  white-space: nowrap;
   background: var(--ink);
   color: var(--paper-2);
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  padding: 13px;
+  padding: 13px 12px;
   font-family: var(--font-display);
   font-size: 15px;
   font-weight: 600;
@@ -1325,6 +1432,73 @@ h3 {
   color: var(--ink-soft);
   font-size: 11.5px;
   line-height: 1.55;
+}
+
+/* ---------------------------------------------------------- features --- */
+.features {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 24px 24px 64px;
+  scroll-margin-top: 72px;
+}
+.features__head {
+  text-align: center;
+  margin-bottom: 26px;
+}
+.features__head h2 {
+  margin: 0 0 6px;
+  font-family: var(--font-display);
+  font-size: clamp(22px, 3vw, 28px);
+  letter-spacing: -0.02em;
+}
+.features__head p {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 15px;
+}
+.features__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.feature {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow-1);
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+.feature:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-2);
+}
+.feature__ico {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: var(--accent-soft);
+  font-size: 20px;
+  margin-bottom: 12px;
+}
+.feature__title {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.feature__body {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+@media (max-width: 880px) {
+  .features__grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ------------------------------------------------------------ footer --- */

@@ -10,6 +10,7 @@ import { Settings } from './components/Settings';
 import { Preview } from './components/Preview';
 import { CardControls } from './components/CardControls';
 import { CardPreview } from './components/CardPreview';
+import { Features } from './components/Features';
 
 type OutputMode = 'qr' | 'card';
 
@@ -142,6 +143,7 @@ export function App() {
         </aside>
       </main>
 
+      <Features />
       <Footer />
     </GeneratorProvider>
   );
