@@ -30,6 +30,13 @@
     <meta name="twitter:card" content="summary" />
   </head>
   <body>
+    <script>
+      // Apply the saved theme before paint to avoid a flash.
+      try {
+        var t = localStorage.getItem('qrstudio.theme');
+        if (t === 'graphite' || t === 'midnight') document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

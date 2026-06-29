@@ -1,4 +1,5 @@
 import { SupportButton } from './Support';
+import { ThemeToggle } from './ThemeToggle';
 
 export function Nav() {
   return (
@@ -11,6 +12,7 @@ export function Nav() {
         <nav className="nav__links">
           <a href="#features">Features</a>
           <a href="#app">Generator</a>
+          <ThemeToggle />
           <SupportButton className="nav__support">☕ Support</SupportButton>
           <a className="nav__cta" href="https://github.com/bekarthik/chores" target="_blank" rel="noopener">
             ★ GitHub
