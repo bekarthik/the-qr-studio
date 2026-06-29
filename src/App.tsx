@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { GeneratorProvider } from './state/GeneratorContext';
 import { Nav } from './components/Nav';
 import { Hero } from './components/Hero';
@@ -15,70 +15,20 @@ import { ResetButton } from './components/ResetButton';
 import { ShareButton } from './components/ShareButton';
 
 type OutputMode = 'qr' | 'card';
+type ControlsTab = 'setup' | 'style' | 'card';
 
-const BASE_SECTIONS = [
-  { id: 'step-source', label: 'Source' },
-  { id: 'step-details', label: 'Details' },
-  { id: 'step-image', label: 'Image' },
-  { id: 'step-style', label: 'Style' },
+const TABS: { id: ControlsTab; label: string; badge?: string }[] = [
+  { id: 'setup', label: 'Setup', badge: '1·3' },
+  { id: 'style', label: 'Style' },
+  { id: 'card', label: 'Card' },
 ];
 
 export function App() {
+  // Independent controls: which controls are shown (tab) is separate from what
+  // the preview shows (output). Tabs swap controls; the output switch swaps the
+  // live result — so you can edit the card while previewing the QR, and back.
+  const [tab, setTab] = useState<ControlsTab>('setup');
   const [output, setOutput] = useState<OutputMode>('qr');
-  const [active, setActive] = useState('step-source');
-
-  const sections = output === 'card' ? [...BASE_SECTIONS, { id: 'step-card', label: 'Card' }] : BASE_SECTIONS;
-
-  // Scroll-spy: the active section is the last one whose top has scrolled past
-  // the sticky chrome. The threshold matches the section scroll-margin so a jump
-  // lands the target exactly on the line — consistent on desktop and mobile.
-  useEffect(() => {
-    const ids = sections.map((s) => s.id);
-    const onScroll = () => {
-      const mobile = window.matchMedia('(max-width: 880px)').matches;
-      const threshold = mobile ? 54 + window.innerHeight * 0.48 + 8 : 130;
-      let current = ids[0];
-      for (const id of ids) {
-        const el = document.getElementById(id);
-        if (el && el.getBoundingClientRect().top - threshold <= 1) current = id;
-      }
-      setActive(current);
-    };
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
-    return () => {
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onScroll);
-    };
-  }, [output]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const jump = (id: string) => {
-    setActive(id);
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
-  const pickCard = () => {
-    setOutput('card');
-    // let the card section mount, then bring it into view
-    window.setTimeout(() => jump('step-card'), 60);
-  };
-
-  const pills = (extra: string) => (
-    <nav className={'section-nav' + extra} aria-label="Jump to section">
-      {sections.map((s) => (
-        <button
-          key={s.id}
-          type="button"
-          aria-current={active === s.id}
-          className={'section-nav__b' + (active === s.id ? ' is-on' : '')}
-          onClick={() => jump(s.id)}
-        >
-          {s.label}
-        </button>
-      ))}
-    </nav>
-  );
 
   return (
     <GeneratorProvider>
@@ -86,15 +36,13 @@ export function App() {
       <Hero />
 
       <main className="studio" id="app">
-        {/* Controls — one continuous flow with a sticky section jump-nav */}
+        {/* Controls — tabbed so each panel is short and the preview stays beside */}
         <div className="studio__controls">
-          {pills('')}
-
           <section className="card panel">
             <div className="card__head card__head--row">
               <div>
                 <h2>Create your code</h2>
-                <p>Pick a source, fill it in, add an image, then style it — the preview updates live.</p>
+                <p>Set up your source, style the code, or design a card — the preview updates live.</p>
               </div>
               <div className="head-actions">
                 <ShareButton />
@@ -102,37 +50,58 @@ export function App() {
               </div>
             </div>
 
-            <div className="panel__step" id="step-source">
-              <h3 className="h"><span className="h__num">1</span> Choose a source</h3>
-              <SourcePicker />
-            </div>
-            <div className="panel__step" id="step-details">
-              <h3 className="h"><span className="h__num">2</span> Enter the details</h3>
-              <SourceForm />
-            </div>
-            <div className="panel__step" id="step-image">
-              <h3 className="h"><span className="h__num">3</span> Add an image <span className="h__opt">optional</span></h3>
-              <ImageSection />
-            </div>
-            <div className="panel__step" id="step-style">
-              <h3 className="h"><span className="h__num">4</span> Style</h3>
-              <Settings />
+            <div className="ctabs" role="tablist" aria-label="Controls">
+              {TABS.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === t.id}
+                  className={'ctab' + (tab === t.id ? ' is-on' : '')}
+                  onClick={() => setTab(t.id)}
+                >
+                  {t.badge && <span className="ctab__n">{t.badge}</span>}
+                  {t.label}
+                </button>
+              ))}
             </div>
 
-            {output === 'card' && (
-              <div className="panel__step panel__step--card" id="step-card">
-                <h3 className="h"><span className="h__ico" aria-hidden="true">🪪</span> Visiting-card design</h3>
+            {tab === 'setup' && (
+              <div className="ctab-panel">
+                <div className="panel__step">
+                  <h3 className="h"><span className="h__num">1</span> Choose a source</h3>
+                  <SourcePicker />
+                </div>
+                <div className="panel__step">
+                  <h3 className="h"><span className="h__num">2</span> Enter the details</h3>
+                  <SourceForm />
+                </div>
+                <div className="panel__step">
+                  <h3 className="h"><span className="h__num">3</span> Add an image <span className="h__opt">optional</span></h3>
+                  <ImageSection />
+                </div>
+              </div>
+            )}
+
+            {tab === 'style' && (
+              <div className="ctab-panel">
+                <Settings />
+              </div>
+            )}
+
+            {tab === 'card' && (
+              <div className="ctab-panel">
                 <CardControls />
               </div>
             )}
           </section>
         </div>
 
-        {/* Output — the live result, switchable between QR and visiting card */}
+        {/* Output — the live result, independently switchable QR ⇄ card */}
         <aside className="studio__output">
           <section className="card output-card">
             <div className="output-card__bar">
-              <div className="seg output-switch" role="tablist" aria-label="Output">
+              <div className="seg output-switch" role="tablist" aria-label="Preview">
                 <button
                   type="button"
                   role="tab"
@@ -147,14 +116,13 @@ export function App() {
                   role="tab"
                   aria-selected={output === 'card'}
                   className={'seg__b' + (output === 'card' ? ' is-on' : '')}
-                  onClick={pickCard}
+                  onClick={() => setOutput('card')}
                 >
                   Visiting card
                 </button>
               </div>
               <p className="output-card__hint">Live · verified in-browser</p>
             </div>
-            {pills(' section-nav--mobile')}
             <div className="output-card__body">
               {output === 'qr' ? <Preview /> : <CardPreview />}
             </div>
