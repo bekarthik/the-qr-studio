@@ -6,9 +6,18 @@ import type { ErrorLevel } from '../qr/matrix';
  * Unified style & advanced settings — common to every source. Image-only
  * controls (halftone / centre-logo) appear only when that feature is enabled.
  */
+/** A finer halftone shrinks each module's protected centre, so the data "core"
+ *  must grow to stay readable. Minimum dot size per detail level. */
+const MIN_DOT: Record<number, number> = { 3: 0, 5: 0.5, 7: 0.72 };
+
 export function Settings() {
   const { cfg, update } = useGen();
   const imageOn = cfg.resemble || cfg.embed;
+
+  const setDetail = (detail: number) => {
+    // bump the dot up to the safe floor for this detail (never shrink the user's choice)
+    update({ detail, dotSize: Math.max(cfg.dotSize, MIN_DOT[detail] ?? 0) });
+  };
 
   return (
     <div className="grid2">
@@ -113,7 +122,7 @@ export function Settings() {
           <p className="subhead">Image (halftone)</p>
           <label className="field">
             <span className="field__label">Halftone detail (image fineness)</span>
-            <select value={cfg.detail} onChange={(e) => update({ detail: Number(e.target.value) })}>
+            <select value={cfg.detail} onChange={(e) => setDetail(Number(e.target.value))}>
               <option value={3}>Standard</option>
               <option value={5}>High</option>
               <option value={7}>Finest</option>

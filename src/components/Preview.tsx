@@ -34,6 +34,41 @@ const BADGE_TEXT: Record<BadgeState, string> = {
   fail: '⚠ May not scan — lower detail/dot size or raise contrast',
 };
 
+/**
+ * jsQR at full resolution is far stricter than a phone camera: on a halftone
+ * code the per-module speckle trips it even when the code scans fine in the real
+ * world. A phone optically downsamples, which averages that speckle away — so we
+ * decode the canvas AND a few smoothed downscales and accept if any reads. This
+ * removes the false "May not scan" while still catching genuinely broken codes.
+ */
+function decodesAtAnyScale(canvas: HTMLCanvasElement, payload: string): boolean {
+  const tryDecode = (cv: HTMLCanvasElement): boolean => {
+    const cx = cv.getContext('2d');
+    if (!cx) return false;
+    try {
+      const d = cx.getImageData(0, 0, cv.width, cv.height);
+      const res = jsQR(d.data, cv.width, cv.height);
+      return res != null && res.data === payload;
+    } catch {
+      return false;
+    }
+  };
+  if (tryDecode(canvas)) return true;
+  for (const w of [820, 600, 440, 320]) {
+    if (w >= canvas.width) continue;
+    const c = document.createElement('canvas');
+    c.width = w;
+    c.height = Math.max(1, Math.round((canvas.height / canvas.width) * w));
+    const cx = c.getContext('2d');
+    if (!cx) continue;
+    cx.imageSmoothingEnabled = true; // bilinear blur ≈ a camera averaging the halftone
+    cx.imageSmoothingQuality = 'high';
+    cx.drawImage(canvas, 0, 0, c.width, c.height);
+    if (tryDecode(c)) return true;
+  }
+  return false;
+}
+
 function message(holder: HTMLElement, text: string, isErr: boolean, detail?: string) {
   const d = document.createElement('div');
   d.className = 'empty' + (isErr ? ' err' : '');
@@ -182,19 +217,7 @@ export function Preview() {
     // Verify off the critical path so typing stays smooth.
     setBadge('checking');
     const timer = setTimeout(() => {
-      let ok = false;
-      try {
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          const { width, height } = canvas;
-          const data = ctx.getImageData(0, 0, width, height).data;
-          const res = jsQR(data, width, height);
-          ok = Boolean(res) && res!.data === payload;
-        }
-      } catch {
-        ok = false;
-      }
-      setBadge(ok ? 'ok' : 'fail');
+      setBadge(decodesAtAnyScale(canvas, payload) ? 'ok' : 'fail');
     }, 160);
     return () => clearTimeout(timer);
   }, [cfg]);

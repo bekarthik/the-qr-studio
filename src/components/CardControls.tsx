@@ -207,10 +207,6 @@ export function CardControls() {
               <input type="checkbox" checked={cfg.cardShowCaption} onChange={(e) => update({ cardShowCaption: e.target.checked })} />
               <span className="field__label">Show caption</span>
             </label>
-            <label className="field field--check">
-              <input type="checkbox" checked={twoSided} onChange={(e) => update({ cardTwoSided: e.target.checked })} />
-              <span className="field__label">Two-sided — <b>QR on the back</b>, logo/watermark on the front</span>
-            </label>
           </div>
           {isVcard && cardFields.length > 0 && (
             <>
