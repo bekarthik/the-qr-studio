@@ -9,15 +9,16 @@ import type { ErrorLevel } from '../qr/matrix';
 /** A finer halftone shrinks each module's protected centre, so the data "core"
  *  must grow a little to stay readable. These are subtle floors — just enough to
  *  keep the code scannable at High / Finest without ballooning the dots. */
-const MIN_DOT: Record<number, number> = { 3: 0, 5: 0.22, 7: 0.36 };
+const MIN_DOT: Record<number, number> = { 3: 0, 5: 0.07, 7: 0.1 };
 
 export function Settings() {
   const { cfg, update } = useGen();
   const imageOn = cfg.resemble || cfg.embed;
 
   const setDetail = (detail: number) => {
-    // bump the dot up to the safe floor for this detail (never shrink the user's choice)
-    update({ detail, dotSize: Math.max(cfg.dotSize, MIN_DOT[detail] ?? 0) });
+    // Snap the dot to this detail's floor so the size tracks the chosen detail
+    // in both directions (raising *or* lowering it) and the slider reflects it.
+    update({ detail, dotSize: MIN_DOT[detail] ?? 0 });
   };
 
   return (

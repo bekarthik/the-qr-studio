@@ -54,7 +54,11 @@ export function CardPreview() {
 
   return (
     <>
-      <img className="cardx__preview" src={`data:image/svg+xml;utf8,${encodeURIComponent(svg)}`} alt="Visiting card preview" />
+      <img
+        className={'cardx__preview' + (cfg.cardOrientation === 'portrait' ? ' cardx__preview--portrait' : '')}
+        src={`data:image/svg+xml;utf8,${encodeURIComponent(svg)}`}
+        alt="Visiting card preview"
+      />
 
       <label className="field field--check card-twoside">
         <input type="checkbox" checked={cfg.cardTwoSided} onChange={(e) => update({ cardTwoSided: e.target.checked })} />

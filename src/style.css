@@ -549,9 +549,16 @@ h3 {
   width: 100%;
   max-width: 560px;
   height: auto;
+  max-height: 72vh;
   margin: 0 auto 16px;
   border: 1px solid var(--line, #e2ddd2);
   border-radius: 12px;
+}
+/* A portrait card is much taller than wide; bound its height (not width) so it
+   stays a sensible preview size instead of dominating the pane. */
+.cardx__preview--portrait {
+  width: auto;
+  max-height: 56vh;
 }
 .preset-row {
   display: flex;
