@@ -330,6 +330,42 @@ h3 {
 .studio__controls {
   min-width: 0;
 }
+
+/* sticky section jump-nav (scroll-spy) */
+.section-nav {
+  position: sticky;
+  top: 64px;
+  z-index: 6;
+  display: flex;
+  gap: 4px;
+  margin-bottom: 14px;
+  padding: 5px;
+  border-radius: 999px;
+  background: var(--paper-2);
+  border: 1px solid var(--line-2);
+  box-shadow: var(--shadow-2);
+}
+.section-nav__b {
+  flex: 1 1 0;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-soft);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.14s, background 0.14s, box-shadow 0.14s;
+}
+.section-nav__b:hover {
+  color: var(--ink-2);
+}
+.section-nav__b.is-on {
+  background: var(--ink);
+  color: var(--paper-2);
+  box-shadow: var(--shadow-1);
+}
 .studio__output {
   position: sticky;
   top: 80px;
@@ -340,6 +376,7 @@ h3 {
 .panel__step {
   padding: 20px 0;
   border-top: 1px solid var(--line);
+  scroll-margin-top: 122px; /* clear the sticky main nav + section-nav on jump */
 }
 .panel__step:first-of-type {
   padding-top: 6px;
@@ -504,6 +541,9 @@ h3 {
   .output-card__body .hint,
   .output-card__body .finehint {
     display: none;
+  }
+  .section-nav {
+    display: none; /* on mobile the pinned preview handles visibility */
   }
   .nav__links > a:not(.nav__cta) {
     display: none;
