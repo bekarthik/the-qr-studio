@@ -131,6 +131,16 @@ ideal for print). Both are produced from the same sub-cell geometry, so they are
 equally scannable. The SVG merges dark sub-cells into horizontal runs to stay
 compact and embeds a centre logo as an `<image>` element.
 
+### Save, share & offline
+
+Your work **persists across reloads** — the source, content, style and card
+design are saved in the browser (your uploaded images are never stored, for
+privacy). **🔗 Share** copies a permalink that encodes the whole design (again,
+no images) so you can hand a colleague the exact look or bookmark it; opening the
+link restores it. **↺ Reset** clears everything back to defaults (confirmed).
+After the first visit a **service worker** caches the app, so QR Studio keeps
+working **offline** — fonts fall back to system type when the network is gone.
+
 ### Visiting card
 
 Generate a print-ready **business card** (3.5×2″, 1050×600 at 300 dpi) as **PNG

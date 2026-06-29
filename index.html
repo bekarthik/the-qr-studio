@@ -11,13 +11,24 @@
     <meta name="theme-color" content="#f4f1ea" />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
 
-    <!-- Type: Space Grotesk (display) + Newsreader (editorial accent) -->
+    <!-- Type: Space Grotesk (display) + Newsreader (editorial accent).
+         Loaded non-render-blocking — text paints immediately in the system-font
+         fallback (see --font-* in CSS) and swaps in when the webfont arrives, so
+         a slow or offline network never blocks or hides content. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,500&display=swap"
       rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,500&display=swap"
+      media="print"
+      onload="this.media='all'"
     />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,500&display=swap"
+      />
+    </noscript>
 
     <!-- Social cards -->
     <meta property="og:type" content="website" />

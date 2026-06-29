@@ -701,6 +701,16 @@ h3 {
   border-color: var(--accent);
   background: var(--accent-soft);
 }
+.head-actions {
+  display: flex;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+.share-btn.is-copied {
+  color: var(--ok);
+  border-color: var(--ok);
+  background: var(--ok-soft);
+}
 .card__head h2 {
   margin: 0;
   font-size: 18px;

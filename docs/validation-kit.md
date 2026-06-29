@@ -34,10 +34,10 @@ Update **Status** each release.
 | 5 | 2 | Feel | Contrast misses AA: white-on-accent 3.66, helper 4.43, links 4.47 | Darken `--ink-soft`/`--accent-2`; active pills → accent-2 + on-accent | ✅ fixed (5.86 / 5.13 / 5.25) |
 | 6 | 2 | UX | Mobile has no quick-nav (jump-pills desktop-only) | Scrollable section strip docked under the pinned preview | ⬜ open |
 | 7 | 2 | UX | Two-level source picker teaches a model; no recents/search | Add type search + recent/popular shortcuts (auto-open already shipped) | ⬜ open |
-| 8 | 2 | UX | No shareable/permalink state | Encode config in URL hash; "Copy link" | ⬜ open |
+| 8 | 2 | UX | No shareable/permalink state | Encode config (minus images) in URL hash; "🔗 Share" copies it | ✅ fixed |
 | 9 | 1 | Feel | No progress feedback for heavy ops (large-image halftone) | Skeleton/spinner during sampling/verify | ⬜ open |
 | 10 | 1 | Feel | Theme icons tooltip-only; Graphite mark ambiguous | Visible labels / clearer icons | ⬜ open |
-| — | 1 | Feel | Google Fonts are render-blocking external requests (FOIT/offline risk) | Self-host fonts; add a service worker for true offline | ⬜ open |
+| — | 1 | Feel | Google Fonts were render-blocking external requests (FOIT/offline risk) | Fonts now load non-blocking (swap + system fallback); service worker precaches the shell for offline | ✅ fixed (self-hosting fonts still optional) |
 
 ---
 

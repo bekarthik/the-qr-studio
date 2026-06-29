@@ -167,32 +167,84 @@ interface Ctx {
   update: (patch: Partial<Config>) => void;
   setField: (key: string, value: string | boolean) => void;
   reset: () => void;
+  /** Build a shareable URL encoding the current design, update the address bar,
+   *  and return it (images are not included). */
+  shareUrl: () => string;
 }
 
 const GeneratorContext = createContext<Ctx | null>(null);
 
 const LS_CONFIG = 'qrstudio.config';
+const SKIP_PERSIST = ['images', 'halftoneIdx', 'logoIdx', 'watermarkIdx'] as const;
 
-/** Restore the saved config (everything except the in-memory images, which are
- *  never persisted — privacy + localStorage quota). Falls back to defaults. */
-function loadConfig(): Config {
+// UTF-8-safe base64 (handles emoji / non-Latin1 in vCard fields).
+const b64 = (s: string) => btoa(unescape(encodeURIComponent(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const unb64 = (s: string) => decodeURIComponent(escape(atob(s.replace(/-/g, '+').replace(/_/g, '/'))));
+
+/** Minimal diff of the config vs defaults (keeps share links short). */
+function encodeConfig(cfg: Config): string {
+  const out: Record<string, unknown> = { type: cfg.type };
+  const skip = new Set<string>([...SKIP_PERSIST, 'values', 'type']);
+  for (const k of Object.keys(INITIAL) as (keyof Config)[]) {
+    if (skip.has(k)) continue;
+    if (JSON.stringify(cfg[k]) !== JSON.stringify(INITIAL[k])) out[k] = cfg[k];
+  }
+  const base = initialValues();
+  const vals: Record<string, PayloadInput> = {};
+  for (const t of Object.keys(cfg.values)) {
+    const cur = cfg.values[t] ?? {};
+    const def = base[t] ?? {};
+    const d: PayloadInput = {};
+    for (const key of Object.keys(cur)) {
+      if (JSON.stringify(cur[key]) !== JSON.stringify(def[key])) d[key] = cur[key];
+    }
+    if (Object.keys(d).length) vals[t] = d;
+  }
+  if (Object.keys(vals).length) out.values = vals;
+  return b64(JSON.stringify(out));
+}
+
+function decodeConfig(encoded: string): Partial<Config> | null {
   try {
-    const raw = localStorage.getItem(LS_CONFIG);
-    if (!raw) return INITIAL;
-    const saved = JSON.parse(raw) as Partial<Config>;
+    const obj = JSON.parse(unb64(encoded)) as Partial<Config>;
+    if (!obj || typeof obj !== 'object') return null;
     return {
-      ...INITIAL,
-      ...saved,
-      // never trust persisted image state
-      images: [],
-      halftoneIdx: 0,
-      logoIdx: 0,
-      watermarkIdx: 0,
-      values: { ...initialValues(), ...(saved.values ?? {}) },
+      ...obj,
+      values: { ...initialValues(), ...(obj.values ?? {}) },
     };
   } catch {
-    return INITIAL;
+    return null;
   }
+}
+
+/** Restore config — a shared #d=… link wins over the saved session, which wins
+ *  over defaults. Images are never restored (privacy + localStorage quota). */
+function loadConfig(): Config {
+  const clean = (saved: Partial<Config>): Config => ({
+    ...INITIAL,
+    ...saved,
+    images: [],
+    halftoneIdx: 0,
+    logoIdx: 0,
+    watermarkIdx: 0,
+    values: { ...initialValues(), ...(saved.values ?? {}) },
+  });
+  try {
+    const m = typeof location !== 'undefined' && location.hash.match(/[#&]d=([^&]+)/);
+    if (m) {
+      const fromUrl = decodeConfig(m[1]);
+      if (fromUrl) return clean(fromUrl);
+    }
+  } catch {
+    /* ignore */
+  }
+  try {
+    const raw = localStorage.getItem(LS_CONFIG);
+    if (raw) return clean(JSON.parse(raw) as Partial<Config>);
+  } catch {
+    /* ignore */
+  }
+  return INITIAL;
 }
 
 export function GeneratorProvider({ children }: { children: ReactNode }) {
@@ -227,7 +279,17 @@ export function GeneratorProvider({ children }: { children: ReactNode }) {
         } catch {
           /* ignore */
         }
+        if (typeof history !== 'undefined') history.replaceState(null, '', location.pathname + location.search);
         setCfg({ ...INITIAL, values: initialValues() });
+      },
+      shareUrl: () => {
+        const url = `${location.origin}${location.pathname}#d=${encodeConfig(cfg)}`;
+        try {
+          history.replaceState(null, '', url);
+        } catch {
+          /* ignore */
+        }
+        return url;
       },
     }),
     [cfg],
