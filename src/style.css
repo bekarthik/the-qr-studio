@@ -317,36 +317,85 @@ h3 {
   box-shadow: var(--shadow-2);
 }
 
-/* --------------------------------------------------------------- app --- */
-.app {
+/* ----------------------------------------------------------- workspace --- */
+.studio {
   display: grid;
-  grid-template-columns: 1.12fr 0.88fr;
-  grid-template-areas:
-    'content preview'
-    'style preview';
-  gap: 20px;
-  padding: 28px 24px 60px;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 22px;
+  padding: 28px 24px 70px;
   max-width: var(--maxw);
   margin: 0 auto;
   align-items: start;
 }
-.card--content {
-  grid-area: content;
+.studio__controls {
+  min-width: 0;
 }
-.card--style {
-  grid-area: style;
+.studio__output {
+  position: sticky;
+  top: 80px;
+  min-width: 0;
 }
-.cardx-section {
-  max-width: var(--maxw);
-  margin: 0 auto;
-  padding: 0 24px 64px;
+
+/* one continuous controls panel, hairline-separated steps */
+.panel__step {
+  padding: 20px 0;
+  border-top: 1px solid var(--line);
+}
+.panel__step:first-of-type {
+  padding-top: 6px;
+  border-top: none;
+}
+.panel__step .h:first-child {
+  margin-top: 0;
+}
+.panel__step--card {
+  margin: 4px -24px -24px;
+  padding: 20px 24px 22px;
+  border-top: 1px solid var(--line);
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+/* output panel — the live result with a QR/Card switch */
+.output-card {
+  padding: 0;
+  overflow: hidden;
+}
+.output-card__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--paper) 50%, var(--paper-2));
+}
+.output-switch {
+  flex: 0 0 auto;
+}
+.output-switch .seg__b {
+  min-width: 0;
+  padding: 8px 16px;
+  font-family: var(--font-display);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.output-card__hint {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  text-align: right;
+}
+.output-card__body {
+  padding: 20px;
 }
 .cardx__preview {
   display: block;
   width: 100%;
   max-width: 560px;
   height: auto;
-  margin: 12px auto 16px;
+  margin: 0 auto 16px;
   border: 1px solid var(--line, #e2ddd2);
   border-radius: 12px;
 }
@@ -414,22 +463,13 @@ h3 {
   color: var(--accent-2);
   border-color: var(--accent);
 }
-.output {
-  grid-area: preview;
-  position: sticky;
-  top: 80px;
-  align-self: start;
-}
 @media (max-width: 880px) {
-  .app {
+  .studio {
     grid-template-columns: 1fr;
-    grid-template-areas:
-      'content'
-      'preview'
-      'style';
   }
-  .output {
+  .studio__output {
     position: static;
+    order: -1; /* show the live result first on mobile */
   }
   .nav__links > a:not(.nav__cta) {
     display: none;

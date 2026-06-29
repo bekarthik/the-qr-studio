@@ -237,11 +237,7 @@ export function Preview() {
   };
 
   return (
-    <section className="card output">
-      <div className="card__head">
-        <h2>Preview</h2>
-        <p>Updates live · decoded in-browser to prove it scans.</p>
-      </div>
+    <>
       <div className="preview" ref={holder} />
       {badge !== 'hidden' && <div className={`badge badge--${badge}`}>{BADGE_TEXT[badge]}</div>}
       <p className="hint">{hint}</p>
@@ -257,6 +253,6 @@ export function Preview() {
         PNG is 1600&nbsp;px — crisp for print up to ~13&nbsp;cm at 300&nbsp;dpi. Use SVG for larger or
         vector print. Always test-scan with a real phone before mass printing.
       </p>
-    </section>
+    </>
   );
 }

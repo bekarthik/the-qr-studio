@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { GeneratorProvider } from './state/GeneratorContext';
 import { Nav } from './components/Nav';
 import { Hero } from './components/Hero';
@@ -7,58 +8,86 @@ import { SourceForm } from './components/SourceForm';
 import { ImageSection } from './components/ImageSection';
 import { Settings } from './components/Settings';
 import { Preview } from './components/Preview';
-import { CardExport } from './components/CardExport';
+import { CardControls } from './components/CardControls';
+import { CardPreview } from './components/CardPreview';
+
+type OutputMode = 'qr' | 'card';
 
 export function App() {
+  const [output, setOutput] = useState<OutputMode>('qr');
+
   return (
     <GeneratorProvider>
       <Nav />
       <Hero />
 
-      <main className="app" id="app">
-        {/* Content — source + details + image (grid-area: content) */}
-        <section className="card card--content">
-          <div className="card__head">
-            <h2>Build your code</h2>
-            <p>Pick a source, fill in the details, then add an image if you like.</p>
-          </div>
+      <main className="studio" id="app">
+        {/* Controls — one continuous flow: source → details → image → style → card */}
+        <div className="studio__controls">
+          <section className="card panel">
+            <div className="card__head">
+              <h2>Create your code</h2>
+              <p>Pick a source, fill it in, add an image, then style it — the preview updates live.</p>
+            </div>
 
-          <h3 className="h">
-            <span className="h__num">1</span> Choose a source
-          </h3>
-          <SourcePicker />
+            <div className="panel__step">
+              <h3 className="h"><span className="h__num">1</span> Choose a source</h3>
+              <SourcePicker />
+            </div>
+            <div className="panel__step">
+              <h3 className="h"><span className="h__num">2</span> Enter the details</h3>
+              <SourceForm />
+            </div>
+            <div className="panel__step">
+              <h3 className="h"><span className="h__num">3</span> Add an image <span className="h__opt">optional</span></h3>
+              <ImageSection />
+            </div>
+            <div className="panel__step">
+              <h3 className="h"><span className="h__num">4</span> Style</h3>
+              <Settings />
+            </div>
 
-          <h3 className="h">
-            <span className="h__num">2</span> Enter the details
-          </h3>
-          <SourceForm />
+            {output === 'card' && (
+              <div className="panel__step panel__step--card">
+                <h3 className="h"><span className="h__ico" aria-hidden="true">🪪</span> Visiting-card design</h3>
+                <CardControls />
+              </div>
+            )}
+          </section>
+        </div>
 
-          <h3 className="h">
-            <span className="h__num">3</span> Add an image <span className="h__opt">optional</span>
-          </h3>
-          <ImageSection />
-        </section>
-
-        {/* Preview (grid-area: preview, sticky) */}
-        <Preview />
-
-        {/* Style — common to every source (grid-area: style) */}
-        <section className="card card--style">
-          <div className="card__head">
-            <h2>Style</h2>
-            <p>Applies to every code you make.</p>
-          </div>
-          <Settings />
-        </section>
+        {/* Output — the live result, switchable between QR and visiting card */}
+        <aside className="studio__output">
+          <section className="card output-card">
+            <div className="output-card__bar">
+              <div className="seg output-switch" role="tablist" aria-label="Output">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={output === 'qr'}
+                  className={'seg__b' + (output === 'qr' ? ' is-on' : '')}
+                  onClick={() => setOutput('qr')}
+                >
+                  QR code
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={output === 'card'}
+                  className={'seg__b' + (output === 'card' ? ' is-on' : '')}
+                  onClick={() => setOutput('card')}
+                >
+                  Visiting card
+                </button>
+              </div>
+              <p className="output-card__hint">Live · verified in-browser</p>
+            </div>
+            <div className="output-card__body">
+              {output === 'qr' ? <Preview /> : <CardPreview />}
+            </div>
+          </section>
+        </aside>
       </main>
-
-      {/* Visiting card export — outside the grid so the sticky preview never
-          overlaps it */}
-      <div className="cardx-section">
-        <section className="card cardx-wrap">
-          <CardExport />
-        </section>
-      </div>
 
       <Footer />
     </GeneratorProvider>
