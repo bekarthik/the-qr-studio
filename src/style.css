@@ -440,6 +440,10 @@ h3 {
   color: var(--paper-2);
   box-shadow: var(--shadow-1);
 }
+/* mobile copy lives inside the pinned output card; hidden on desktop */
+.section-nav--mobile {
+  display: none;
+}
 .studio__output {
   position: sticky;
   top: 80px;
@@ -650,8 +654,33 @@ h3 {
     border-top: 1px solid var(--line-2);
     box-shadow: 0 -8px 24px -14px rgba(0, 0, 0, 0.4);
   }
-  .section-nav {
-    display: none; /* the compact pinned preview handles visibility on mobile */
+  /* desktop jump-nav hidden; a horizontally-scrollable copy rides inside the
+     pinned output card so it's always reachable without scrolling up */
+  .studio__controls > .section-nav {
+    display: none;
+  }
+  .section-nav--mobile {
+    display: flex;
+    position: static;
+    z-index: auto;
+    margin: 0;
+    padding: 7px 10px;
+    gap: 6px;
+    border: none;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
+    box-shadow: none;
+    background: color-mix(in srgb, var(--paper) 45%, var(--paper-2));
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  .section-nav--mobile .section-nav__b {
+    flex: 0 0 auto;
+  }
+  /* jumps land below the pinned output card (bar + pills + compact preview) */
+  .panel__step {
+    scroll-margin-top: calc(54px + 48vh);
   }
   .nav__links > a:not(.nav__cta) {
     display: none;
@@ -874,6 +903,41 @@ h3 {
   background: var(--ink);
   color: var(--paper);
 }
+.picker__opt-label {
+  flex: 1 1 auto;
+  text-align: left;
+}
+.picker__opt-cat {
+  flex: 0 0 auto;
+  font-size: 11px;
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+.picker__opt.is-active .picker__opt-cat {
+  color: var(--paper-3);
+}
+.picker__search {
+  width: 100%;
+  margin-bottom: 6px;
+  padding: 9px 11px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-xs);
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13.5px;
+  box-shadow: var(--inset);
+}
+.picker__search:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--ring);
+}
+.picker__none {
+  margin: 6px 8px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
 
 /* forms */
 .form,
@@ -1068,6 +1132,31 @@ h3 {
 .upload__btn:hover {
   border-color: var(--accent);
   color: var(--accent-2);
+}
+.upload__busy {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+.spinner {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 2px solid var(--line-2);
+  border-top-color: var(--accent);
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 1.4s;
+  }
 }
 .thumb {
   width: 46px;

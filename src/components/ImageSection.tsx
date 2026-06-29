@@ -1,12 +1,35 @@
-import { Fragment, type ChangeEvent } from 'react';
+import { Fragment, useState, type ChangeEvent } from 'react';
 import { useGen } from '../state/GeneratorContext';
+
+/** Cap the working resolution so halftone sampling / redraws stay fast and memory
+ *  bounded — the output never needs more than this, and it keeps share/persist
+ *  out of the way of huge originals. Transparency is preserved (PNG). */
+const MAX_DIM = 1400;
+
+function downscale(img: HTMLImageElement): Promise<HTMLImageElement> {
+  const longest = Math.max(img.naturalWidth, img.naturalHeight);
+  if (longest <= MAX_DIM) return Promise.resolve(img);
+  const scale = MAX_DIM / longest;
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(img.naturalWidth * scale);
+  canvas.height = Math.round(img.naturalHeight * scale);
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return Promise.resolve(img);
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  return new Promise((resolve) => {
+    const down = new Image();
+    down.onload = () => resolve(down);
+    down.onerror = () => resolve(img);
+    down.src = canvas.toDataURL('image/png');
+  });
+}
 
 function readImage(file: File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
       const img = new Image();
-      img.onload = () => resolve(img);
+      img.onload = () => downscale(img).then(resolve, () => resolve(img));
       img.onerror = reject;
       img.src = String(reader.result);
     };
@@ -29,13 +52,19 @@ export function ImageSection() {
   const { cfg, update } = useGen();
   const { images } = cfg;
   const single = images.length === 1;
+  const [busy, setBusy] = useState(false);
 
   const onFiles = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
     e.target.value = '';
     if (!files.length) return;
-    const loaded = await Promise.all(files.map((f) => readImage(f).catch(() => null)));
-    update({ images: [...images, ...loaded.filter((x): x is HTMLImageElement => x != null)] });
+    setBusy(true);
+    try {
+      const loaded = await Promise.all(files.map((f) => readImage(f).catch(() => null)));
+      update({ images: [...images, ...loaded.filter((x): x is HTMLImageElement => x != null)] });
+    } finally {
+      setBusy(false);
+    }
   };
 
   const removeAt = (i: number) => {
@@ -71,8 +100,9 @@ export function ImageSection() {
   return (
     <div className="image-block">
       <label className="upload">
-        <input type="file" accept="image/*" multiple hidden onChange={onFiles} />
+        <input type="file" accept="image/*" multiple hidden onChange={onFiles} disabled={busy} />
         <span className="upload__btn">{images.length ? '＋ Add image(s)' : 'Upload image(s) / logo'}</span>
+        {busy && <span className="upload__busy" role="status"><span className="spinner" aria-hidden="true" /> Processing…</span>}
       </label>
 
       {images.length === 0 && (

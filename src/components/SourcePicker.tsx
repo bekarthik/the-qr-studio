@@ -11,14 +11,39 @@ import { useGen } from '../state/GeneratorContext';
 export function SourcePicker() {
   const { cfg, update } = useGen();
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
   const ddRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
 
   const currentCat = SOURCE_CATEGORY[cfg.type];
   const inCategory = SOURCES.filter((s) => SOURCE_CATEGORY[s.type] === currentCat);
   const current = SOURCES.find((s) => s.type === cfg.type)!;
 
+  // Search spans ALL sources so "wifi" / "card" / "pay" finds the type without
+  // knowing its category; matching ignores punctuation so "wifi" hits "Wi-Fi".
+  // Empty query falls back to the current category.
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const q = norm(query);
+  const results = q
+    ? SOURCES.filter(
+        (s) =>
+          norm(s.label).includes(q) ||
+          norm(CATEGORY_META[SOURCE_CATEGORY[s.type]].label).includes(q),
+      )
+    : inCategory;
+
+  const choose = (type: typeof cfg.type) => {
+    update({ type });
+    setQuery('');
+    setOpen(false);
+  };
+
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setQuery('');
+      return;
+    }
+    searchRef.current?.focus();
     const onDown = (e: MouseEvent) => {
       if (ddRef.current && !ddRef.current.contains(e.target as Node)) setOpen(false);
     };
@@ -83,22 +108,32 @@ export function SourcePicker() {
 
         {open && (
           <div className="picker__menu" role="listbox">
-            {inCategory.map((s) => (
+            <input
+              ref={searchRef}
+              type="text"
+              className="picker__search"
+              placeholder="Search all types — link, wifi, card, pay…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && results[0]) choose(results[0].type);
+              }}
+            />
+            {results.length === 0 && <p className="picker__none">No matching source type.</p>}
+            {results.map((s) => (
               <button
                 key={s.type}
                 type="button"
                 role="option"
                 aria-selected={s.type === cfg.type}
                 className={'picker__opt' + (s.type === cfg.type ? ' is-active' : '')}
-                onClick={() => {
-                  update({ type: s.type });
-                  setOpen(false);
-                }}
+                onClick={() => choose(s.type)}
               >
                 <span className="picker__ico" aria-hidden="true">
                   {s.icon}
                 </span>
-                {s.label}
+                <span className="picker__opt-label">{s.label}</span>
+                {q && <span className="picker__opt-cat">{CATEGORY_META[SOURCE_CATEGORY[s.type]].label}</span>}
               </button>
             ))}
           </div>

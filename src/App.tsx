@@ -58,6 +58,22 @@ export function App() {
     window.setTimeout(() => jump('step-card'), 60);
   };
 
+  const pills = (extra: string) => (
+    <nav className={'section-nav' + extra} aria-label="Jump to section">
+      {sections.map((s) => (
+        <button
+          key={s.id}
+          type="button"
+          aria-current={active === s.id}
+          className={'section-nav__b' + (active === s.id ? ' is-on' : '')}
+          onClick={() => jump(s.id)}
+        >
+          {s.label}
+        </button>
+      ))}
+    </nav>
+  );
+
   return (
     <GeneratorProvider>
       <Nav />
@@ -66,19 +82,7 @@ export function App() {
       <main className="studio" id="app">
         {/* Controls — one continuous flow with a sticky section jump-nav */}
         <div className="studio__controls">
-          <nav className="section-nav" aria-label="Jump to section">
-            {sections.map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                aria-current={active === s.id}
-                className={'section-nav__b' + (active === s.id ? ' is-on' : '')}
-                onClick={() => jump(s.id)}
-              >
-                {s.label}
-              </button>
-            ))}
-          </nav>
+          {pills('')}
 
           <section className="card panel">
             <div className="card__head card__head--row">
@@ -144,6 +148,7 @@ export function App() {
               </div>
               <p className="output-card__hint">Live · verified in-browser</p>
             </div>
+            {pills(' section-nav--mobile')}
             <div className="output-card__body">
               {output === 'qr' ? <Preview /> : <CardPreview />}
             </div>
