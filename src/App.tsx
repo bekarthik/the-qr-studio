@@ -30,6 +30,13 @@ export function App() {
   const [tab, setTab] = useState<ControlsTab>('setup');
   const [output, setOutput] = useState<OutputMode>('qr');
 
+  // Opening the Card tab flips the preview to the card so the design you're
+  // editing is what you see; the output switch still lets you go back to the QR.
+  const selectTab = (id: ControlsTab) => {
+    setTab(id);
+    if (id === 'card') setOutput('card');
+  };
+
   return (
     <GeneratorProvider>
       <Nav />
@@ -58,7 +65,7 @@ export function App() {
                   role="tab"
                   aria-selected={tab === t.id}
                   className={'ctab' + (tab === t.id ? ' is-on' : '')}
-                  onClick={() => setTab(t.id)}
+                  onClick={() => selectTab(t.id)}
                 >
                   {t.badge && <span className="ctab__n">{t.badge}</span>}
                   {t.label}
