@@ -81,6 +81,9 @@ export interface Config {
   embedPos: 'center' | 'br';
   plate: boolean;
   protectPatterns: boolean;
+  /** Strict "studio-grade" scannability check: require a full-resolution decode
+   *  (a higher bar than a phone camera) for print-critical work. */
+  strictVerify: boolean;
 }
 
 function initialValues(): Record<string, PayloadInput> {
@@ -160,6 +163,7 @@ const INITIAL: Config = {
   embedPos: 'center',
   plate: true,
   protectPatterns: true,
+  strictVerify: false,
 };
 
 interface Ctx {

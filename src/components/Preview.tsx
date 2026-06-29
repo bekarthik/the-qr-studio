@@ -41,7 +41,7 @@ const BADGE_TEXT: Record<BadgeState, string> = {
  * decode the canvas AND a few smoothed downscales and accept if any reads. This
  * removes the false "May not scan" while still catching genuinely broken codes.
  */
-function decodesAtAnyScale(canvas: HTMLCanvasElement, payload: string): boolean {
+function decodesAtAnyScale(canvas: HTMLCanvasElement, payload: string, strict: boolean): boolean {
   const tryDecode = (cv: HTMLCanvasElement): boolean => {
     const cx = cv.getContext('2d');
     if (!cx) return false;
@@ -53,7 +53,10 @@ function decodesAtAnyScale(canvas: HTMLCanvasElement, payload: string): boolean 
       return false;
     }
   };
-  if (tryDecode(canvas)) return true;
+  const full = tryDecode(canvas);
+  // Studio-grade: must decode at full resolution, no camera-style help.
+  if (strict) return full;
+  if (full) return true;
   for (const w of [820, 600, 440, 320]) {
     if (w >= canvas.width) continue;
     const c = document.createElement('canvas');
@@ -82,7 +85,7 @@ function message(holder: HTMLElement, text: string, isErr: boolean, detail?: str
 }
 
 export function Preview() {
-  const { cfg } = useGen();
+  const { cfg, update } = useGen();
   const holder = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const snapRef = useRef<Snapshot | null>(null);
@@ -217,7 +220,7 @@ export function Preview() {
     // Verify off the critical path so typing stays smooth.
     setBadge('checking');
     const timer = setTimeout(() => {
-      setBadge(decodesAtAnyScale(canvas, payload) ? 'ok' : 'fail');
+      setBadge(decodesAtAnyScale(canvas, payload, cfg.strictVerify) ? 'ok' : 'fail');
     }, 160);
     return () => clearTimeout(timer);
   }, [cfg]);
@@ -259,10 +262,24 @@ export function Preview() {
     save(new Blob([svg], { type: 'image/svg+xml' }), 'svg');
   };
 
+  const strict = cfg.strictVerify;
+  const badgeLabel =
+    badge === 'ok'
+      ? strict ? '✓ Verified scannable · studio-grade' : '✓ Verified scannable'
+      : badge === 'fail'
+        ? strict ? '⚠ Fails the strict check — lower detail/dot size or raise contrast' : BADGE_TEXT.fail
+        : BADGE_TEXT[badge];
+
   return (
     <>
       <div className="preview" ref={holder} />
-      {badge !== 'hidden' && <div className={`badge badge--${badge}`}>{BADGE_TEXT[badge]}</div>}
+      {badge !== 'hidden' && <div className={`badge badge--${badge}`}>{badgeLabel}</div>}
+      <label className="field field--check verify-mode">
+        <input type="checkbox" checked={strict} onChange={(e) => update({ strictVerify: e.target.checked })} />
+        <span className="field__label">
+          Studio-grade check <span className="h__opt">strict</span>
+        </span>
+      </label>
       <p className="hint">{hint}</p>
       <div className="downloads">
         <button className="download" disabled={!ready} onClick={downloadPng}>

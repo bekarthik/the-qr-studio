@@ -1561,6 +1561,14 @@ h3 {
 .card-twoside {
   margin: 14px 2px 2px;
 }
+.verify-mode {
+  margin: 10px 2px 0;
+  font-size: 12.5px;
+}
+.verify-mode .field__label {
+  color: var(--ink-soft);
+  font-weight: 500;
+}
 
 /* ---------------------------------------------------------- features --- */
 .features {

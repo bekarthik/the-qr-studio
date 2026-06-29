@@ -209,6 +209,12 @@ badge — ✓ *Verified scannable*, or a ⚠ warning to dial back detail / logo 
 contrast. The same check runs headlessly in `npm run verify`. This turns "does my
 styled QR actually scan?" from a gamble into a shown guarantee.
 
+By default the check is **real-world**: it also decodes a few smoothed downscales
+(a phone optically averages the halftone speckle), so a code that scans in
+practice isn't falsely flagged. Tick **Studio-grade check** for a stricter bar —
+the code must decode at full resolution with no camera-style help — when you're
+preparing print-critical artwork.
+
 ## Develop
 
 ```bash
