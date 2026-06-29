@@ -10,9 +10,6 @@ export function Footer() {
           </span>
           <span className="foot__links">
             <SupportButton className="foot__link">☕ Support</SupportButton>
-            <a href="https://github.com/bekarthik/chores" target="_blank" rel="noopener">
-              Source
-            </a>
           </span>
         </div>
         <p>

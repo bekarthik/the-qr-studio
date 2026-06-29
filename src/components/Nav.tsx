@@ -14,9 +14,6 @@ export function Nav() {
           <a href="#app">Generator</a>
           <ThemeToggle />
           <SupportButton className="nav__support">☕ Support</SupportButton>
-          <a className="nav__cta" href="https://github.com/bekarthik/chores" target="_blank" rel="noopener">
-            ★ GitHub
-          </a>
         </nav>
       </div>
     </header>
