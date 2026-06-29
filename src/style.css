@@ -227,17 +227,38 @@ h3 {
   border: none;
   border-radius: 999px;
   background: transparent;
-  color: var(--ink-soft);
   cursor: pointer;
-  transition: color 0.15s, background 0.15s, box-shadow 0.15s;
-}
-.theme-seg__b:hover {
-  color: var(--ink-2);
+  transition: background 0.15s, box-shadow 0.15s;
 }
 .theme-seg__b.is-on {
   background: var(--paper-2);
-  color: var(--accent);
   box-shadow: var(--shadow-1);
+}
+.theme-swatch {
+  position: relative;
+  display: inline-block;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  border: 1px solid var(--line-2);
+  box-shadow: var(--inset);
+  transition: transform 0.13s ease;
+}
+.theme-seg__b:hover .theme-swatch {
+  transform: scale(1.08);
+}
+.theme-seg__b.is-on .theme-swatch {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--ring);
+}
+.theme-swatch__dot {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
 @media (max-width: 600px) {
   .theme-seg {

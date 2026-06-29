@@ -32,11 +32,11 @@ Update **Status** each release.
 | 3 | 3 | UX | Delete custom preset was unconfirmed/unrecoverable | Confirm before delete | ✅ fixed |
 | 4 | 3 | Feel/UX | Output switch (right) silently injects card-design section (left) | Brief highlight cue on the section when it appears | ✅ fixed (consider also an `aria-live` announce) |
 | 5 | 2 | Feel | Contrast misses AA: white-on-accent 3.66, helper 4.43, links 4.47 | Darken `--ink-soft`/`--accent-2`; active pills → accent-2 + on-accent | ✅ fixed (5.86 / 5.13 / 5.25) |
-| 6 | 2 | UX | Mobile has no quick-nav (jump-pills desktop-only) | Scrollable jump-pills docked inside the pinned output card on mobile | ✅ fixed (scroll-spy highlight lags slightly on mobile — cosmetic) |
+| 6 | 2 | UX | Mobile has no quick-nav (jump-pills desktop-only) | Scrollable jump-pills docked inside the pinned output card on mobile | ✅ fixed |
 | 7 | 2 | UX | Two-level source picker teaches a model; no search | In-dropdown search across ALL types (punctuation-insensitive: "wifi"→Wi-Fi); auto-open already shipped | ✅ fixed |
 | 8 | 2 | UX | No shareable/permalink state | Encode config (minus images) in URL hash; "🔗 Share" copies it | ✅ fixed |
 | 9 | 1 | Feel | No progress feedback / cost for heavy ops (large-image halftone) | Downscale uploads to ≤1400px (real perf/memory fix) + "Processing…" spinner | ✅ fixed |
-| 10 | 1 | Feel | Theme icons tooltip-only; Graphite mark ambiguous | Visible labels / clearer icons | ⬜ open |
+| 10 | 1 | Feel | Theme icons tooltip-only; Graphite mark ambiguous | Replaced with **colour swatches** that preview each theme (bg + accent); names kept on `aria-label`/`title` | ✅ fixed |
 | — | 1 | Feel | Google Fonts were render-blocking external requests (FOIT/offline risk) | Fonts now load non-blocking (swap + system fallback); service worker precaches the shell for offline | ✅ fixed (self-hosting fonts still optional) |
 
 ---

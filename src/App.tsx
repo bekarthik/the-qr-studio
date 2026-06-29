@@ -29,22 +29,28 @@ export function App() {
 
   const sections = output === 'card' ? [...BASE_SECTIONS, { id: 'step-card', label: 'Card' }] : BASE_SECTIONS;
 
-  // Scroll-spy: highlight the section nearest the top of the viewport.
+  // Scroll-spy: the active section is the last one whose top has scrolled past
+  // the sticky chrome. The threshold matches the section scroll-margin so a jump
+  // lands the target exactly on the line — consistent on desktop and mobile.
   useEffect(() => {
-    const els = sections.map((s) => document.getElementById(s.id)).filter((e): e is HTMLElement => e != null);
-    if (!els.length) return;
-    const obs = new IntersectionObserver(
-      (entries) => {
-        const visible = entries.filter((e) => e.isIntersecting);
-        if (visible.length) {
-          visible.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-          setActive(visible[0].target.id);
-        }
-      },
-      { rootMargin: '-118px 0px -55% 0px', threshold: 0 },
-    );
-    els.forEach((el) => obs.observe(el));
-    return () => obs.disconnect();
+    const ids = sections.map((s) => s.id);
+    const onScroll = () => {
+      const mobile = window.matchMedia('(max-width: 880px)').matches;
+      const threshold = mobile ? 54 + window.innerHeight * 0.48 + 8 : 130;
+      let current = ids[0];
+      for (const id of ids) {
+        const el = document.getElementById(id);
+        if (el && el.getBoundingClientRect().top - threshold <= 1) current = id;
+      }
+      setActive(current);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
   }, [output]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const jump = (id: string) => {
