@@ -110,6 +110,24 @@ export function hexToRgb(hex: string): RGB {
  */
 export const brandDarkHex = (hex: string): string => rgbToHex(clampDark(hexToRgb(hex)));
 
+/**
+ * Image-derived dark/light colours for a styled finder eye centred on the
+ * finder whose top-left module is (fr, fc). A styled eye over a halftone would
+ * otherwise be cleared to flat white; sampling the picture here keeps the eye in
+ * the image's hue (dark frame/pupil + light gap), still clamped for contrast.
+ */
+export function eyeImageColors(
+  sampler: ImageSampler,
+  fr: number,
+  fc: number,
+  sub: number,
+): { dark: string; light: string } {
+  const sr = (fr + 3) * sub + (sub >> 1);
+  const sc = (fc + 3) * sub + (sub >> 1);
+  const rgb = sampler.colorAt(sr, sc);
+  return { dark: rgbToHex(clampDark(rgb, IDENTIFIER_DARK_MAX)), light: rgbToHex(clampLight(rgb)) };
+}
+
 /** Fraction of the carved centre region actually filled by the logo; the rest
  * is a quiet margin so the logo sits *inside* empty space, never touching live
  * modules. */

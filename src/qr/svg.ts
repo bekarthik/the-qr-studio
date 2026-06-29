@@ -5,6 +5,7 @@ import {
   subCellFill,
   brandDarkHex,
   centerHole,
+  eyeImageColors,
   inFinder,
   finderOrigins,
   moduleColor,
@@ -116,8 +117,18 @@ export function renderSVG(opts: SvgOptions): string {
   // Styled finder eyes (works for both block and halftone): clear each 7×7 then
   // redraw the position pattern in the chosen shape/colour.
   if (eyesActive) {
+    // Over a halftone in image-colour mode, sample each eye's hue so it blends
+    // into the picture instead of being cleared to flat white.
+    const eyeImg = !!sampler && colorStyle === 'image' && !!sampler.colorAt;
     for (const [fr, fc] of finderOrigins(n)) {
-      rects.push(...eyeSvg(quietSub + fc * sub, quietSub + fr * sub, sub, eyeShapeR, eyeColor, bg));
+      let dCol = eyeColor;
+      let lCol = bg;
+      if (eyeImg) {
+        const { dark, light } = eyeImageColors(sampler!, fr, fc, sub);
+        lCol = light;
+        if (!opts.eyeColor) dCol = dark;
+      }
+      rects.push(...eyeSvg(quietSub + fc * sub, quietSub + fr * sub, sub, eyeShapeR, dCol, lCol));
     }
   }
 

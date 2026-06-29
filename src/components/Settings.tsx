@@ -7,8 +7,9 @@ import type { ErrorLevel } from '../qr/matrix';
  * controls (halftone / centre-logo) appear only when that feature is enabled.
  */
 /** A finer halftone shrinks each module's protected centre, so the data "core"
- *  must grow to stay readable. Minimum dot size per detail level. */
-const MIN_DOT: Record<number, number> = { 3: 0, 5: 0.5, 7: 0.72 };
+ *  must grow a little to stay readable. These are subtle floors — just enough to
+ *  keep the code scannable at High / Finest without ballooning the dots. */
+const MIN_DOT: Record<number, number> = { 3: 0, 5: 0.22, 7: 0.36 };
 
 export function Settings() {
   const { cfg, update } = useGen();

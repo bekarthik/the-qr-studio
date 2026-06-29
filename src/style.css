@@ -1272,9 +1272,13 @@ h3 {
   color: var(--accent-2);
   box-shadow: inset 0 0 0 1px var(--accent);
 }
-.img-cell:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+/* Role is off: the assignment is still editable, just visually muted so it's
+   clear ticking the role's box is what actually shows it on the QR. */
+.img-cell.is-off {
+  opacity: 0.5;
+}
+.img-cell.is-off.is-sel {
+  opacity: 0.7;
 }
 
 /* card field-visibility chips */
@@ -1559,7 +1563,7 @@ h3 {
   line-height: 1.55;
 }
 .card-twoside {
-  margin: 14px 2px 2px;
+  margin: 14px 2px 18px;
 }
 .verify-mode {
   margin: 10px 2px 0;

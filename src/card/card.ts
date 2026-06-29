@@ -83,7 +83,8 @@ const GEO = {
 
 export function cardDims(o: CardOrientation, twoSided: boolean): { w: number; h: number } {
   const g = GEO[o];
-  return { w: twoSided ? g.W * 2 + SHEET_GAP : g.W, h: g.H };
+  // Two-sided sheets stack the faces vertically (front above back).
+  return twoSided ? { w: g.W, h: g.H * 2 + SHEET_GAP } : { w: g.W, h: g.H };
 }
 
 /** The QR draw size for an orientation, scaled & clamped so it stays on-card. */
@@ -151,9 +152,9 @@ function patternMarks(p: CardPattern, c: string): string {
 
 type Geo = (typeof GEO)[CardOrientation];
 
-function faceWrap(ox: number, g: Geo, theme: CardTheme, fill: string, pal: Palette, content: string): string {
-  const clip = `clip${ox}`;
-  return (
+function faceWrap(ox: number, oy: number, g: Geo, theme: CardTheme, fill: string, pal: Palette, content: string): string {
+  const clip = `clip_${ox}_${oy}`;
+  const body =
     `<clipPath id="${clip}"><rect x="${ox + 1.5}" y="1.5" width="${g.W - 3}" height="${g.H - 3}" rx="26"/></clipPath>` +
     `<g clip-path="url(#${clip})">` +
     `<rect x="${ox}" y="0" width="${g.W}" height="${g.H}" fill="${fill}"/>` +
@@ -163,8 +164,10 @@ function faceWrap(ox: number, g: Geo, theme: CardTheme, fill: string, pal: Palet
     `</g>` +
     (theme.border
       ? `<rect x="${ox + 1.5}" y="1.5" width="${g.W - 3}" height="${g.H - 3}" rx="26.5" fill="none" stroke="${pal.border}" stroke-width="3"/>`
-      : '')
-  );
+      : '');
+  // A face can be stacked below the first via a vertical translate (two-sided
+  // sheet); content uses absolute y, so the whole group shifts together.
+  return oy ? `<g transform="translate(0 ${oy})">${body}</g>` : body;
 }
 
 const hasDetails = (d: CardData) =>
@@ -435,7 +438,7 @@ export function buildCardSVG(d: CardData, qrSvg: string, front: FrontOptions, th
   return (
     open(g.W, g.H) +
     (defs ? `<defs>${defs}</defs>` : '') +
-    faceWrap(0, g, theme, fill, pal, singleContent(0, g, theme.orientation, qrSvg, d, theme, pal, front)) +
+    faceWrap(0, 0, g, theme, fill, pal, singleContent(0, g, theme.orientation, qrSvg, d, theme, pal, front)) +
     '</svg>'
   );
 }
@@ -449,7 +452,7 @@ export function buildCardFrontSVG(d: CardData, front: FrontOptions, theme: CardT
   return (
     open(g.W, g.H) +
     (defs ? `<defs>${defs}</defs>` : '') +
-    faceWrap(0, g, theme, fill, pal, frontContent(0, g, theme.orientation, d, theme, pal, front)) +
+    faceWrap(0, 0, g, theme, fill, pal, frontContent(0, g, theme.orientation, d, theme, pal, front)) +
     '</svg>'
   );
 }
@@ -462,7 +465,7 @@ export function buildCardBackSVG(d: CardData, qrSvg: string, theme: CardTheme): 
   return (
     open(g.W, g.H) +
     (defs ? `<defs>${defs}</defs>` : '') +
-    faceWrap(0, g, theme, fill, pal, backContent(0, g, qrSvg, d, theme, pal)) +
+    faceWrap(0, 0, g, theme, fill, pal, backContent(0, g, qrSvg, d, theme, pal)) +
     '</svg>'
   );
 }
@@ -471,12 +474,13 @@ export function buildCardSheetSVG(d: CardData, qrSvg: string, front: FrontOption
   const g = GEO[theme.orientation];
   const pal = palette(theme);
   const { defs, fill } = paint(theme);
-  const backOx = g.W + SHEET_GAP;
+  // Stack the two faces vertically: front on top, back below a gutter.
+  const backOy = g.H + SHEET_GAP;
   return (
-    open(g.W * 2 + SHEET_GAP, g.H) +
+    open(g.W, g.H * 2 + SHEET_GAP) +
     (defs ? `<defs>${defs}</defs>` : '') +
-    faceWrap(0, g, theme, fill, pal, frontContent(0, g, theme.orientation, d, theme, pal, front)) +
-    faceWrap(backOx, g, theme, fill, pal, backContent(backOx, g, qrSvg, d, theme, pal)) +
+    faceWrap(0, 0, g, theme, fill, pal, frontContent(0, g, theme.orientation, d, theme, pal, front)) +
+    faceWrap(0, backOy, g, theme, fill, pal, backContent(0, g, qrSvg, d, theme, pal)) +
     '</svg>'
   );
 }

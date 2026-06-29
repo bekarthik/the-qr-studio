@@ -5,6 +5,7 @@ import {
   subCellFill,
   brandDarkHex,
   centerHole,
+  eyeImageColors,
   inFinder,
   finderOrigins,
   moduleColor,
@@ -157,8 +158,18 @@ export function renderQR(opts: RenderOptions): HTMLCanvasElement {
   // position pattern in the chosen shape/colour.
   if (eyesActive) {
     const m = sub * cellPx;
+    // Over a halftone in image-colour mode, sample each eye's hue so it blends
+    // into the picture instead of being cleared to flat white.
+    const eyeImg = !!sampler && colorStyle === 'image' && !!sampler.colorAt;
     for (const [fr, fc] of finderOrigins(n)) {
-      drawEye(ctx, (quietSub + fc * sub) * cellPx, (quietSub + fr * sub) * cellPx, m, eyeShapeR, eyeColor, bg);
+      let dCol = eyeColor;
+      let lCol = bg;
+      if (eyeImg) {
+        const { dark, light } = eyeImageColors(sampler!, fr, fc, sub);
+        lCol = light;
+        if (!opts.eyeColor) dCol = dark;
+      }
+      drawEye(ctx, (quietSub + fc * sub) * cellPx, (quietSub + fr * sub) * cellPx, m, eyeShapeR, dCol, lCol);
     }
   }
 

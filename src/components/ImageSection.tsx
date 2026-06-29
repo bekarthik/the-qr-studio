@@ -88,9 +88,18 @@ export function ImageSection() {
     </div>
   );
 
+  // Toggling the halftone effect on also switches to image colours, so the code
+  // adopts the picture's hues automatically (the default solid black otherwise
+  // hides the resemblance the user just asked for).
+  const toggleRole = (onKey: OnKey, on: boolean) => {
+    const patch: Record<string, unknown> = { [onKey]: on };
+    if (onKey === 'resemble' && on) patch.colorStyle = 'image';
+    update(patch);
+  };
+
   const roleCheck = (r: (typeof ROLES)[number]) => (
     <label className="field field--check" key={r.onKey}>
-      <input type="checkbox" checked={cfg[r.onKey]} onChange={(e) => update({ [r.onKey]: e.target.checked })} />
+      <input type="checkbox" checked={cfg[r.onKey]} onChange={(e) => toggleRole(r.onKey, e.target.checked)} />
       <span className="field__label">
         <b>{r.label}</b> — <span className="img-role__desc">{r.desc}</span>
       </span>
@@ -121,12 +130,12 @@ export function ImageSection() {
 
       {images.length > 1 && (
         <>
-          <p className="img-hint">Tick a role, then click a cell to choose which image fills it. One image can fill several.</p>
+          <p className="img-hint">Click a cell to assign which image fills each role — one image can fill several. Tick a role's box to actually show it on the QR.</p>
           <div className="img-matrix" role="grid">
             <div className="img-matrix__corner" />
             {ROLES.map((r) => (
               <label className="img-col" key={r.onKey} title={r.desc}>
-                <input type="checkbox" checked={cfg[r.onKey]} onChange={(e) => update({ [r.onKey]: e.target.checked })} />
+                <input type="checkbox" checked={cfg[r.onKey]} onChange={(e) => toggleRole(r.onKey, e.target.checked)} />
                 <span>{r.label}</span>
               </label>
             ))}
@@ -141,10 +150,13 @@ export function ImageSection() {
                     <button
                       type="button"
                       key={r.onKey}
-                      className={'img-cell' + (sel ? ' is-sel' : '')}
-                      disabled={!on}
+                      className={'img-cell' + (sel ? ' is-sel' : '') + (on ? '' : ' is-off')}
                       aria-pressed={sel}
-                      title={`Use image ${i + 1} as ${r.label.toLowerCase()}`}
+                      title={
+                        on
+                          ? `Use image ${i + 1} as ${r.label.toLowerCase()}`
+                          : `Assign image ${i + 1} as ${r.label.toLowerCase()} (tick the role to show it)`
+                      }
                       onClick={() => update({ [r.idxKey]: i })}
                     >
                       {sel ? '●' : '○'}
