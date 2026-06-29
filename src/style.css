@@ -247,7 +247,7 @@ h3 {
 .hero {
   max-width: 760px;
   margin: 0 auto;
-  padding: 70px 24px 24px;
+  padding: 52px 24px 20px;
   text-align: center;
 }
 .hero__eyebrow {
@@ -386,6 +386,15 @@ h3 {
   color: var(--ink-soft);
   font-family: var(--font-mono);
   text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+@media (max-width: 1040px) {
+  .output-card__hint {
+    display: none;
+  }
 }
 .output-card__body {
   padding: 20px;
@@ -466,10 +475,35 @@ h3 {
 @media (max-width: 880px) {
   .studio {
     grid-template-columns: 1fr;
+    gap: 14px;
   }
+  /* Stacked: keep the result pinned at the top so editing any control below
+     stays in view — no scrolling back up to see the change. */
   .studio__output {
-    position: static;
-    order: -1; /* show the live result first on mobile */
+    position: sticky;
+    top: 56px;
+    order: -1;
+    z-index: 5;
+  }
+  .output-card {
+    box-shadow: var(--shadow-3);
+  }
+  .output-card__body {
+    padding: 12px 14px;
+  }
+  /* compact, capped preview so controls remain reachable beneath it */
+  .output-card__body .preview {
+    max-width: 38vh;
+    max-height: 38vh;
+    margin: 0 auto;
+  }
+  .cardx__preview {
+    max-height: 34vh;
+    width: auto;
+  }
+  .output-card__body .hint,
+  .output-card__body .finehint {
+    display: none;
   }
   .nav__links > a:not(.nav__cta) {
     display: none;
