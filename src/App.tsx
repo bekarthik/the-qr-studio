@@ -11,6 +11,7 @@ import { Preview } from './components/Preview';
 import { CardControls } from './components/CardControls';
 import { CardPreview } from './components/CardPreview';
 import { Features } from './components/Features';
+import { ResetButton } from './components/ResetButton';
 
 type OutputMode = 'qr' | 'card';
 
@@ -79,9 +80,12 @@ export function App() {
           </nav>
 
           <section className="card panel">
-            <div className="card__head">
-              <h2>Create your code</h2>
-              <p>Pick a source, fill it in, add an image, then style it — the preview updates live.</p>
+            <div className="card__head card__head--row">
+              <div>
+                <h2>Create your code</h2>
+                <p>Pick a source, fill it in, add an image, then style it — the preview updates live.</p>
+              </div>
+              <ResetButton />
             </div>
 
             <div className="panel__step" id="step-source">

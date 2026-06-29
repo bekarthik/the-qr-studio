@@ -29,6 +29,7 @@ export interface CardArtifacts {
   hasData: boolean;
   twoSided: boolean;
   baseName: string;
+  payload: string;
   out: { preview: string; single: string; front: string; back: string } | null;
 }
 
@@ -43,7 +44,7 @@ export function buildCardArtifacts(cfg: Config): CardArtifacts {
   const twoSided = cfg.cardTwoSided;
   const baseName = (displayName || 'card').replace(/\s+/g, '-').toLowerCase() || 'card';
 
-  if (!payload) return { hasData: false, twoSided, baseName, out: null };
+  if (!payload) return { hasData: false, twoSided, baseName, payload: '', out: null };
 
   const exact = cfg.cardExactQr;
   const imageOn = exact && (cfg.resemble || cfg.embed);
@@ -52,7 +53,7 @@ export function buildCardArtifacts(cfg: Config): CardArtifacts {
   try {
     matrix = buildMatrix(payload, errorLevel);
   } catch {
-    return { hasData: true, twoSided, baseName, out: null };
+    return { hasData: true, twoSided, baseName, payload, out: null };
   }
 
   const eyeColor = cfg.autoEyeColor ? null : cfg.eyeColor;
@@ -124,6 +125,7 @@ export function buildCardArtifacts(cfg: Config): CardArtifacts {
     hasData: true,
     twoSided,
     baseName,
+    payload,
     out: {
       preview: twoSided ? buildCardSheetSVG(data, qrSvg, frontOpts, theme) : buildCardSVG(data, qrSvg, frontOpts, theme),
       single: buildCardSVG(data, qrSvg, frontOpts, theme),

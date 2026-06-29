@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { SOURCES } from '../ui/forms';
 import type { SourceType, PayloadInput } from '../content/payloads';
 import type { ErrorLevel } from '../qr/matrix';
@@ -166,12 +166,51 @@ interface Ctx {
   cfg: Config;
   update: (patch: Partial<Config>) => void;
   setField: (key: string, value: string | boolean) => void;
+  reset: () => void;
 }
 
 const GeneratorContext = createContext<Ctx | null>(null);
 
+const LS_CONFIG = 'qrstudio.config';
+
+/** Restore the saved config (everything except the in-memory images, which are
+ *  never persisted — privacy + localStorage quota). Falls back to defaults. */
+function loadConfig(): Config {
+  try {
+    const raw = localStorage.getItem(LS_CONFIG);
+    if (!raw) return INITIAL;
+    const saved = JSON.parse(raw) as Partial<Config>;
+    return {
+      ...INITIAL,
+      ...saved,
+      // never trust persisted image state
+      images: [],
+      halftoneIdx: 0,
+      logoIdx: 0,
+      watermarkIdx: 0,
+      values: { ...initialValues(), ...(saved.values ?? {}) },
+    };
+  } catch {
+    return INITIAL;
+  }
+}
+
 export function GeneratorProvider({ children }: { children: ReactNode }) {
-  const [cfg, setCfg] = useState<Config>(INITIAL);
+  const [cfg, setCfg] = useState<Config>(loadConfig);
+
+  // Persist a serialisable subset (omit the live HTMLImageElement[]), debounced.
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      try {
+        const { images: _images, ...rest } = cfg;
+        void _images;
+        localStorage.setItem(LS_CONFIG, JSON.stringify(rest));
+      } catch {
+        /* quota / unavailable — ignore */
+      }
+    }, 350);
+    return () => window.clearTimeout(id);
+  }, [cfg]);
 
   const api = useMemo<Ctx>(
     () => ({
@@ -182,6 +221,14 @@ export function GeneratorProvider({ children }: { children: ReactNode }) {
           ...c,
           values: { ...c.values, [c.type]: { ...c.values[c.type], [key]: value } },
         })),
+      reset: () => {
+        try {
+          localStorage.removeItem(LS_CONFIG);
+        } catch {
+          /* ignore */
+        }
+        setCfg({ ...INITIAL, values: initialValues() });
+      },
     }),
     [cfg],
   );

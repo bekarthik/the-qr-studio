@@ -133,7 +133,10 @@ export function CardControls() {
     for (const k of CAPTURE) (patch as Record<string, unknown>)[k] = cfg[k];
     persist([...custom.filter((p) => p.name !== name), { name, patch }]);
   };
-  const deletePreset = (name: string) => persist(custom.filter((p) => p.name !== name));
+  const deletePreset = (name: string) => {
+    if (!window.confirm(`Delete the saved preset “${name}”? This can’t be undone.`)) return;
+    persist(custom.filter((p) => p.name !== name));
+  };
 
   // Download / load the design (theme only — no contact data).
   const fileRef = useRef<HTMLInputElement>(null);
