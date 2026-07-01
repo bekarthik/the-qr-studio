@@ -656,6 +656,9 @@ h3 {
   .cardx__preview {
     max-height: 28vh;
     width: auto;
+    /* Never exceed the pane width: a landscape card is wider than it is tall,
+       so on a narrow phone the width (not the height) must be what's capped. */
+    max-width: 100%;
   }
   .output-card__body .hint,
   .output-card__body .finehint {
