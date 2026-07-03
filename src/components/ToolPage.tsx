@@ -17,6 +17,7 @@ import { Features } from './Features';
 import { ResetButton } from './ResetButton';
 import { ShareButton } from './ShareButton';
 import { JsonLd } from './JsonLd';
+import { ContentBlocks } from './ContentBlocks';
 
 type OutputMode = 'qr' | 'card';
 type ControlsTab = 'setup' | 'style' | 'card';
@@ -148,6 +149,7 @@ export function ToolPage({ route }: { route: RouteDef }) {
         </aside>
       </main>
 
+      <ContentBlocks blocks={route.content} />
       <Features />
       <Footer />
     </GeneratorProvider>

@@ -1827,3 +1827,86 @@ h3 {
   color: var(--ink-soft);
   font-size: 11px;
 }
+
+/* GEO/SEO content blocks (src/components/ContentBlocks.tsx) — answer-first
+   intro, question H2s, FAQs, honest stats. Kept visually quiet: it reads as
+   documentation below the tool, not a second hero. */
+.geo {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 8px 24px 56px;
+}
+.geo__intro {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 8px 0 20px;
+  text-align: center;
+}
+.geo__intro p {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 17px;
+  line-height: 1.6;
+}
+.geo-section,
+.geo-howto,
+.geo-faq {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 22px 0;
+  border-top: 1px solid var(--line);
+}
+.geo-section h2,
+.geo-howto h2,
+.geo-faq h2 {
+  margin: 0 0 10px;
+  font-family: var(--font-display);
+  font-size: clamp(20px, 2.6vw, 24px);
+  letter-spacing: -0.01em;
+}
+.geo-section p {
+  margin: 0;
+  color: var(--ink-2);
+  line-height: 1.6;
+}
+.geo-howto ol {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--ink-2);
+  line-height: 1.7;
+}
+.geo-howto strong {
+  color: var(--ink);
+}
+.geo-faq__item {
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+}
+.geo-faq__item:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+.geo-faq__item h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  color: var(--ink);
+}
+.geo-faq__item p {
+  margin: 0;
+  color: var(--ink-2);
+  line-height: 1.6;
+}
+.geo-stat {
+  max-width: 760px;
+  margin: 12px auto 0;
+  padding: 14px 18px;
+  border-left: 3px solid var(--accent);
+  background: var(--paper-3);
+  border-radius: 8px;
+  color: var(--ink-2);
+  font-size: 15px;
+}
+.geo-stat cite {
+  font-style: normal;
+  color: var(--ink-soft);
+}
