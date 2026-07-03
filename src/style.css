@@ -1828,85 +1828,171 @@ h3 {
   font-size: 11px;
 }
 
-/* GEO/SEO content blocks (src/components/ContentBlocks.tsx) — answer-first
-   intro, question H2s, FAQs, honest stats. Kept visually quiet: it reads as
-   documentation below the tool, not a second hero. */
+/* GEO/SEO content blocks (src/components/ContentBlocks.tsx) — speaks the
+   studio's design language so it reads as part of the product, not appended
+   SEO text: the same card surfaces as the tool panel and Features grid, the
+   panel's numbered ink-square step chips for the HowTo, the Newsreader
+   editorial serif for the lede, and the 13.5px card-body type scale. */
 .geo {
-  max-width: var(--maxw);
+  max-width: 880px;
   margin: 0 auto;
-  padding: 8px 24px 56px;
+  padding: 30px 24px 34px;
 }
 .geo__intro {
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 8px 0 20px;
+  max-width: 700px;
+  margin: 0 auto 28px;
   text-align: center;
 }
-.geo__intro p {
-  margin: 0;
-  color: var(--ink-2);
-  font-size: 17px;
-  line-height: 1.6;
-}
-.geo-section,
-.geo-howto,
-.geo-faq {
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 22px 0;
-  border-top: 1px solid var(--line);
-}
-.geo-section h2,
-.geo-howto h2,
-.geo-faq h2 {
+.geo__intro h2 {
   margin: 0 0 10px;
   font-family: var(--font-display);
   font-size: clamp(20px, 2.6vw, 24px);
+  letter-spacing: -0.02em;
+}
+.geo__intro p {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 17.5px;
+  line-height: 1.68;
+  color: var(--ink-2);
+}
+/* Question explainers — two-up cards, same surface + type as .feature. */
+.geo__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.geo-card {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow-1);
+}
+.geo-card h2 {
+  margin: 0 0 7px;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
   letter-spacing: -0.01em;
 }
-.geo-section p {
+.geo-card p {
   margin: 0;
   color: var(--ink-2);
+  font-size: 13.5px;
   line-height: 1.6;
 }
-.geo-howto ol {
+/* HowTo — one card, three numbered steps using the tool panel's chip look. */
+.geo-howto {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow-1);
+  margin-bottom: 16px;
+}
+.geo-howto h2 {
   margin: 0;
-  padding-left: 20px;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.geo-howto ol {
+  list-style: none;
+  counter-reset: geo-step;
+  margin: 16px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+.geo-howto li {
+  counter-increment: geo-step;
+  position: relative;
+  padding-left: 31px;
   color: var(--ink-2);
-  line-height: 1.7;
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+.geo-howto li::before {
+  content: counter(geo-step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
 }
 .geo-howto strong {
+  display: block;
+  margin-bottom: 3px;
   color: var(--ink);
+  font-weight: 600;
+}
+/* FAQ — centered section head (like Features) over a single card list. */
+.geo-faq h2 {
+  margin: 30px 0 16px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: clamp(20px, 2.6vw, 24px);
+  letter-spacing: -0.02em;
+}
+.geo-faq__list {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-1);
+  padding: 7px 22px;
 }
 .geo-faq__item {
-  padding: 14px 0;
+  padding: 15px 0;
   border-top: 1px solid var(--line);
 }
-.geo-faq__item:first-of-type {
+.geo-faq__item:first-child {
   border-top: none;
-  padding-top: 0;
 }
 .geo-faq__item h3 {
-  margin: 0 0 6px;
-  font-size: 16px;
+  margin: 0 0 5px;
+  font-family: var(--font-display);
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   color: var(--ink);
 }
 .geo-faq__item p {
   margin: 0;
   color: var(--ink-2);
+  font-size: 13.5px;
   line-height: 1.6;
 }
 .geo-stat {
-  max-width: 760px;
-  margin: 12px auto 0;
+  margin: 16px 0 0;
   padding: 14px 18px;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
   border-left: 3px solid var(--accent);
-  background: var(--paper-3);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-1);
   color: var(--ink-2);
-  font-size: 15px;
+  font-size: 13.5px;
+  line-height: 1.6;
 }
 .geo-stat cite {
   font-style: normal;
   color: var(--ink-soft);
+}
+@media (max-width: 880px) {
+  .geo__grid,
+  .geo-howto ol {
+    grid-template-columns: 1fr;
+  }
 }
