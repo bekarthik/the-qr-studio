@@ -1,7 +1,11 @@
+import { useEffect } from 'react';
 import { Nav } from './Nav';
 import { Footer } from './Footer';
+import { applyNotFoundHead } from '../seo/head';
 
 export function NotFound() {
+  useEffect(() => applyNotFoundHead(), []);
+
   return (
     <>
       <Nav />
