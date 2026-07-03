@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { RouteDef } from '../seo/routes';
 import { applyRouteHead } from '../seo/head';
+import { buildJsonLd } from '../seo/jsonld';
 import { GeneratorProvider } from '../state/GeneratorContext';
 import { Nav } from './Nav';
 import { Hero } from './Hero';
@@ -15,6 +16,7 @@ import { CardPreview } from './CardPreview';
 import { Features } from './Features';
 import { ResetButton } from './ResetButton';
 import { ShareButton } from './ShareButton';
+import { JsonLd } from './JsonLd';
 
 type OutputMode = 'qr' | 'card';
 type ControlsTab = 'setup' | 'style' | 'card';
@@ -36,6 +38,7 @@ export function ToolPage({ route }: { route: RouteDef }) {
   const [output, setOutput] = useState<OutputMode>('qr');
 
   useEffect(() => applyRouteHead(route), [route]);
+  const jsonLd = useMemo(() => buildJsonLd(route), [route]);
 
   // Opening the Card tab flips the preview to the card so the design you're
   // editing is what you see; the output switch still lets you go back to the QR.
@@ -46,6 +49,7 @@ export function ToolPage({ route }: { route: RouteDef }) {
 
   return (
     <GeneratorProvider preset={route.preset}>
+      <JsonLd data={jsonLd} />
       <Nav />
       <Hero />
 
