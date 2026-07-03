@@ -127,3 +127,93 @@ This is the baseline to preserve through every subsequent step.
 This confirms the brief's assumed baseline. Proceeding to step 2 (router +
 route registry + preset wiring) while §4 is pending; nothing in step 2 depends
 on the live bot-access answer.
+
+---
+
+## 7. "After" — what changed (steps 2–7 complete)
+
+Date: 2026-07-03. All code-side work from the brief is done and pushed to
+`claude/qr-studio-seo-geo-5olypk`. Summary of the new architecture:
+
+| File | Role |
+|---|---|
+| `src/seo/routes.ts` | Single typed route registry — `ROUTES: RouteDef[]`. Everything below reads from it. |
+| `src/seo/content.ts` | `ContentBlock` types (intro/section/howto/faq/stat). |
+| `src/seo/head.ts` | The one place `<head>` is set — `applyRouteHead()` / `applyNotFoundHead()`. |
+| `src/seo/jsonld.ts` | Builders: `organization`, `softwareApplication`, `faqPage`, `howTo`, `breadcrumb`. |
+| `src/components/ContentBlocks.tsx` | Renders a route's `ContentBlock[]` — the only place GEO copy becomes markup. |
+| `src/components/JsonLd.tsx` | Injects `<script type="application/ld+json">` tags. |
+| `src/components/ToolPage.tsx` | The tool, extracted from the old `App.tsx`, now preset per route. |
+| `public/robots.txt` | Explicitly allows Googlebot/Bingbot/Applebot + GPTBot/ChatGPT-User/OAI-SearchBot/PerplexityBot/ClaudeBot/Claude-User/anthropic-ai. Never blocks any bot. |
+| `scripts/gen-sitemap.mjs` | Post-build: `dist/sitemap.xml` + `dist/llms.txt` from `ROUTES`. |
+| `scripts/gen-og-image.mjs` | One-off generator for `public/og-image.png` (real 1200×630 social card, replacing the favicon placeholder). |
+| `scripts/prerender.mjs` | Post-build: crawls every route with the pre-installed Chromium, snapshots static HTML into `dist/<path>/index.html`. Removable — no-ops (exit 0) if Chromium isn't present, e.g. on Netlify's build image. |
+
+Routes shipped: `/`, `/upi`, `/wifi`, `/vcard`, `/url`, `/whatsapp` — no
+`-qr-code` suffix per your call, since the domain already says QR.
+
+### Verified in this environment (no live egress needed)
+
+- `npm run build` green (fresh `npm ci` + `rm -rf dist`, clean-room). Prerender
+  step ran and snapshotted all 6 routes.
+- `npm run verify` **96/96**, `npm run verify:card` **27/27** — engine
+  untouched, confirmed repeatedly across every step.
+- Served the built `dist/` with a Netlify-accurate static server (correct
+  pretty-URL → `<path>/index.html` resolution) and `curl`'d every route with
+  `GPTBot/1.0`, `ClaudeBot/1.0`, `PerplexityBot/1.0`, `OAI-SearchBot/1.0`,
+  `Googlebot/2.1` — **all 6 routes return HTTP 200 with the correct
+  `<title>`, FAQ content, and JSON-LD present in the raw HTML, with zero JS
+  executed** (this is the actual non-JS-crawler experience — `curl` doesn't
+  run JavaScript). Example:
+  ```
+  GPTBot -> /upi: HTTP 200, title "UPI QR Code Generator — Free & Verified
+  Scannable | QR Studio", 6 FAQ blocks, 5 JSON-LD script tags
+  ```
+- `robots.txt`, `sitemap.xml`, `llms.txt` all serve correctly and reference
+  the real 6-route set.
+- Headless-Chromium end-to-end check: the prerendered static HTML still boots
+  into a fully interactive tool after JS loads (typed a UPI VPA into the
+  prerendered `/upi` page, got a live "✓ Verified scannable · Version 4 ·
+  33×33 modules · error correction H" result) — no hydration breakage.
+- Found and fixed a real bug during this verification: the prerender
+  crawler's own local static server was serving stale, already-mutated
+  `dist/index.html` content as a fallback for not-yet-crawled routes,
+  producing duplicate JSON-LD blocks. Fixed by serving a pristine in-memory
+  shell captured once before the crawl starts, plus a guard that makes
+  `npm run prerender` refuse to re-run against already-prerendered output.
+
+### Still needs you (live egress + accounts this environment doesn't have)
+
+These are the brief's §"Verification" items that need the real deployed
+domain or a Google/social account — nothing here is blocked by outstanding
+code work, only by access:
+
+1. **Live bot-access check** (§4 above, still unresolved) — run the curl
+   block in §4 against `https://theqr.studio/` once this branch is deployed,
+   to confirm Cloudflare/Netlify isn't blocking any AI bot in production.
+2. **Google Rich Results Test** — https://search.google.com/test/rich-results
+   — paste each route's URL once deployed; check SoftwareApplication, FAQPage,
+   HowTo and BreadcrumbList all validate with no errors.
+3. **Link previews** — share each route's URL in WhatsApp, X/Twitter, and
+   LinkedIn composer (don't send) and confirm the 1200×630 `og-image.png`
+   card renders with the right title/description.
+4. **Search Console URL inspection** — once deployed and the sitemap is
+   submitted, inspect each route: should be indexable, no soft-404 (the
+   `/does-not-exist` 404 route is explicitly `noindex` so it shouldn't show
+   as a false soft-404 for a real route).
+5. **Netlify dashboard**: confirm the `[[redirects]] from="/*" to="/index.html"
+   status=200` rule in `netlify.toml` is picked up, and that Netlify's
+   pretty-URL resolution serves the prerendered `dist/<path>/index.html`
+   files ahead of that fallback (this is Netlify's documented default
+   behavior — same as the local Python-server check above — but worth
+   confirming once live).
+6. **Chromium on Netlify's build image**: prerendering currently no-ops on
+   Netlify (no Chromium there), so the *deployed* site serves the
+   plain client-rendered SPA shell for every route, not the prerendered
+   static HTML — bots will see the pre-JS-render experience described in §2,
+   not the fixed version verified in this section. To get prerendering
+   running on the actual Netlify build, you'd need either a Netlify build
+   plugin that installs a Chromium binary, or to run `npm run build` in a CI
+   environment that has one and publish that `dist/` instead. Flagging this
+   rather than deciding it — it's a real infrastructure choice, not a code
+   change.
