@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build && node --experimental-strip-types scripts/gen-sitemap.mjs",
+    "build": "tsc --noEmit && vite build && node --experimental-strip-types scripts/gen-sitemap.mjs && node --experimental-strip-types scripts/prerender.mjs",
+    "prerender": "node --experimental-strip-types scripts/prerender.mjs",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "verify": "node scripts/verify.mjs",
