@@ -221,9 +221,11 @@ function decodeConfig(encoded: string): Partial<Config> | null {
   }
 }
 
-/** Restore config — a shared #d=… link wins over the saved session, which wins
- *  over defaults. Images are never restored (privacy + localStorage quota). */
-function loadConfig(): Config {
+/** Restore config — a shared #d=… link wins over everything else. Failing that,
+ *  a route preset (e.g. landing on /wifi) sets the initial source type, with the
+ *  rest of the saved session (colours, style, etc.) layered underneath. Images
+ *  are never restored (privacy + localStorage quota). */
+function loadConfig(preset?: SourceType): Config {
   const clean = (saved: Partial<Config>): Config => ({
     ...INITIAL,
     ...saved,
@@ -244,15 +246,18 @@ function loadConfig(): Config {
   }
   try {
     const raw = localStorage.getItem(LS_CONFIG);
-    if (raw) return clean(JSON.parse(raw) as Partial<Config>);
+    if (raw) {
+      const saved = JSON.parse(raw) as Partial<Config>;
+      return clean(preset ? { ...saved, type: preset } : saved);
+    }
   } catch {
     /* ignore */
   }
-  return INITIAL;
+  return preset ? { ...INITIAL, type: preset } : INITIAL;
 }
 
-export function GeneratorProvider({ children }: { children: ReactNode }) {
-  const [cfg, setCfg] = useState<Config>(loadConfig);
+export function GeneratorProvider({ children, preset }: { children: ReactNode; preset?: SourceType }) {
+  const [cfg, setCfg] = useState<Config>(() => loadConfig(preset));
 
   // Persist a serialisable subset (omit the live HTMLImageElement[]), debounced.
   useEffect(() => {
