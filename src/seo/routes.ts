@@ -7,14 +7,27 @@ export const SITE_NAME = 'QR Studio';
 export type JsonLdKind = 'softwareApplication' | 'faqPage' | 'howTo' | 'breadcrumb';
 
 /**
+ * Semantic page category — what a Sightline `<Slot>`/rule set keys off, distinct
+ * from `jsonLd` (the concrete schema types emitted). 'home' is the root landing
+ * page; 'tool' is a per-use-case generator page.
+ */
+export type PageType = 'home' | 'tool';
+
+/**
  * One entry per public route. This is the single source of truth consumed by
  * the router, `src/seo/head.ts`, `src/seo/jsonld.ts`, the sitemap generator,
  * and `scripts/prerender.mjs` — add a route here and every surface picks it
  * up automatically.
+ *
+ * All routes today are STATIC, param-less paths (no dynamic segments). If P0.7
+ * introduces parameterised routes, extend this with a `params` field and teach
+ * the router/prerender/sitemap to expand them; nothing here assumes params.
  */
 export interface RouteDef {
   /** History-API path, e.g. '/upi'. No '-qr-code' suffix — the domain already says QR. */
   path: string;
+  /** Semantic category for SDK rules/slots (not the concrete schema set). */
+  pageType: PageType;
   /** Presets the tool's source type on load; '/' leaves the default (url). */
   preset?: SourceType;
   /** <title> — kept under ~60 chars where possible. */
@@ -34,6 +47,7 @@ export interface RouteDef {
 export const ROUTES: RouteDef[] = [
   {
     path: '/',
+    pageType: 'home',
     title: 'QR Studio — Free QR Code Generator, Styled & Verified Scannable',
     description:
       'Create QR codes for links, UPI, Wi-Fi, vCards and more — style them with your brand colour or image, verify they scan, and download PNG/SVG. Free, private, runs entirely in your browser.',
@@ -87,6 +101,7 @@ export const ROUTES: RouteDef[] = [
   },
   {
     path: '/upi',
+    pageType: 'tool',
     preset: 'upi',
     title: 'UPI QR Code Generator — Free & Verified Scannable | QR Studio',
     description:
@@ -150,6 +165,7 @@ export const ROUTES: RouteDef[] = [
   },
   {
     path: '/wifi',
+    pageType: 'tool',
     preset: 'wifi',
     title: 'Wi-Fi QR Code Generator — Free & Verified Scannable | QR Studio',
     description:
@@ -213,6 +229,7 @@ export const ROUTES: RouteDef[] = [
   },
   {
     path: '/vcard',
+    pageType: 'tool',
     preset: 'vcard',
     title: 'vCard QR Code Generator — Digital Business Card | QR Studio',
     description:
@@ -276,6 +293,7 @@ export const ROUTES: RouteDef[] = [
   },
   {
     path: '/url',
+    pageType: 'tool',
     preset: 'url',
     title: 'URL QR Code Generator — Free & Verified Scannable | QR Studio',
     description:
@@ -335,6 +353,7 @@ export const ROUTES: RouteDef[] = [
   },
   {
     path: '/whatsapp',
+    pageType: 'tool',
     preset: 'whatsapp',
     title: 'WhatsApp QR Code Generator — Free & Verified Scannable | QR Studio',
     description:
