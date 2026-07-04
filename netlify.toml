@@ -1,12 +1,19 @@
-# Deploy QR Studio as a static site.
-# On Netlify set the site's "base directory" to `qr-studio` (this folder) when
-# the repo is a monorepo; these settings then apply relative to it.
+# Deploy QR Studio as a prebuilt static site.
+#
+# Netlify no longer BUILDS this site — the prerender step needs Chromium, which
+# Netlify's build image lacks, so builds are done in GitHub Actions (which
+# installs Chromium) and the prebuilt dist/ is pushed here via the Netlify CLI
+# (`netlify deploy --prod --dir=dist`). See docs/runbooks/deploy.md.
+#
+# There is intentionally NO `[build] command` here. As belt-and-suspenders
+# against a stray git-triggered build overwriting the CLI deploy with an
+# un-prerendered shell, `ignore` always short-circuits any build Netlify might
+# still attempt (a 0 exit tells Netlify "nothing changed, skip"). CLI deploys
+# bypass the build pipeline, so they're unaffected. The dashboard toggle
+# ("Stop builds") is the primary guard; this is the in-repo backstop.
 [build]
-  command = "npm run build"
   publish = "dist"
-
-[build.environment]
-  NODE_VERSION = "20"
+  ignore = "exit 0"
 
 # Long-cache the hashed assets Vite emits.
 [[headers]]
