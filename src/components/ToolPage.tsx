@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { RouteDef } from '../seo/routes';
 import { applyRouteHead } from '../seo/head';
-import { buildJsonLd } from '../seo/jsonld';
 import { GeneratorProvider } from '../state/GeneratorContext';
 import { Nav } from './Nav';
 import { Hero } from './Hero';
@@ -16,7 +15,6 @@ import { CardPreview } from './CardPreview';
 import { Features } from './Features';
 import { ResetButton } from './ResetButton';
 import { ShareButton } from './ShareButton';
-import { JsonLd } from './JsonLd';
 import { ContentBlocks } from './ContentBlocks';
 
 type OutputMode = 'qr' | 'card';
@@ -38,8 +36,10 @@ export function ToolPage({ route }: { route: RouteDef }) {
   const [tab, setTab] = useState<ControlsTab>('setup');
   const [output, setOutput] = useState<OutputMode>('qr');
 
+  // head.ts owns every <head> write for this route — title, meta, canonical,
+  // OG/Twitter and JSON-LD — in one call. This is the single seam Sightline's
+  // <SeoProvider> will replace.
   useEffect(() => applyRouteHead(route), [route]);
-  const jsonLd = useMemo(() => buildJsonLd(route), [route]);
 
   // Opening the Card tab flips the preview to the card so the design you're
   // editing is what you see; the output switch still lets you go back to the QR.
@@ -50,7 +50,6 @@ export function ToolPage({ route }: { route: RouteDef }) {
 
   return (
     <GeneratorProvider preset={route.preset}>
-      <JsonLd data={jsonLd} />
       <Nav />
       <Hero />
 
