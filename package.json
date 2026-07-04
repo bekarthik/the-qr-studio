@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build && node --experimental-strip-types scripts/gen-sitemap.mjs && node --experimental-strip-types scripts/prerender.mjs",
     "prerender": "node --experimental-strip-types scripts/prerender.mjs",
+    "smoke:live": "node --experimental-strip-types scripts/smoke-live.mjs",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "verify": "node scripts/verify.mjs",
