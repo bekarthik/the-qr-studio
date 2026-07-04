@@ -16,15 +16,17 @@ Scope: `bekarthik/the-qr-studio` (Vite/React SPA), branch `claude/qr-studio-seo-
   `publish = "dist"`). No SSR/edge rendering configured — pure static file host
   for the Vite build output, plus (presumably, needs confirming from the live
   Netlify dashboard) a SPA fallback rewrite.
-- **Unknown routes: soft 404, not a hard 404.** Because it's a static host with
-  a SPA fallback (`/* → /index.html 200`), an unknown path returns **HTTP 200**
-  serving the app shell, never a `404` status. Verified locally against the
-  built `dist/`: `/does-not-exist` → HTTP 200. After the SEO work the app
-  renders a real 404 *page* (client-side `NotFound`, `robots: noindex, follow`,
-  no JSON-LD, `<h1>Page not found</h1>`) so Google shouldn't index it, but the
-  HTTP **status** is still 200 — a genuine hard-404 status would need edge/host
-  logic this static setup doesn't have. Recorded honestly for the case study;
-  the `noindex` mitigates the soft-404 risk without eliminating the 200.
+- **Unknown routes (this branch): soft 404, not a hard 404.** This describes the
+  branch build, NOT live production — see §4: the deployed old build has no
+  fallback and returns a genuine **HTTP 404** today. On *this branch*, the
+  netlify.toml SPA fallback (`/* → /index.html 200`) makes an unknown path
+  return **HTTP 200** serving the app shell. Verified locally against the built
+  `dist/`: `/does-not-exist` → HTTP 200. The app renders a real 404 *page*
+  (client-side `NotFound`, `robots: noindex, follow`, no JSON-LD, `<h1>Page not
+  found</h1>`) so Google shouldn't index it, but the HTTP **status** is still
+  200. This is a **regression vs. production's current hard-404** and is the
+  open decision noted in §4 — keep the fallback (accept soft-404s) or drop it so
+  the prerendered per-route files win and unknown paths 404 like today.
 
 ## 2. `index.html` — current head
 
@@ -51,60 +53,30 @@ Checked `public/` — currently contains only `favicon.svg` and `sw.js`.
 - ❌ `sitemap.xml` — absent.
 - ❌ `llms.txt` — absent.
 
-## 4. Bot / hosting access — **BLOCKED IN THIS ENVIRONMENT**
+## 4. Bot / hosting access — CONFIRMED (live production, 2026-07-04)
 
-This session's outbound network policy blocks egress to `theqr.studio`:
+Run by the owner against the deployed production site (old single-route build,
+pre-branch). Evidence:
 
-```
-$ curl -sI https://theqr.studio/
-HTTP/1.1 403 Forbidden        # <- from this environment's proxy gateway, NOT from theqr.studio
-Content-Length: 36
-```
+- **Hosting:** `server: Netlify` + `x-nf-request-id` present; no `cf-ray`/
+  `cf-cache` headers → **Netlify serves the domain directly, no Cloudflare in
+  front.** No CDN-level bot rules exist to block or challenge crawlers.
+- **Bot access — all open:** GPTBot, Googlebot, ClaudeBot, PerplexityBot,
+  OAI-SearchBot, Applebot all → **HTTP 200**. GPTBot and Googlebot received
+  byte-identical responses: the generic site-wide `<title>`/description,
+  `og:image` pointing at `favicon.svg`, no canonical, no JSON-LD, and an
+  empty `<div id="root"></div>`.
+- **Unknown routes:** `/does-not-exist` → **HTTP 404** on live production.
+  This CORRECTS §1's soft-404 note for the deployed site: the `/* → 
+  /index.html 200` fallback exists only on this branch's netlify.toml; the
+  currently-deployed old build has no fallback, so production returns hard
+  404s today. (§1's soft-404 behavior becomes real only if this branch ships
+  with the fallback rule — see the open decision on dropping it in favor of
+  prerendered per-route files.)
 
-Proxy status (`$HTTPS_PROXY/__agentproxy/status`) confirms this is a policy
-denial at the CONNECT stage, not a response from the origin:
-
-```
-"recentRelayFailures": [
-  { "kind": "connect_rejected",
-    "detail": "gateway answered 403 to CONNECT (policy denial or upstream failure)",
-    "host": "theqr.studio:443" }
-]
-```
-
-DNS resolution *does* work from here (`theqr.studio` → `98.84.224.111`,
-`18.208.88.157`), so I can't yet tell whether Cloudflare fronts the domain or
-whether Netlify serves it directly, and I can't check live AI-bot access.
-
-**Action needed from you (run locally, paste results back):**
-
-```bash
-# 1. Plain fetch — baseline status/headers
-curl -sI https://theqr.studio/
-
-# 2. Simulate AI/search bots — look for 403/429/redirect-to-block-page
-curl -s -A "GPTBot/1.0"        -o /dev/null -w "GPTBot: %{http_code}\n" https://theqr.studio/
-curl -s -A "ClaudeBot/1.0"     -o /dev/null -w "ClaudeBot: %{http_code}\n" https://theqr.studio/
-curl -s -A "PerplexityBot/1.0" -o /dev/null -w "PerplexityBot: %{http_code}\n" https://theqr.studio/
-curl -s -A "OAI-SearchBot/1.0" -o /dev/null -w "OAI-SearchBot: %{http_code}\n" https://theqr.studio/
-curl -s -A "Googlebot/2.1"     -o /dev/null -w "Googlebot: %{http_code}\n" https://theqr.studio/
-curl -s -A "Applebot/0.1"      -o /dev/null -w "Applebot: %{http_code}\n" https://theqr.studio/
-
-# 3. Confirm what a non-JS crawler actually sees (should show empty #root today)
-curl -s https://theqr.studio/ | head -60
-
-# 4. Look for Cloudflare in front (server header, cf-ray, etc.)
-curl -sI https://theqr.studio/ | grep -i -E "server|cf-ray|cf-cache"
-```
-
-Once you paste these back I'll fill in the "confirmed" section below and flag
-anything that needs fixing (e.g. a Cloudflare bot-fight-mode or WAF rule
-blocking `GPTBot`/`ClaudeBot`, which would violate the "don't block any AI
-bot" guardrail and need a Cloudflare-side allow rule — that change happens
-outside this repo).
-
-**Status: pending owner input** — not yet confirmed either way. Treat as
-"unknown, verify before shipping" rather than "safe."
+**Interpretation (the "before" in one line):** no crawler is blocked — every
+search and AI bot receives a 200 — but every one of them is served a single
+generic title and an empty body. The site is fully open and fully invisible.
 
 ## 5. Baseline verify-suite status (engine untouched, must stay green throughout)
 
@@ -131,11 +103,12 @@ This is the baseline to preserve through every subsequent step.
 | `llms.txt` | Missing |
 | `og:image` | Placeholder (favicon.svg, not a real 1200×630 card) |
 | Twitter card | `summary`, no image |
-| AI bot access (Cloudflare/Netlify level) | **Unconfirmed — needs live check, see §4** |
+| AI bot access (Cloudflare/Netlify level) | **Confirmed open** — Netlify direct, no Cloudflare; all bots → HTTP 200 (see §4). Fully open, fully invisible. |
+| Unknown routes | **Hard 404** on live production today (no SPA fallback in the old build; see §4) |
 
 This confirms the brief's assumed baseline. Proceeding to step 2 (router +
-route registry + preset wiring) while §4 is pending; nothing in step 2 depends
-on the live bot-access answer.
+route registry + preset wiring); nothing in step 2 depends on the live
+bot-access answer (now confirmed in §4).
 
 ---
 
@@ -197,9 +170,10 @@ These are the brief's §"Verification" items that need the real deployed
 domain or a Google/social account — nothing here is blocked by outstanding
 code work, only by access:
 
-1. **Live bot-access check** (§4 above, still unresolved) — run the curl
-   block in §4 against `https://theqr.studio/` once this branch is deployed,
-   to confirm Cloudflare/Netlify isn't blocking any AI bot in production.
+1. ~~**Live bot-access check**~~ — **DONE** (§4, 2026-07-04): Netlify direct,
+   no Cloudflare, every bot → HTTP 200. No crawler is blocked. After this
+   branch deploys, re-run the per-route checklist in §8 to confirm the bots
+   now receive the *prerendered* content (not the old empty shell).
 2. **Google Rich Results Test** — https://search.google.com/test/rich-results
    — paste each route's URL once deployed; check SoftwareApplication, FAQPage,
    HowTo and BreadcrumbList all validate with no errors.
@@ -264,7 +238,9 @@ done
 # (proxy for "no JS execution"): the intro paragraph + first FAQ should be present.
 curl -s "$BASE/upi" | grep -c 'geo-faq__item'   # expect >= 5 if prerendered; 0 if plain SPA shell
 
-# Unknown route — confirm soft-404 (expect HTTP 200, NOT 404) and noindex in the shell
+# Unknown route status — depends on the open fallback decision (§4/§1):
+#   fallback KEPT  → HTTP 200 (soft-404, noindex shell)
+#   fallback DROPPED → HTTP 404 (like production today)
 curl -s "$BASE/definitely-not-a-real-route" -o /dev/null -w "unknown route HTTP %{http_code}\n"
 ```
 
