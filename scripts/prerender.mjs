@@ -78,18 +78,35 @@ function makeServeDist(pristineShell) {
   };
 }
 
+// PRERENDER_REQUIRED (any value except '', '0', 'false') turns the otherwise
+// silent no-op into a hard failure. CI sets this so a build that would ship
+// the un-prerendered SPA shell (e.g. Chromium missing) FAILS instead of
+// deploying a bot-invisible site; local/Netlify builds leave it unset and
+// keep the removable-enhancement behaviour.
+const REQUIRED = !['', '0', 'false'].includes(process.env.PRERENDER_REQUIRED ?? '');
+
+/** Either warn-and-skip (returns 'skip') or, when PRERENDER_REQUIRED, log an
+ *  error, set a failing exit code, and return 'fail'. */
+function skipOrFail(reason) {
+  if (REQUIRED) {
+    console.error(`[prerender] ${reason} — PRERENDER_REQUIRED is set, so this is a FAILURE, not a no-op.`);
+    process.exitCode = 1;
+    return 'fail';
+  }
+  console.warn(`[prerender] ${reason} — skipping. dist/ keeps the plain client-rendered SPA shell (no-op, not a failure).`);
+  return 'skip';
+}
+
 async function main() {
   const exe = findChromium();
   if (!exe) {
-    console.warn(
-      '[prerender] No pre-installed Chromium found (checked $PLAYWRIGHT_CHROMIUM_PATH and ' +
-        '$PLAYWRIGHT_BROWSERS_PATH/chromium-*). Skipping — dist/ keeps the plain client-rendered ' +
-        'SPA shell for every route. This is a no-op, not a failure.',
+    skipOrFail(
+      'No Chromium found (checked $PLAYWRIGHT_CHROMIUM_PATH and $PLAYWRIGHT_BROWSERS_PATH/chromium-*)',
     );
     return;
   }
   if (!existsSync(join(DIST, 'index.html'))) {
-    console.warn('[prerender] dist/index.html not found — run `vite build` first. Skipping.');
+    skipOrFail('dist/index.html not found — run `vite build` first');
     return;
   }
 
