@@ -77,14 +77,19 @@ duplication**; titles/canonical/OG match the registry; the 404 page is
 
 ## Findings P0.7 should know
 
-1. **Prerender no-ops on Netlify's build image (no Chromium).** So the
-   *deployed* site currently serves the plain client-rendered SPA shell to
-   bots — AI crawlers (which never run JS) see almost nothing. This is exactly
-   the gap Sightline's edge is meant to close: once the edge serves rendered
-   HTML/Markdown to bots, it **supersedes** `scripts/prerender.mjs`, which can
-   then be deleted. Until one or the other is live, bot visibility is broken
-   in production regardless of the client-side head work. (Details:
-   `seo-baseline.md` §7 item 6.)
+1. **Prerender now runs in CI (was: no-op on Netlify).** Netlify's build image
+   has no Chromium, so a Netlify-built deploy shipped the plain SPA shell (bot-
+   invisible). This is now handled: the site builds in **GitHub Actions** (which
+   installs Chromium and runs the prerender), gates on the verify suites, and
+   deploys the prebuilt `dist/` to Netlify via CLI — Netlify's own build is off.
+   A `smoke:live` step asserts every deploy is bot-visible. See
+   `.github/workflows/deploy.yml` and `docs/runbooks/deploy.md`.
+   **For P0.7:** once Sightline's edge serves rendered HTML/Markdown to bots, it
+   **supersedes** `scripts/prerender.mjs` — delete the script + its `build`-step
+   tail, and either keep this CI-build/CLI-deploy path or hand deploys back to
+   Netlify (steps in the runbook's "Removing this pipeline later"). The
+   `build`/verify/registry seams don't change; only the bot-rendering source
+   moves from prerender → edge.
 2. **JSON-LD duplication on hydration (fixed here, note for the SDK).** A
    prerendered page ships with JSON-LD baked in; the old `JsonLd.tsx` appended
    *more* on hydration without removing them → doubled structured data in the
@@ -121,6 +126,9 @@ src/components/ContentBlocks.tsx   renders ContentBlock[] → HTML (the <Slot> s
 src/components/ToolPage.tsx        route shell: calls applyRouteHead + renders the tool + ContentBlocks
 scripts/prerender.mjs    removable build-time bot-HTML snapshotter (superseded by Sightline edge)
 scripts/gen-sitemap.mjs  sitemap.xml + llms.txt from ROUTES
+scripts/smoke-live.mjs   post-deploy: asserts the live site is bot-visible per route
 public/robots.txt        allows all search + AI crawlers; references sitemap
+.github/workflows/deploy.yml   CI: build (with prerender) → verify gate → Netlify CLI deploy → smoke
+docs/runbooks/deploy.md  deploy pipeline setup (secrets, Netlify dashboard) + operation
 docs/seo-baseline.md     before/after visibility baseline + live crawler checklist
 ```

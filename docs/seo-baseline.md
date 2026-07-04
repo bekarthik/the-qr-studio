@@ -216,16 +216,28 @@ code work, only by access:
    files ahead of that fallback (this is Netlify's documented default
    behavior — same as the local Python-server check above — but worth
    confirming once live).
-6. **Chromium on Netlify's build image**: prerendering currently no-ops on
-   Netlify (no Chromium there), so the *deployed* site serves the
-   plain client-rendered SPA shell for every route, not the prerendered
-   static HTML — bots will see the pre-JS-render experience described in §2,
-   not the fixed version verified in this section. To get prerendering
-   running on the actual Netlify build, you'd need either a Netlify build
-   plugin that installs a Chromium binary, or to run `npm run build` in a CI
-   environment that has one and publish that `dist/` instead. Flagging this
-   rather than deciding it — it's a real infrastructure choice, not a code
-   change.
+
+### Update (2026-07-04): the prerender→deploy gap is now SOLVED by CI
+
+Item 6 below ("Chromium on Netlify's build image") is **resolved**. The site
+now builds in **GitHub Actions** (which installs Chromium, so the prerender
+runs), gates on the verify suites, and pushes the prebuilt `dist/` to Netlify
+via the CLI; Netlify's own build is disabled. So a deployed `main` serves the
+**prerendered** HTML to bots, not the plain shell. The workflow's own
+`smoke:live` step asserts this on every deploy (HTTP 200 + expected `<title>` +
+JSON-LD as GPTBot/Googlebot). Setup + operation: **`docs/runbooks/deploy.md`**.
+
+What still genuinely needs you (access, not code): items 1–4 above (live
+bot-access spot-check, Rich Results Test, link previews, Search Console), and
+adding the two GitHub secrets (`NETLIFY_AUTH_TOKEN`, `NETLIFY_SITE_ID`) +
+flipping Netlify to "Stop builds" per the runbook.
+
+6. ~~**Chromium on Netlify's build image**~~ — **RESOLVED** by the CI pipeline
+   above; kept here for the case-study record. Previously prerendering no-op'd
+   on Netlify (no Chromium there), so the deployed site served the plain
+   client-rendered SPA shell — bots saw the §2 pre-render experience. The
+   GitHub Actions build + CLI deploy closes this until Sightline's edge layer
+   supersedes the prerender entirely.
 
 ## 8. Per-route live crawler checklist (run against the deployed branch)
 
