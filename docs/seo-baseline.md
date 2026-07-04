@@ -16,6 +16,15 @@ Scope: `bekarthik/the-qr-studio` (Vite/React SPA), branch `claude/qr-studio-seo-
   `publish = "dist"`). No SSR/edge rendering configured — pure static file host
   for the Vite build output, plus (presumably, needs confirming from the live
   Netlify dashboard) a SPA fallback rewrite.
+- **Unknown routes: soft 404, not a hard 404.** Because it's a static host with
+  a SPA fallback (`/* → /index.html 200`), an unknown path returns **HTTP 200**
+  serving the app shell, never a `404` status. Verified locally against the
+  built `dist/`: `/does-not-exist` → HTTP 200. After the SEO work the app
+  renders a real 404 *page* (client-side `NotFound`, `robots: noindex, follow`,
+  no JSON-LD, `<h1>Page not found</h1>`) so Google shouldn't index it, but the
+  HTTP **status** is still 200 — a genuine hard-404 status would need edge/host
+  logic this static setup doesn't have. Recorded honestly for the case study;
+  the `noindex` mitigates the soft-404 risk without eliminating the 200.
 
 ## 2. `index.html` — current head
 
@@ -217,3 +226,43 @@ code work, only by access:
    environment that has one and publish that `dist/` instead. Flagging this
    rather than deciding it — it's a real infrastructure choice, not a code
    change.
+
+## 8. Per-route live crawler checklist (run against the deployed branch)
+
+This sandbox can't reach `theqr.studio` (egress blocked — see §4). Run the
+block below **once this branch is deployed** and paste the results back to
+complete the before/after case study. For each route capture what GPTBot
+(AI, never runs JS) and Googlebot see, plus a JS-disabled content sanity
+check. A "good" result = full HTML with the route's `<title>`, FAQ text, and
+`application/ld+json` present **without** any JS executing.
+
+```bash
+BASE=https://theqr.studio
+for r in / /upi /wifi /vcard /url /whatsapp; do
+  echo "===== $r ====="
+  # GPTBot (AI answer engines — JS never executes)
+  curl -sA "Mozilla/5.0 (compatible; GPTBot/1.0; +https://openai.com/gptbot)" "$BASE$r" \
+    | grep -Eio '<title>[^<]+|"@type":"[a-z]+"|geo-faq__item' | sort | uniq -c
+  # Googlebot (first pass is also JS-free)
+  curl -sA "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)" "$BASE$r" \
+    -o /dev/null -w "  Googlebot HTTP %{http_code}\n"
+done
+
+# JS-disabled content check — does meaningful content exist in raw HTML?
+# (proxy for "no JS execution"): the intro paragraph + first FAQ should be present.
+curl -s "$BASE/upi" | grep -c 'geo-faq__item'   # expect >= 5 if prerendered; 0 if plain SPA shell
+
+# Unknown route — confirm soft-404 (expect HTTP 200, NOT 404) and noindex in the shell
+curl -s "$BASE/definitely-not-a-real-route" -o /dev/null -w "unknown route HTTP %{http_code}\n"
+```
+
+**Interpreting the result:**
+- If GPTBot sees the `<title>`, the `"@type"` schema entries, and `geo-faq__item`
+  blocks → prerendering is live and the fix landed. ✅
+- If GPTBot sees only the generic shell `<title>` and **zero** `"@type"` /
+  `geo-faq__item` → the deploy is serving the plain SPA shell (prerender
+  didn't run on the build host; see §7 item 6). The client-side head/JSON-LD
+  still work for JS-executing consumers, but AI crawlers get nothing. ⚠️
+- Any GPTBot/Googlebot response that is `403`/`429`/a challenge page → a
+  host/CDN bot rule is blocking a crawler; reconcile with `public/robots.txt`
+  (which allows all of them) — that fix is host-side, outside this repo.
