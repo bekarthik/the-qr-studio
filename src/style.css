@@ -2606,10 +2606,29 @@ body.ws-open {
     border-left: 0;
     border-bottom: 1px solid var(--line-2);
   }
+  /* Column layout: every section renders at its natural height and does NOT
+     scroll on its own — otherwise the full-window body can't scroll as one and
+     nested scrolls trap the gesture. */
+  .ws-pane {
+    overflow: visible;
+  }
   .ws-canvas {
     order: -1;
-    min-height: 320px;
+    flex: none; /* content height, not a flex share — else the stage overflows
+                   onto the next pane */
+    min-height: 300px;
+    overflow: visible;
     border-bottom: 1px solid var(--line-2);
+  }
+  .ws-stage {
+    flex: none; /* grow to fit the artwork instead of a fixed flex share */
+    overflow: visible;
+  }
+  /* Full-window on mobile: the WINDOW body is the single scroll container, so
+     the stacked panes + status are all reachable (fixes clipped content). */
+  .ws-window.is-full .ws-body {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
