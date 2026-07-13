@@ -8,7 +8,7 @@ import { renderQR } from '../qr/render';
 import { renderSVG } from '../qr/svg';
 
 const RES = 1600;
-type BadgeState = 'hidden' | 'checking' | 'ok' | 'fail';
+export type BadgeState = 'hidden' | 'checking' | 'ok' | 'fail';
 
 interface Snapshot {
   matrix: QrMatrix;
@@ -84,14 +84,34 @@ function message(holder: HTMLElement, text: string, isErr: boolean, detail?: str
   holder.replaceChildren(d);
 }
 
-export function Preview() {
-  const { cfg, update } = useGen();
+/** Export hooks handed up to the Workstation chrome (top-bar Export menu and
+ *  status-bar quick buttons) so download actions live in the frame, not the
+ *  canvas. */
+export interface ExportApi {
+  png: () => void;
+  svg: () => void;
+  ready: boolean;
+}
+
+export function Preview({
+  onStatus,
+  registerExport,
+}: {
+  onStatus?: (s: BadgeState) => void;
+  registerExport?: (api: ExportApi) => void;
+} = {}) {
+  const { cfg } = useGen();
   const holder = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const snapRef = useRef<Snapshot | null>(null);
   const [badge, setBadge] = useState<BadgeState>('hidden');
   const [hint, setHint] = useState('');
   const [ready, setReady] = useState(false);
+
+  // Report verify state up so the Workstation bar can mirror it.
+  useEffect(() => {
+    onStatus?.(badge);
+  }, [badge, onStatus]);
 
   useEffect(() => {
     const h = holder.current;
@@ -262,37 +282,28 @@ export function Preview() {
     save(new Blob([svg], { type: 'image/svg+xml' }), 'svg');
   };
 
+  // Hand the export actions to the surrounding chrome. Re-registered on every
+  // config change (not just readiness) so the SVG closure never goes stale.
+  useEffect(() => {
+    registerExport?.({ png: downloadPng, svg: downloadSvg, ready });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, cfg, registerExport]);
+
   const strict = cfg.strictVerify;
   const badgeLabel =
     badge === 'ok'
-      ? strict ? '✓ Verified scannable · studio-grade' : '✓ Verified scannable'
+      ? strict ? '✓ Scanner-verified · studio-grade' : '✓ Scanner-verified — this will scan'
       : badge === 'fail'
-        ? strict ? '⚠ Fails the strict check — lower detail/dot size or raise contrast' : BADGE_TEXT.fail
+        ? strict ? '⚠ Fails the strict check — lower detail or raise contrast' : BADGE_TEXT.fail
         : BADGE_TEXT[badge];
 
   return (
     <>
-      <div className="preview" ref={holder} />
-      {badge !== 'hidden' && <div className={`badge badge--${badge}`}>{badgeLabel}</div>}
-      <label className="field field--check verify-mode">
-        <input type="checkbox" checked={strict} onChange={(e) => update({ strictVerify: e.target.checked })} />
-        <span className="field__label">
-          Studio-grade check <span className="h__opt">strict</span>
-        </span>
-      </label>
-      <p className="hint">{hint}</p>
-      <div className="downloads">
-        <button className="download" disabled={!ready} onClick={downloadPng}>
-          Download PNG
-        </button>
-        <button className="download download--alt" disabled={!ready} onClick={downloadSvg}>
-          Download SVG
-        </button>
+      <div className="ws-sheet">
+        <div className="preview" ref={holder} />
+        {badge !== 'hidden' && <div className={`badge badge--${badge}`}>{badgeLabel}</div>}
       </div>
-      <p className="finehint">
-        PNG is 1600&nbsp;px — crisp for print up to ~13&nbsp;cm at 300&nbsp;dpi. Use SVG for larger or
-        vector print. Always test-scan with a real phone before mass printing.
-      </p>
+      <p className="hint">{hint}</p>
     </>
   );
 }

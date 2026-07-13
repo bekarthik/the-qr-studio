@@ -1,21 +1,28 @@
-import { SupportButton } from './Support';
+import { Link } from 'react-router-dom';
+import { Brand } from './Brand';
 
 export function Footer() {
   return (
-    <footer className="foot">
-      <div className="foot__inner">
-        <div className="foot__top">
-          <span className="foot__brand">
-            <span className="nav__logo" aria-hidden="true">▣</span> QR Studio
-          </span>
-          <span className="foot__links">
-            <SupportButton className="foot__link">☕ Support</SupportButton>
-          </span>
+    <footer>
+      <div className="wrap foot">
+        <div>
+          <Brand size={28} />
+          <p>
+            A free QR code generator that runs entirely in your browser. Your colour, your logo, your
+            data — never uploaded.
+          </p>
         </div>
-        <p>
-          Runs entirely in your browser — no accounts, no tracking, no uploads. You're responsible
-          for where your codes lead; don't create QR codes for phishing, scams or anything you
-          wouldn't put your name to.
+        <nav className="foot__links" aria-label="Footer">
+          <a href="/#studio">Generator</a>
+          <a href="/#print">Survives print</a>
+          <a href="/#features">Privacy</a>
+          <a href="/#faq">FAQ</a>
+          <Link to="/contact">Contact us</Link>
+        </nav>
+      </div>
+      <div className="wrap">
+        <p className="foot__spec">
+          Stock: your browser · Inks: unlimited · Uploads: 0 · Expiry: never · © 2026 theqr.studio
         </p>
       </div>
     </footer>

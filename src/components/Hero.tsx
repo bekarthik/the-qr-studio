@@ -1,31 +1,37 @@
-const PILLS = ['🔒 Nothing uploaded', '✓ Verified scannable', '🖼️ Image halftone', '⬇️ PNG & SVG'];
+import type { MouseEvent } from 'react';
+import { OPEN_STUDIO_EVENT } from './Workstation';
+
+const openStudio = (e: MouseEvent) => {
+  e.preventDefault();
+  window.dispatchEvent(new CustomEvent(OPEN_STUDIO_EVENT));
+};
 
 export function Hero() {
   return (
-    <>
-      <span id="top" />
-      <section className="hero">
-        <p className="hero__eyebrow">
-          <span className="dot" /> Free · No sign-up · 100% in your browser
-        </p>
-        <h1 className="hero__title">
-          QR codes that look like your brand —<br />
-          <span className="grad">and actually scan</span>
+    <section className="hero">
+      <div className="wrap hero__solo">
+        <span className="eyebrow">Free QR code generator</span>
+        <h1>
+          This is the
+          <br />
+          QR&nbsp;Studio.
         </h1>
-        <p className="hero__sub">
-          Links, UPI, Wi-Fi, visiting cards and more — styled with your colour or your own image, and
-          verified scannable right in your browser. Nothing is ever uploaded.
+        <p className="drop">
+          Drop your <b>colour</b>. Drop your <b>image</b>. Drop your <b>logo</b>.
+          <br />
+          Get a custom QR code that works everywhere — screen, print, poster, card.
         </p>
-        <div className="hero__cta">
-          <a className="hero__btn" href="#app">Create your code →</a>
-          <a className="hero__btn hero__btn--ghost" href="#features">See what it does</a>
-        </div>
-        <ul className="hero__pills">
-          {PILLS.map((p) => (
-            <li key={p}>{p}</li>
-          ))}
+        <ul className="highlights">
+          <li>Free, in your browser</li>
+          <li>Nothing leaves your device</li>
         </ul>
-      </section>
-    </>
+        <div className="cta-row">
+          <a href="#studio" className="btn" onClick={openStudio}>
+            Start generating QR ▸
+          </a>
+          <span className="trust">no signup · no watermark · no expiry</span>
+        </div>
+      </div>
+    </section>
   );
 }

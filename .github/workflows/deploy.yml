@@ -1,0 +1,74 @@
+name: Deploy (prerender + Netlify)
+
+# Why this exists: scripts/prerender.mjs needs Chromium, which Netlify's build
+# image doesn't have — so Netlify's own build shipped the un-prerendered SPA
+# shell (invisible to AI crawlers). This workflow builds on a runner that CAN
+# install Chromium, gates on the QR verify suites, deploys the prebuilt dist/
+# to Netlify via CLI, and smoke-tests the live site as a bot. Netlify's own
+# build is disabled for this site (see docs/runbooks/deploy.md).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+# Never let two prod deploys overlap; don't cancel one mid-flight.
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build-verify-deploy:
+    runs-on: ubuntu-latest
+    env:
+      # scripts/prerender.mjs (playwright-core) finds Chromium under here.
+      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.pw-browsers
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node 22: the build's gen-sitemap.mjs / prerender.mjs run under
+      # `node --experimental-strip-types`, which needs Node >= 22.6.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Match the Chromium revision to the installed playwright-core (1.61.1)
+      # so the binary prerender.mjs launches is a guaranteed-compatible build.
+      - name: Install Chromium for prerender
+        run: npx --yes playwright@1.61.1 install --with-deps chromium
+
+      # PRERENDER_REQUIRED=1 makes the build FAIL (not silently no-op) if
+      # Chromium is missing — so we can never deploy a bot-invisible shell.
+      - name: Build (with required prerender)
+        run: npm run build
+        env:
+          PRERENDER_REQUIRED: '1'
+          # Contact form (optional): set these repo secrets to enable /contact.
+          # The publishable key is public-by-design; RLS does the enforcement.
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+
+      # Deploy gate: the QR engine must stay green (resvg + jsQR, no browser).
+      - name: Verify QR engine (gate)
+        run: |
+          npm run verify
+          npm run verify:card
+
+      - name: Deploy prebuilt dist/ to Netlify (production)
+        run: npx --yes netlify-cli@17 deploy --prod --dir=dist --message "GH Actions ${{ github.sha }}"
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+
+      # Prove the live site is bot-visible: 200 + expected <title> + JSON-LD in
+      # raw HTML for every route, plus robots/sitemap/llms. Retries internally
+      # for CDN propagation; fails the workflow on any miss.
+      - name: Smoke-test the live deploy
+        run: npm run smoke:live

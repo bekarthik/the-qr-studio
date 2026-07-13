@@ -1,13 +1,17 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useGen } from '../state/GeneratorContext';
 import { cardDims } from '../card/card';
 import { buildCardArtifacts, save } from '../card/artifacts';
+import type { ExportApi } from './Preview';
+import { Toggle } from './StudioControls';
 
-/** The visiting-card live preview + the two-sided toggle + downloads.
+/** The visiting-card live preview + the two-sided toggle. Downloads are exposed
+ *  to the Workstation chrome via `registerExport` (top-bar Export menu +
+ *  status-bar quick buttons), same as the QR preview.
  *  Scannability is NOT re-verified here — the card embeds the same code shown in
  *  the QR preview (whose badge is the source of truth); rasterising the small
  *  card QR through jsQR produced false "may not scan" warnings. */
-export function CardPreview() {
+export function CardPreview({ registerExport }: { registerExport?: (api: ExportApi) => void } = {}) {
   const { cfg, update } = useGen();
   const { hasData, twoSided, baseName, out } = useMemo(() => buildCardArtifacts(cfg), [cfg]);
   const svg = out?.preview ?? '';
@@ -48,32 +52,56 @@ export function CardPreview() {
     }
   };
 
+  const ready = Boolean(hasData && out);
+  useEffect(() => {
+    registerExport?.({ png: downloadPng, svg: downloadSvg, ready });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, out, registerExport]);
+
   if (!hasData || !svg) {
     return <p className="empty">Fill in the source details to generate a card.</p>;
   }
 
+  const portrait = cfg.cardOrientation === 'portrait';
+  const sheetCls = 'ws-sheet ws-sheet--card' + (portrait ? ' is-portrait' : '');
+  const imgCls = 'cardx__preview' + (portrait ? ' cardx__preview--portrait' : '');
+  const sides: { svg: string; label: string }[] =
+    twoSided && out
+      ? [
+          { svg: out.front, label: 'Front' },
+          { svg: out.back, label: 'Back' },
+        ]
+      : [{ svg, label: '' }];
+
   return (
     <>
-      <img
-        className={'cardx__preview' + (cfg.cardOrientation === 'portrait' ? ' cardx__preview--portrait' : '')}
-        src={`data:image/svg+xml;utf8,${encodeURIComponent(svg)}`}
-        alt="Visiting card preview"
-      />
-
-      <label className="field field--check card-twoside">
-        <input type="checkbox" checked={cfg.cardTwoSided} onChange={(e) => update({ cardTwoSided: e.target.checked })} />
-        <span className="field__label">Two-sided — <b>QR on the back</b>, logo/watermark on the front</span>
-      </label>
-
-      <div className="downloads">
-        <button className="download" onClick={downloadPng}>Download PNG{twoSided && ' ×2'}</button>
-        <button className="download download--alt" onClick={downloadSvg}>Download SVG{twoSided && ' ×2'}</button>
+      {/* two-sided: wide landscape cards stack vertically; narrow portrait
+          cards sit side-by-side — whichever keeps both fully in view */}
+      <div className={'ws-duo' + (twoSided && !portrait ? ' ws-duo--stack' : '')}>
+        {sides.map((s) => (
+          <figure className={sheetCls} key={s.label || 'single'}>
+            <img
+              className={imgCls}
+              src={`data:image/svg+xml;utf8,${encodeURIComponent(s.svg)}`}
+              alt={s.label ? `Visiting card — ${s.label.toLowerCase()}` : 'Visiting card preview'}
+            />
+            {s.label && <figcaption className="ws-sheet__cap">{s.label}</figcaption>}
+          </figure>
+        ))}
       </div>
-      <p className="finehint">
+
+      <div className="ws-stage__opts">
+        <Toggle
+          on={cfg.cardTwoSided}
+          label="Two-sided — QR on the back, logo & watermark on the front"
+          onToggle={() => update({ cardTwoSided: !cfg.cardTwoSided })}
+        />
+      </div>
+      <p className="hint">
         {cfg.cardExactQr
-          ? <>This card mirrors your live code — check the <b>QR code</b> preview’s scannability badge.</>
-          : <>The card’s QR uses a clean colour/shape style so it always scans.</>}
-        {twoSided && <> Two-sided downloads as <b>two files</b> — <code>-front</code> and <code>-back</code>.</>}
+          ? 'Mirrors your live code — scannability is verified on the QR view.'
+          : 'The card’s QR uses a clean colour/shape style so it always scans.'}
+        {twoSided && ' Exports as two files: -front and -back.'}
       </p>
     </>
   );

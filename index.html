@@ -3,42 +3,50 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>QR Studio — image-styled, verified-scannable QR codes</title>
+    <title>QR Studio — Free QR Code Generator, Styled & Verified Scannable</title>
     <meta
       name="description"
-      content="Free, in-browser generator for scannable QR codes — links, UPI, Wi-Fi, vCards and more. Style them with your brand colour or your image, and verify they scan before you download. Nothing is uploaded."
+      content="Create QR codes for links, UPI, Wi-Fi, vCards and more — style them with your brand colour or image, verify they scan, and download PNG/SVG. Free, private, runs entirely in your browser."
     />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://theqr.studio/" />
     <meta name="theme-color" content="#f4f1ea" />
-    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="icon" type="image/png" href="favicon.png" />
 
-    <!-- Type: Space Grotesk (display) + Newsreader (editorial accent).
-         Loaded non-render-blocking — text paints immediately in the system-font
-         fallback (see --font-* in CSS) and swaps in when the webfont arrives, so
-         a slow or offline network never blocks or hides content. -->
+    <!-- Type: Inter for everything (display + UI). Loaded non-render-blocking —
+         text paints immediately in the system-font fallback (see --font-* in
+         CSS) and swaps in when the webfont arrives, so a slow or offline network
+         never blocks or hides content. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
       media="print"
       onload="this.media='all'"
     />
     <noscript>
       <link
         rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,500&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
       />
     </noscript>
 
-    <!-- Social cards -->
+    <!-- Social cards. This static shell is the pre-hydration fallback for '/' —
+         once scripts/prerender.mjs runs, each route gets its own static HTML
+         with route-specific tags; src/seo/head.ts also keeps these in sync
+         client-side as the router navigates. -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="QR Studio — QR codes that look like your brand and actually scan" />
+    <meta property="og:site_name" content="QR Studio" />
+    <meta property="og:url" content="https://theqr.studio/" />
+    <meta property="og:title" content="QR Studio — Free QR Code Generator, Styled & Verified Scannable" />
     <meta
       property="og:description"
-      content="Free, in-browser QR generator. Style codes with your colour or image, verify they scan, export PNG & SVG. Nothing uploaded."
+      content="Create QR codes for links, UPI, Wi-Fi, vCards and more — style them with your brand colour or image, verify they scan, and download PNG/SVG. Free, private, runs entirely in your browser."
     />
-    <meta property="og:image" content="favicon.svg" />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:image" content="https://theqr.studio/og-image.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://theqr.studio/og-image.png" />
   </head>
   <body>
     <script>
