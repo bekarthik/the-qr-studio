@@ -54,9 +54,8 @@ export function Workstation() {
   const isCard = output === 'card';
 
   return (
-    <section className="ws" id="app">
-      <div className={'ws-window' + (full ? ' is-full' : '')}>
-        <div className="ws-bar">
+    <div className={'ws-window' + (full ? ' is-full' : '')} id="app">
+      <div className="ws-bar">
           <span className="ws-mark" aria-hidden="true">
             <span />
           </span>
@@ -133,6 +132,5 @@ export function Workstation() {
           </aside>
         </div>
       </div>
-    </section>
   );
 }
