@@ -8,7 +8,7 @@ import { renderQR } from '../qr/render';
 import { renderSVG } from '../qr/svg';
 
 const RES = 1600;
-type BadgeState = 'hidden' | 'checking' | 'ok' | 'fail';
+export type BadgeState = 'hidden' | 'checking' | 'ok' | 'fail';
 
 interface Snapshot {
   matrix: QrMatrix;
@@ -84,7 +84,7 @@ function message(holder: HTMLElement, text: string, isErr: boolean, detail?: str
   holder.replaceChildren(d);
 }
 
-export function Preview() {
+export function Preview({ onStatus }: { onStatus?: (s: BadgeState) => void } = {}) {
   const { cfg, update } = useGen();
   const holder = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -92,6 +92,11 @@ export function Preview() {
   const [badge, setBadge] = useState<BadgeState>('hidden');
   const [hint, setHint] = useState('');
   const [ready, setReady] = useState(false);
+
+  // Report verify state up so the Workstation bar can mirror it.
+  useEffect(() => {
+    onStatus?.(badge);
+  }, [badge, onStatus]);
 
   useEffect(() => {
     const h = holder.current;

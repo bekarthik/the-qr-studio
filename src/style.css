@@ -2004,19 +2004,15 @@ h3 {
 }
 
 /* ============================================================ workstation ===
-   The three-pane studio shell. Panes reuse the existing component classes
-   (.picker, .form, .field, .grid2, .preview, .downloads, …) so only the outer
-   frame is styled here. Colours come from theme tokens, so it themes with the
-   rest of the site (Linen / Graphite / Midnight). */
-.ws {
-  max-width: var(--maxw);
-  margin: 0 auto;
-  padding: 8px 24px 70px;
-  scroll-margin-top: 72px;
-}
+   Three-pane studio styled to the "previewinter" design, on the app's theme
+   tokens so it follows Linen (light) / Midnight (dark). The functional
+   controls (StudioSource, StudioStyle, Preview) render into these shells. */
 .ws-window {
+  position: relative;
+  margin-top: 26px;
+  scroll-margin-top: 80px;
   border: 1px solid var(--line-2);
-  border-radius: 18px;
+  border-radius: 16px;
   overflow: hidden;
   background: var(--paper-2);
   box-shadow: var(--shadow-2);
@@ -2024,26 +2020,26 @@ h3 {
 
 /* top bar */
 .ws-bar {
+  height: 48px;
   display: flex;
   align-items: center;
   gap: 11px;
-  height: 54px;
   padding: 0 14px;
   background: var(--paper);
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--line-2);
 }
 .ws-mark {
-  width: 24px;
-  height: 24px;
-  border-radius: 7px;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
   background: var(--ink);
   display: grid;
   place-items: center;
   flex: 0 0 auto;
 }
 .ws-mark span {
-  width: 9px;
-  height: 9px;
+  width: 8px;
+  height: 8px;
   border-radius: 2px;
   background: var(--accent);
 }
@@ -2051,9 +2047,8 @@ h3 {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 12.5px;
   color: var(--ink-2);
-  font-weight: 500;
 }
 .ws-file__dot {
   width: 6px;
@@ -2061,116 +2056,509 @@ h3 {
   border-radius: 50%;
   background: var(--ok);
 }
-.ws-bar__actions {
+.ws-vchip {
   margin-left: auto;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-}
-.ws-open-btn {
-  font-family: var(--font-display);
-  font-size: 13px;
+  gap: 7px;
+  font-size: 11.5px;
   font-weight: 600;
-  color: var(--on-accent, #fff);
-  background: var(--accent);
-  border: 1px solid transparent;
-  border-radius: 9px;
-  padding: 8px 14px;
-  cursor: pointer;
-  transition: filter 0.14s ease;
+  border-radius: 999px;
+  padding: 5px 10px;
+  color: var(--ok);
+  background: var(--ok-soft);
+  border: 1px solid color-mix(in srgb, var(--ok) 45%, transparent);
 }
-.ws-open-btn:hover {
+.ws-vchip--wait {
+  color: var(--ink-2);
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+  border-color: var(--line-2);
+}
+.ws-vchip--fail {
+  color: var(--bad);
+  background: var(--bad-soft);
+  border-color: color-mix(in srgb, var(--bad) 45%, transparent);
+}
+.ws-vchip .t {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: currentColor;
+  display: grid;
+  place-items: center;
+}
+.ws-vchip .t::after {
+  content: '';
+  width: 5px;
+  height: 3px;
+  border-left: 1.4px solid var(--paper-2);
+  border-bottom: 1.4px solid var(--paper-2);
+  transform: translateY(-1px) rotate(-45deg);
+}
+.ws-icon {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--line-2);
+  background: var(--paper-2);
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  color: var(--ink-2);
+  font-size: 15px;
+  cursor: pointer;
+}
+.ws-icon:hover {
+  color: var(--ink);
+  border-color: var(--ink-soft);
+}
+.ws-exp {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--on-accent);
+  background: var(--accent);
+  border: 0;
+  border-radius: 7px;
+  padding: 7px 13px;
+  cursor: pointer;
+}
+.ws-exp:hover {
   filter: brightness(1.08);
 }
 
 /* body — three panes */
 .ws-body {
-  display: grid;
-  grid-template-columns: 300px minmax(0, 1fr) 320px;
-  min-height: 560px;
+  display: flex;
+  height: 540px;
 }
 .ws-pane {
-  padding: 16px 16px 22px;
+  width: 268px;
+  flex: 0 0 268px;
   overflow-y: auto;
+  background: var(--paper-2);
 }
 .ws-pane--l {
-  border-right: 1px solid var(--line);
+  border-right: 1px solid var(--line-2);
 }
 .ws-pane--r {
-  border-left: 1px solid var(--line);
+  border-left: 1px solid var(--line-2);
 }
 .ws-sec {
-  padding: 14px 0;
-  border-top: 1px solid var(--line);
-}
-.ws-sec:first-child {
-  padding-top: 4px;
-  border-top: 0;
+  border-bottom: 1px solid var(--line);
+  padding: 14px 15px;
 }
 .ws-sec__h {
-  margin: 0 0 12px;
-  font-size: 11px;
+  margin: 0 0 11px;
+  font-size: 10.5px;
   font-weight: 700;
-  letter-spacing: 0.09em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ink-soft);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
-.ws-sec__opt {
+.ws-sec__h span {
+  color: var(--ink-soft);
   font-weight: 500;
   letter-spacing: 0.02em;
   text-transform: none;
+}
+
+/* fields (own + reused SourceForm .field) */
+.ws-field {
+  margin-top: 11px;
+}
+.ws-field:first-child {
+  margin-top: 0;
+}
+.ws-field > label,
+.ws-pane .field > .field__label,
+.ws-pane .field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--ink-soft);
-  opacity: 0.8;
+  margin-bottom: 6px;
+}
+.ws-inp,
+.ws-pane .field input[type='text'],
+.ws-pane .field input[type='url'],
+.ws-pane .field input:not([type]),
+.ws-pane .field textarea,
+.ws-pane .field select {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  background: var(--paper-2);
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--ink);
+}
+.ws-pane .field {
+  margin-top: 11px;
+}
+.ws-pane .form__note {
+  font-size: 11px;
+  color: var(--ink-soft);
+  margin: 10px 0 0;
+  line-height: 1.5;
+}
+
+/* category grid */
+.ws-cats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.ws-cat {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-2);
+  background: var(--paper-2);
+  border: 1px solid var(--line-2);
+  border-radius: 7px;
+  padding: 8px 3px;
+  text-align: center;
+  cursor: pointer;
+}
+.ws-cat:hover {
+  border-color: var(--ink-soft);
+}
+.ws-cat.on {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: transparent;
+}
+
+/* segmented controls */
+.ws-seg {
+  display: flex;
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--paper-2);
+}
+.ws-seg button {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  border: 0;
+  border-right: 1px solid var(--line-2);
+  background: transparent;
+  color: var(--ink-2);
+  padding: 7px 3px;
+  cursor: pointer;
+}
+.ws-seg button:last-child {
+  border-right: 0;
+}
+.ws-seg button:hover {
+  color: var(--ink);
+}
+.ws-seg button.on {
+  background: var(--ink);
+  color: var(--paper-2);
+}
+.ws-seg button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ink swatches */
+.ws-inks {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+.ws-sw {
+  width: 23px;
+  height: 23px;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+}
+.ws-sw.on {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 2px var(--paper-2), 0 0 0 3px var(--ink);
+}
+.ws-sw.add {
+  position: relative;
+  background: var(--paper-2);
+  border: 1px dashed var(--line-2);
+  display: grid;
+  place-items: center;
+  color: var(--ink-soft);
+  font-size: 13px;
+  overflow: hidden;
+}
+.ws-sw.add input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* image-feature buttons */
+.ws-imgrow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+}
+.ws-imgbtn {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  background: var(--paper-2);
+  border: 1px solid var(--line-2);
+  border-radius: 7px;
+  padding: 9px 3px;
+  text-align: center;
+  cursor: pointer;
+}
+.ws-imgbtn.on {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: transparent;
+}
+
+/* toggle row */
+.ws-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--ink-2);
+  cursor: pointer;
+  margin-top: 11px;
+}
+.ws-swt {
+  width: 32px;
+  height: 19px;
+  border-radius: 999px;
+  background: var(--line-2);
+  position: relative;
+  flex: 0 0 auto;
+  transition: background 0.15s;
+}
+.ws-swt::after {
+  content: '';
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--paper-2);
+  top: 3px;
+  left: 3px;
+  transition: left 0.15s;
+}
+.ws-swt.on {
+  background: var(--ok);
+}
+.ws-swt.on::after {
+  left: 16px;
+}
+
+/* range in a ws field */
+.ws-field input[type='range'] {
+  width: 100%;
+  accent-color: var(--accent);
 }
 
 /* centre — canvas */
 .ws-canvas {
+  flex: 1;
   display: flex;
   flex-direction: column;
   min-width: 0;
   background-color: var(--bg);
-  background-image: radial-gradient(var(--bg-dot) 1px, transparent 1.5px);
+  background-image: radial-gradient(var(--bg-dot) 1px, transparent 1.4px);
   background-size: 20px 20px;
 }
 .ws-cbar {
+  height: 40px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 11px 16px;
+  gap: 10px;
+  padding: 0 14px;
   border-bottom: 1px solid var(--line);
 }
-.ws-live {
-  margin-left: auto;
-  font-size: 12px;
-  color: var(--ink-soft);
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
+.ws-tabs {
+  display: flex;
+  gap: 2px;
+  background: var(--paper-2);
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  padding: 3px;
 }
-.ws-live::before {
-  content: '';
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--ok);
+.ws-tabs button {
+  font-family: var(--font-display);
+  font-size: 11.5px;
+  font-weight: 600;
+  border: 0;
+  background: transparent;
+  color: var(--ink-2);
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.ws-tabs button.on {
+  background: var(--ink);
+  color: var(--paper-2);
+}
+.ws-zoom {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--ink-soft);
+  background: var(--paper-2);
+  border: 1px solid var(--line-2);
+  border-radius: 7px;
+  padding: 4px 9px;
 }
 .ws-stage {
   flex: 1;
   min-height: 0;
-  padding: 24px;
   overflow-y: auto;
+  padding: 22px;
   display: flex;
   flex-direction: column;
+  align-items: center;
 }
 
-/* full-window overlay (plain fixed cover — not the Fullscreen API) */
+/* status bar */
+.ws-status {
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 15px;
+  background: var(--paper);
+  border-top: 1px solid var(--line-2);
+  font-size: 11px;
+  color: var(--ink-2);
+  flex-wrap: wrap;
+}
+.ws-status__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ok);
+}
+.ws-status__spec {
+  font-family: var(--font-mono);
+  color: var(--ink-soft);
+}
+.ws-status__actions {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+}
+
+/* reused Preview inside the stage */
+.ws-stage .preview {
+  width: 100%;
+  max-width: 320px;
+}
+.ws-stage .qr {
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid var(--line-2);
+  box-shadow: var(--shadow-1);
+}
+.ws-stage .empty {
+  min-height: 240px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 13px;
+  background: #fff;
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  padding: 20px;
+}
+.ws-stage .badge {
+  margin-top: 12px;
+  width: 100%;
+  max-width: 320px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.ws-stage .badge--ok {
+  color: var(--ok);
+  background: var(--ok-soft);
+}
+.ws-stage .badge--fail {
+  color: var(--bad);
+  background: var(--bad-soft);
+}
+.ws-stage .badge--checking {
+  color: var(--ink-2);
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+}
+.ws-stage .verify-mode {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.ws-stage .hint,
+.ws-stage .finehint {
+  font-size: 11px;
+  color: var(--ink-soft);
+  text-align: center;
+  max-width: 340px;
+  line-height: 1.5;
+  margin-top: 10px;
+}
+.ws-stage .downloads {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  width: 100%;
+  max-width: 320px;
+}
+.ws-stage .download {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 10px;
+  border-radius: 9px;
+  border: 1.5px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper-2);
+  cursor: pointer;
+}
+.ws-stage .download--alt {
+  background: transparent;
+  color: var(--ink);
+}
+.ws-stage .download:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* full-window overlay (rendered in a portal on <body>, so no stacking trap) */
 body.ws-open {
   overflow: hidden;
 }
 .ws-window.is-full {
   position: fixed;
   inset: 0;
-  z-index: 200;
+  z-index: 1000;
   margin: 0;
   border: 0;
   border-radius: 0;
@@ -2179,45 +2567,32 @@ body.ws-open {
   flex-direction: column;
 }
 .ws-window.is-full .ws-body {
+  height: auto;
   flex: 1;
   min-height: 0;
 }
-
-/* nav "Open studio" pill */
-.nav__studio {
-  font-family: var(--font-display);
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--on-accent, #fff);
-  background: var(--accent);
-  border: 1px solid transparent;
-  border-radius: 999px;
-  padding: 8px 15px;
-  cursor: pointer;
-  box-shadow: var(--shadow-1);
-  transition: filter 0.14s ease, transform 0.14s ease;
-}
-.nav__studio:hover {
-  filter: brightness(1.08);
-  transform: translateY(-1px);
+.ws-window.is-full .ws-pane {
+  width: 300px;
+  flex: 0 0 300px;
 }
 
-@media (max-width: 940px) {
+@media (max-width: 900px) {
   .ws-body {
-    grid-template-columns: 1fr;
+    height: auto;
+    flex-direction: column;
   }
-  .ws-pane--l,
-  .ws-pane--r {
-    border-left: 0;
+  .ws-pane,
+  .ws-window.is-full .ws-pane {
+    width: auto;
+    flex: none;
     border-right: 0;
-    border-bottom: 1px solid var(--line);
+    border-left: 0;
+    border-bottom: 1px solid var(--line-2);
   }
   .ws-canvas {
     order: -1;
-    border-bottom: 1px solid var(--line);
-  }
-  .nav__studio {
-    display: none;
+    min-height: 320px;
+    border-bottom: 1px solid var(--line-2);
   }
 }
 
@@ -2803,11 +3178,6 @@ footer {
   z-index: 0;
   pointer-events: none;
   background: radial-gradient(60% 40% at 78% 8%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 60%);
-}
-
-/* the embedded workstation sits inside the studio band's wrap */
-.ws-window {
-  margin-top: 26px;
 }
 
 @media (max-width: 820px) {
