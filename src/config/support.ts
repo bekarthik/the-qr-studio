@@ -20,9 +20,9 @@ export interface SupportMethod {
   hint?: string;
 }
 
-/** Edit these, or set the matching VITE_SUPPORT_* env vars. */
+/** Edit these, or set the matching VITE_SUPPORT_* env vars. Blank = hidden. */
 const HANDLES = {
-  buyMeACoffee: env.VITE_SUPPORT_BMC ?? 'bekarthik', // ← replace with your handle
+  buyMeACoffee: env.VITE_SUPPORT_BMC ?? '',
   kofi: env.VITE_SUPPORT_KOFI ?? '',
   githubSponsors: env.VITE_SUPPORT_GITHUB ?? '',
   paypal: env.VITE_SUPPORT_PAYPAL ?? '',
