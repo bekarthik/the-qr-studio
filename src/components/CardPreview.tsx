@@ -62,14 +62,30 @@ export function CardPreview({ registerExport }: { registerExport?: (api: ExportA
     return <p className="empty">Fill in the source details to generate a card.</p>;
   }
 
+  const portrait = cfg.cardOrientation === 'portrait';
+  const sheetCls = 'ws-sheet ws-sheet--card' + (portrait ? ' is-portrait' : '');
+  const imgCls = 'cardx__preview' + (portrait ? ' cardx__preview--portrait' : '');
+  const sides: { svg: string; label: string }[] =
+    twoSided && out
+      ? [
+          { svg: out.front, label: 'Front' },
+          { svg: out.back, label: 'Back' },
+        ]
+      : [{ svg, label: '' }];
+
   return (
     <>
-      <div className="ws-sheet ws-sheet--card">
-        <img
-          className={'cardx__preview' + (cfg.cardOrientation === 'portrait' ? ' cardx__preview--portrait' : '')}
-          src={`data:image/svg+xml;utf8,${encodeURIComponent(svg)}`}
-          alt="Visiting card preview"
-        />
+      <div className="ws-duo">
+        {sides.map((s) => (
+          <figure className={sheetCls} key={s.label || 'single'}>
+            <img
+              className={imgCls}
+              src={`data:image/svg+xml;utf8,${encodeURIComponent(s.svg)}`}
+              alt={s.label ? `Visiting card — ${s.label.toLowerCase()}` : 'Visiting card preview'}
+            />
+            {s.label && <figcaption className="ws-sheet__cap">{s.label}</figcaption>}
+          </figure>
+        ))}
       </div>
 
       <div className="ws-stage__opts">

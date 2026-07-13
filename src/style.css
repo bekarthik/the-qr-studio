@@ -2329,13 +2329,30 @@ h3 {
 
 /* toggle row */
 .ws-toggle {
+  /* full button reset — it's a <button>, and UA border/background made it
+     render as a boxed pill with the switch jammed against the edge */
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  width: 100%;
+  font-family: inherit;
+  text-align: left;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   font-size: 12px;
   color: var(--ink-2);
   cursor: pointer;
   margin-top: 11px;
+}
+.ws-toggle > span:first-child {
+  flex: 1;
+  line-height: 1.4;
+}
+.ws-toggle:hover {
+  color: var(--ink);
 }
 .ws-swt {
   width: 32px;
@@ -3676,24 +3693,47 @@ footer {
   font-size: 12px;
 }
 
-/* status bar: quick export actions on the right */
-.ws-status__actions button {
-  font-family: var(--font-display);
-  font-size: 10.5px;
-  font-weight: 700;
-  border: 1px solid var(--line-2);
-  background: var(--paper-2);
-  color: var(--ink);
-  border-radius: 6px;
-  padding: 5px 11px;
-  cursor: pointer;
+
+/* ---- workstation v2.1: portrait sizing, side-by-side two-sided ------------- */
+/* the artwork row: one sheet, or front+back side-by-side (wraps when narrow) */
+.ws-duo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  max-width: 100%;
 }
-.ws-status__actions button.p {
-  background: var(--ink);
-  color: var(--paper-2);
-  border-color: var(--ink);
+/* portrait cards get a narrower sheet so 100% fits the stage; zoom still
+   scales the sheet, and the image always fills the sheet width */
+.ws-stage .ws-sheet--card.is-portrait {
+  width: calc(250px * var(--zoom, 1));
 }
-.ws-status__actions button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
+.ws-duo .ws-sheet--card {
+  width: calc(290px * var(--zoom, 1));
+}
+.ws-duo .ws-sheet--card.is-portrait {
+  width: calc(225px * var(--zoom, 1));
+}
+/* defuse the page-level portrait rule (width:auto + max-height:56vh) that let
+   the SVG render at its intrinsic pixel size and ignore zoom */
+.ws-stage .cardx__preview,
+.ws-stage .cardx__preview--portrait {
+  width: 100%;
+  height: auto;
+  max-height: none;
+}
+/* <figure> sheets: strip the UA 40px side margins that forced wrapping */
+figure.ws-sheet {
+  margin: 14px 0 0;
+}
+
+.ws-sheet__cap {
+  margin: 10px 0 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--ink-soft);
 }

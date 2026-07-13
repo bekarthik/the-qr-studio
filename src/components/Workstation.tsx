@@ -220,14 +220,6 @@ export function Workstation() {
         <span className="ws-status__spec">
           ECC {ecc} · decoded in-browser{isCard ? '' : ' · PNG 1600 px · SVG vector'}
         </span>
-        <span className="ws-status__actions">
-          <button type="button" disabled={!canExport} onClick={() => runExport('png')} title="Download PNG">
-            PNG
-          </button>
-          <button type="button" className="p" disabled={!canExport} onClick={() => runExport('svg')} title="Download SVG">
-            SVG
-          </button>
-        </span>
       </div>
     </div>
   );
