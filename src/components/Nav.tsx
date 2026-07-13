@@ -1,5 +1,8 @@
 import { SupportButton } from './Support';
 import { ThemeToggle } from './ThemeToggle';
+import { OPEN_STUDIO_EVENT } from './Workstation';
+
+const openStudio = () => window.dispatchEvent(new CustomEvent(OPEN_STUDIO_EVENT));
 
 export function Nav() {
   return (
@@ -14,6 +17,9 @@ export function Nav() {
           <a href="#app">Generator</a>
           <ThemeToggle />
           <SupportButton className="nav__support">☕ Support</SupportButton>
+          <button type="button" className="nav__studio" onClick={openStudio}>
+            ⤢ Open studio
+          </button>
         </nav>
       </div>
     </header>

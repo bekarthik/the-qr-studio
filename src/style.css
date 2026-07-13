@@ -34,9 +34,9 @@
   --inset: inset 0 1px 1px rgba(20, 22, 28, 0.04);
   --maxw: 1140px;
 
-  --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
-  --font-serif: 'Newsreader', Georgia, 'Times New Roman', serif;
-  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace;
 }
 
@@ -62,26 +62,26 @@
   --bad-soft: #fce5e3;
 }
 
-/* "Midnight" — Apple dark mode. */
+/* "Midnight" — neutral near-black dark, tuned to the collage tones. */
 [data-theme='midnight'] {
   color-scheme: dark;
-  --bg: #0e1118;
-  --bg-dot: rgba(255, 255, 255, 0.04);
-  --paper: #171c27;
-  --paper-2: #1c2230;
-  --paper-3: #252c3c;
-  --ink: #eef1f7;
-  --ink-2: #b3bccb;
-  --ink-soft: #8b94a4;
+  --bg: #0c0b0f;
+  --bg-dot: rgba(255, 255, 255, 0.045);
+  --paper: #141216;
+  --paper-2: #17161b;
+  --paper-3: #201e25;
+  --ink: #f4f0e8;
+  --ink-2: #a9a39a;
+  --ink-soft: #6d6860;
   --line: rgba(255, 255, 255, 0.08);
   --line-2: rgba(255, 255, 255, 0.14);
-  --accent: #ff6a42;
+  --accent: #ff6b34;
   --accent-2: #ff855f;
-  --accent-soft: rgba(255, 106, 66, 0.16);
+  --accent-soft: rgba(255, 107, 52, 0.16);
   --on-accent: #14100c;
   --ring: color-mix(in srgb, var(--accent) 42%, transparent);
-  --ok: #34d17e;
-  --ok-soft: rgba(52, 209, 126, 0.16);
+  --ok: #3bd98a;
+  --ok-soft: rgba(59, 217, 138, 0.15);
   --bad: #ff6b5e;
   --bad-soft: rgba(255, 107, 94, 0.16);
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
@@ -332,18 +332,16 @@ h3 {
 }
 .hero__title {
   margin: 0 0 20px;
-  font-size: clamp(33px, 5.6vw, 58px);
-  line-height: 1.04;
-  font-weight: 600;
-  letter-spacing: -0.025em;
+  font-size: clamp(36px, 6vw, 66px);
+  line-height: 1.02;
+  font-weight: 800;
+  letter-spacing: -0.03em;
 }
 .hero__title .grad {
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-weight: 500;
-  letter-spacing: 0;
+  font-weight: 800;
+  letter-spacing: -0.03em;
   color: var(--ink);
-  background: linear-gradient(transparent 76%, rgba(224, 82, 46, 0.32) 0);
+  background: linear-gradient(transparent 74%, color-mix(in srgb, var(--accent) 34%, transparent) 0);
 }
 .hero__sub {
   margin: 0 auto;
@@ -1994,5 +1992,223 @@ h3 {
   .geo__grid,
   .geo-howto ol {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================ workstation ===
+   The three-pane studio shell. Panes reuse the existing component classes
+   (.picker, .form, .field, .grid2, .preview, .downloads, …) so only the outer
+   frame is styled here. Colours come from theme tokens, so it themes with the
+   rest of the site (Linen / Graphite / Midnight). */
+.ws {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 8px 24px 70px;
+  scroll-margin-top: 72px;
+}
+.ws-window {
+  border: 1px solid var(--line-2);
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--paper-2);
+  box-shadow: var(--shadow-2);
+}
+
+/* top bar */
+.ws-bar {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  height: 54px;
+  padding: 0 14px;
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
+}
+.ws-mark {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: var(--ink);
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+.ws-mark span {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+.ws-file {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-2);
+  font-weight: 500;
+}
+.ws-file__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ok);
+}
+.ws-bar__actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ws-open-btn {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--on-accent, #fff);
+  background: var(--accent);
+  border: 1px solid transparent;
+  border-radius: 9px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: filter 0.14s ease;
+}
+.ws-open-btn:hover {
+  filter: brightness(1.08);
+}
+
+/* body — three panes */
+.ws-body {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr) 320px;
+  min-height: 560px;
+}
+.ws-pane {
+  padding: 16px 16px 22px;
+  overflow-y: auto;
+}
+.ws-pane--l {
+  border-right: 1px solid var(--line);
+}
+.ws-pane--r {
+  border-left: 1px solid var(--line);
+}
+.ws-sec {
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+}
+.ws-sec:first-child {
+  padding-top: 4px;
+  border-top: 0;
+}
+.ws-sec__h {
+  margin: 0 0 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.ws-sec__opt {
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--ink-soft);
+  opacity: 0.8;
+}
+
+/* centre — canvas */
+.ws-canvas {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background-color: var(--bg);
+  background-image: radial-gradient(var(--bg-dot) 1px, transparent 1.5px);
+  background-size: 20px 20px;
+}
+.ws-cbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.ws-live {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--ink-soft);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.ws-live::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ok);
+}
+.ws-stage {
+  flex: 1;
+  min-height: 0;
+  padding: 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* full-window overlay (plain fixed cover — not the Fullscreen API) */
+body.ws-open {
+  overflow: hidden;
+}
+.ws-window.is-full {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+}
+.ws-window.is-full .ws-body {
+  flex: 1;
+  min-height: 0;
+}
+
+/* nav "Open studio" pill */
+.nav__studio {
+  font-family: var(--font-display);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--on-accent, #fff);
+  background: var(--accent);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 8px 15px;
+  cursor: pointer;
+  box-shadow: var(--shadow-1);
+  transition: filter 0.14s ease, transform 0.14s ease;
+}
+.nav__studio:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 940px) {
+  .ws-body {
+    grid-template-columns: 1fr;
+  }
+  .ws-pane--l,
+  .ws-pane--r {
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .ws-canvas {
+    order: -1;
+    border-bottom: 1px solid var(--line);
+  }
+  .nav__studio {
+    display: none;
   }
 }

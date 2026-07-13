@@ -8,7 +8,7 @@ const LS = 'qrstudio.theme';
 const THEMES: { id: Theme; label: string; bg: string; accent: string }[] = [
   { id: 'linen', label: 'Linen — warm light', bg: '#f5f2ec', accent: '#e85431' },
   { id: 'graphite', label: 'Graphite — cool light', bg: '#eef0f3', accent: '#ff5a36' },
-  { id: 'midnight', label: 'Midnight — dark', bg: '#1b2230', accent: '#ff6a42' },
+  { id: 'midnight', label: 'Midnight — dark', bg: '#141216', accent: '#ff6b34' },
 ];
 
 function apply(t: Theme) {
