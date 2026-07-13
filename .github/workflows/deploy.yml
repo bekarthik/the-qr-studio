@@ -50,6 +50,10 @@ jobs:
         run: npm run build
         env:
           PRERENDER_REQUIRED: '1'
+          # Contact form (optional): set these repo secrets to enable /contact.
+          # The publishable key is public-by-design; RLS does the enforcement.
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
 
       # Deploy gate: the QR engine must stay green (resvg + jsQR, no browser).
       - name: Verify QR engine (gate)

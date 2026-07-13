@@ -13,6 +13,10 @@ interface ImportMetaEnv {
   readonly VITE_SUPPORT_PAYPAL?: string;
   /** UPI VPA (India) → upi://pay?pa=<vpa> */
   readonly VITE_SUPPORT_UPI?: string;
+  /** Supabase project URL (https://<ref>.supabase.co) for the contact form */
+  readonly VITE_SUPABASE_URL?: string;
+  /** Supabase PUBLISHABLE key (sb_publishable_…) — legacy anon JWTs are rejected */
+  readonly VITE_SUPABASE_PUBLISHABLE_KEY?: string;
 }
 
 interface ImportMeta {

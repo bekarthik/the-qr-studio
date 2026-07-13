@@ -9,9 +9,10 @@ export type JsonLdKind = 'softwareApplication' | 'faqPage' | 'howTo' | 'breadcru
 /**
  * Semantic page category — what a Sightline `<Slot>`/rule set keys off, distinct
  * from `jsonLd` (the concrete schema types emitted). 'home' is the root landing
- * page; 'tool' is a per-use-case generator page.
+ * page; 'tool' is a per-use-case generator page; 'page' is a plain
+ * non-generator page (e.g. /contact).
  */
-export type PageType = 'home' | 'tool';
+export type PageType = 'home' | 'tool' | 'page';
 
 /**
  * One entry per public route. This is the single source of truth consumed by
@@ -414,6 +415,17 @@ export const ROUTES: RouteDef[] = [
       },
     ],
     jsonLd: ['softwareApplication', 'faqPage', 'howTo', 'breadcrumb'],
+  },
+
+  {
+    path: '/contact',
+    pageType: 'page',
+    title: 'Contact QR Studio — Support, Feedback & Business',
+    description:
+      'Get in touch with QR Studio — support questions, bug reports, feature ideas or business enquiries. We read everything and reply by email.',
+    canonical: 'https://theqr.studio/contact',
+    content: [],
+    jsonLd: ['breadcrumb'],
   },
 ];
 

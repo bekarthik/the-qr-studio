@@ -3746,3 +3746,116 @@ figure.ws-sheet {
   text-align: center;
   color: var(--ink-soft);
 }
+
+/* ------------------------------------------------------------- contact --- */
+.contact-card {
+  max-width: 640px;
+  margin-top: 30px;
+  background: var(--paper-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  padding: 26px;
+  box-shadow: var(--shadow-1);
+}
+.contact-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.contact-field {
+  display: block;
+  margin-top: 14px;
+}
+.contact-form__row .contact-field {
+  margin-top: 0;
+}
+.contact-field > span {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+  margin-bottom: 6px;
+}
+.contact-field input,
+.contact-field select,
+.contact-field textarea {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1.5px solid var(--line-2);
+  border-radius: 10px;
+  background: var(--paper-2);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--ink);
+  resize: vertical;
+}
+.contact-field input:focus-visible,
+.contact-field select:focus-visible,
+.contact-field textarea:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--ring);
+}
+/* honeypot: visually removed, still in the DOM for bots */
+.contact-trap {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.contact-problem {
+  margin: 14px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--bad);
+  background: var(--bad-soft);
+  border-radius: 8px;
+  padding: 9px 12px;
+}
+.contact-form__foot {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+.contact-form__foot .btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+.contact-done {
+  text-align: center;
+  padding: 26px 10px;
+}
+.contact-done__mark {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--ok);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+.contact-done h3 {
+  margin: 0 0 8px;
+  font-size: 1.3rem;
+}
+.contact-done p {
+  margin: 0;
+  color: var(--ink-2);
+}
+@media (max-width: 560px) {
+  .contact-form__row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .contact-form__row .contact-field + .contact-field {
+    margin-top: 14px;
+  }
+}
