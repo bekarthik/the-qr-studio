@@ -151,8 +151,7 @@ export function ContactPage({ route }: { route: RouteDef }) {
                   )}
                   {!contactConfigured && (
                     <p className="contact-problem">
-                      The contact form isn't configured on this deployment yet (missing Supabase
-                      settings) — submissions are disabled.
+                      The contact form isn't configured yet — submissions are disabled.
                     </p>
                   )}
 

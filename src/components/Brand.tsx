@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 /** The QR Studio brand mark — the faceted-red logo (public/logo.png, trimmed,
  *  transparent background so it sits on both Linen and Midnight). */
 export function BrandMark({ size = 30 }: { size?: number }) {
@@ -6,12 +8,19 @@ export function BrandMark({ size = 30 }: { size?: number }) {
 }
 
 export function Brand({ size = 30 }: { size?: number }) {
+  // A router Link so it actually navigates home from sub-pages (/contact),
+  // not just scrolls the current page. On the home page it scrolls to the top.
   return (
-    <a className="brand" href="#top" aria-label="QR Studio — home">
+    <Link
+      className="brand"
+      to="/"
+      aria-label="QR Studio — home"
+      onClick={() => window.scrollTo({ top: 0 })}
+    >
       <BrandMark size={size} />
       <span className="wm">
         QR<b>studio</b>
       </span>
-    </a>
+    </Link>
   );
 }
