@@ -78,7 +78,7 @@ export function ContentBlocks({ blocks }: { blocks: ContentBlock[] }) {
           case 'faq':
             return (
               <div className="geo-faq" key={i}>
-                <h2>{block.heading ?? 'Frequently asked questions'}</h2>
+                {block.heading && <h2>{block.heading}</h2>}
                 <div className="geo-faq__list">
                   {block.items.map((item, j) => (
                     <div className="geo-faq__item" key={j}>
