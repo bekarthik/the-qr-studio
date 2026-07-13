@@ -14,20 +14,45 @@ import { createServer } from 'node:http';
 import { existsSync, readdirSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { extname, join, dirname } from 'node:path';
+import { homedir } from 'node:os';
+import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 import { ROUTES } from '../src/seo/routes.ts';
 
-const DIST = new URL('../dist/', import.meta.url).pathname;
+// fileURLToPath, not URL.pathname — the latter yields broken "/C:/…" strings
+// on Windows.
+const DIST = fileURLToPath(new URL('../dist/', import.meta.url));
+
+/** Chromium exe layout inside a chromium-<rev> folder, per platform. */
+const EXE_SUBPATHS =
+  process.platform === 'win32'
+    ? [join('chrome-win', 'chrome.exe'), join('chrome-win64', 'chrome.exe')]
+    : process.platform === 'darwin'
+      ? [join('chrome-mac', 'Chromium.app', 'Contents', 'MacOS', 'Chromium')]
+      : [join('chrome-linux', 'chrome')];
+
+/** Where `npx playwright install chromium` puts browsers by default. */
+function defaultBrowserRoots() {
+  if (process.platform === 'win32') return [join(process.env.LOCALAPPDATA || join(homedir(), 'AppData', 'Local'), 'ms-playwright')];
+  if (process.platform === 'darwin') return [join(homedir(), 'Library', 'Caches', 'ms-playwright')];
+  return [join(homedir(), '.cache', 'ms-playwright'), '/opt/pw-browsers'];
+}
 
 function findChromium() {
   const envPath = process.env.PLAYWRIGHT_CHROMIUM_PATH;
   if (envPath && existsSync(envPath)) return envPath;
-  const browsersRoot = process.env.PLAYWRIGHT_BROWSERS_PATH || '/opt/pw-browsers';
-  if (!existsSync(browsersRoot)) return null;
-  const dirs = readdirSync(browsersRoot).filter((d) => d.startsWith('chromium-') && !d.includes('headless_shell'));
-  for (const d of dirs) {
-    const exe = join(browsersRoot, d, 'chrome-linux', 'chrome');
-    if (existsSync(exe)) return exe;
+  const roots = process.env.PLAYWRIGHT_BROWSERS_PATH
+    ? [process.env.PLAYWRIGHT_BROWSERS_PATH]
+    : defaultBrowserRoots();
+  for (const root of roots) {
+    if (!existsSync(root)) continue;
+    const dirs = readdirSync(root).filter((d) => d.startsWith('chromium-') && !d.includes('headless_shell'));
+    for (const d of dirs) {
+      for (const sub of EXE_SUBPATHS) {
+        const exe = join(root, d, sub);
+        if (existsSync(exe)) return exe;
+      }
+    }
   }
   return null;
 }
