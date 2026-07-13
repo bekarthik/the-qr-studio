@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
-import type { RouteDef } from '../seo/routes';
+import { useEffect, useRef } from 'react';
+import { ROUTES, type RouteDef } from '../seo/routes';
 import { applyRouteHead } from '../seo/head';
-import { GeneratorProvider } from '../state/GeneratorContext';
+import { GeneratorProvider, useGen } from '../state/GeneratorContext';
 import { Nav } from './Nav';
 import { Hero } from './Hero';
 import { Footer } from './Footer';
@@ -48,19 +48,40 @@ export function ToolPage({ route }: { route: RouteDef }) {
         <TypeCards />
         <Features />
 
-        {route.content.length > 0 && (
-          <section id="faq" className="band">
-            <div className="wrap">
-              <span className="kicker">Good to know</span>
-              <h2>Questions, answered.</h2>
-              <ContentBlocks blocks={route.content} />
-            </div>
-          </section>
-        )}
+        <GeoSection route={route} />
 
         <CtaBanner />
       </main>
       <Footer />
     </GeneratorProvider>
+  );
+}
+
+/**
+ * "Questions, answered." — the route's GEO content, following the studio.
+ *
+ * The first render always shows THIS route's own blocks, so the prerendered
+ * HTML (what crawlers read) stays in lockstep with the route's JSON-LD. Once
+ * the user switches the source type in the workstation, the section swaps to
+ * the content of the route dedicated to that type (/upi, /vcard, …) so the
+ * copy always matches what they're building; types without a dedicated page
+ * fall back to this route's blocks.
+ */
+function GeoSection({ route }: { route: RouteDef }) {
+  const { cfg } = useGen();
+  const initialType = useRef(cfg.type);
+  const switched = cfg.type !== initialType.current;
+  const matched = switched ? ROUTES.find((r) => r.pageType === 'tool' && r.preset === cfg.type) : undefined;
+  const blocks = matched?.content ?? route.content;
+
+  if (blocks.length === 0) return null;
+  return (
+    <section id="faq" className="band">
+      <div className="wrap">
+        <span className="kicker">Good to know</span>
+        <h2>Questions, answered.</h2>
+        <ContentBlocks blocks={blocks} />
+      </div>
+    </section>
   );
 }
