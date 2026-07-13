@@ -54,6 +54,15 @@ jobs:
           # The publishable key is public-by-design; RLS does the enforcement.
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          # Support / payment links (optional). VITE_* are inlined at build time,
+          # and the build runs HERE (not on Netlify), so these must be GitHub
+          # secrets/vars — a value set in the Netlify dashboard is never seen.
+          VITE_SUPPORT_BMC: ${{ vars.VITE_SUPPORT_BMC }}
+          VITE_SUPPORT_KOFI: ${{ vars.VITE_SUPPORT_KOFI }}
+          VITE_SUPPORT_GITHUB: ${{ vars.VITE_SUPPORT_GITHUB }}
+          VITE_SUPPORT_PAYPAL: ${{ vars.VITE_SUPPORT_PAYPAL }}
+          VITE_SUPPORT_UPI: ${{ vars.VITE_SUPPORT_UPI }}
+          VITE_SUPPORT_STRIPE_URL: ${{ secrets.VITE_SUPPORT_STRIPE_URL }}
 
       # Deploy gate: the QR engine must stay green (resvg + jsQR, no browser).
       - name: Verify QR engine (gate)
