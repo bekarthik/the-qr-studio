@@ -2,7 +2,7 @@
  * visit. Hashed build assets are immutable, so cache-first is safe; HTML is
  * network-first so a redeploy is picked up while still working offline. Only
  * same-origin GETs are cached (cross-origin fonts fall back to system fonts). */
-const CACHE = 'qrstudio-v1';
+const CACHE = 'qrstudio-v2';
 
 self.addEventListener('install', () => self.skipWaiting());
 
@@ -31,7 +31,7 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE).then((c) => c.put(req, copy));
           return res;
         })
-        .catch(async () => (await caches.match(req)) || (await caches.match('./')) || Response.error()),
+        .catch(async () => (await caches.match(req)) || (await caches.match('/')) || Response.error()),
     );
     return;
   }

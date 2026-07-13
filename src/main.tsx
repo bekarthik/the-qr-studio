@@ -10,10 +10,11 @@ createRoot(document.getElementById('root')!).render(
 );
 
 // Offline support: register the service worker in production builds only
-// (dev relies on Vite HMR). Uses a relative URL so it works from a sub-path.
+// (dev relies on Vite HMR). Absolute path so it registers from any route
+// (e.g. /upi/), matching the root scope it caches for.
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(() => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
       /* offline support is a progressive enhancement — ignore failures */
     });
   });
