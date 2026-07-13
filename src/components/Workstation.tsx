@@ -114,7 +114,7 @@ export function Workstation() {
         </span>
         <span className={'ws-vchip' + chip.cls}>
           <span className="t" />
-          {chip.label}
+          <span className="ws-btn__t">{chip.label}</span>
         </span>
         <div className="ws-bar__actions">
           <ShareButton />
@@ -148,7 +148,7 @@ export function Workstation() {
             onClick={() => setFull((f) => !f)}
             title={full ? 'Return to the page' : 'Expand to the full browser window'}
           >
-            {full ? '✕ Close studio' : '⤢ Open studio'}
+            {full ? '✕' : '⤢'} <span className="ws-btn__t">{full ? 'Close studio' : 'Open studio'}</span>
           </button>
         </div>
       </div>
