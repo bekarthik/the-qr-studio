@@ -3859,3 +3859,14 @@ figure.ws-sheet {
     margin-top: 14px;
   }
 }
+
+/* brand mark image (nav / footer) + workstation bar logo */
+.brand__mark {
+  width: auto;
+  display: block;
+}
+.ws-logo {
+  height: 24px;
+  width: auto;
+  flex: 0 0 auto;
+}

@@ -108,9 +108,7 @@ export function Workstation() {
   const windowEl = (
     <div className={'ws-window' + (full ? ' is-full' : '')} id="app">
       <div className="ws-bar">
-        <span className="ws-mark" aria-hidden="true">
-          <span />
-        </span>
+        <img className="ws-logo" src="/logo.png" alt="" aria-hidden="true" />
         <span className="ws-file">
           <span className="ws-file__dot" /> {cfg.type}.qr
         </span>

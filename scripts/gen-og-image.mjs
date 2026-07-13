@@ -3,30 +3,22 @@
 // (same renderer the verify suites use), so no browser is needed. Re-run this
 // script by hand whenever the brand mark or tagline changes; the output PNG
 // is committed since it's a static, site-wide default.
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { Resvg } from '@resvg/resvg-js';
 
 const W = 1200;
 const H = 630;
 
+// The real brand mark (public/logo.png, 196x235, transparent) embedded as a
+// data URI so resvg can rasterise it without any file resolution.
+const logo = readFileSync(new URL('../public/logo.png', import.meta.url)).toString('base64');
+const LW = 300;
+const LH = Math.round((235 / 196) * LW);
+
 const svg = `
 <svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
   <rect width="${W}" height="${H}" fill="#f5f2ec"/>
-  <g transform="translate(96,135) scale(11.25)">
-    <rect width="32" height="32" rx="7" fill="#e0522e"/>
-    <g fill="#fdfbf6">
-      <path d="M6 6h7v7H6z" fill="none" stroke="#fdfbf6" stroke-width="2"/>
-      <rect x="9" y="9" width="1.5" height="1.5"/>
-      <path d="M19 6h7v7h-7z" fill="none" stroke="#fdfbf6" stroke-width="2"/>
-      <rect x="22" y="9" width="1.5" height="1.5"/>
-      <path d="M6 19h7v7H6z" fill="none" stroke="#fdfbf6" stroke-width="2"/>
-      <rect x="9" y="22" width="1.5" height="1.5"/>
-      <rect x="19" y="19" width="2.5" height="2.5"/>
-      <rect x="23.5" y="19" width="2.5" height="2.5"/>
-      <rect x="19" y="23.5" width="2.5" height="2.5"/>
-      <rect x="23.5" y="23.5" width="2.5" height="2.5"/>
-    </g>
-  </g>
+  <image x="120" y="${(H - LH) / 2}" width="${LW}" height="${LH}" href="data:image/png;base64,${logo}"/>
   <text x="526" y="290" font-family="Liberation Sans, Arial, sans-serif" font-weight="700" font-size="84" fill="#211d18">QR Studio</text>
   <text x="528" y="360" font-family="Liberation Sans, Arial, sans-serif" font-size="34" fill="#574f44">Free, in-browser QR codes —</text>
   <text x="528" y="402" font-family="Liberation Sans, Arial, sans-serif" font-size="34" fill="#574f44">styled with your brand, verified scannable.</text>
