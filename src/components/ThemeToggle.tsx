@@ -43,7 +43,7 @@ export function ThemeToggle() {
       aria-pressed={dark}
       title="Toggle light / dark"
     >
-      {dark ? '☀ Light' : '☾ Dark'}
+      {dark ? '☀' : '☾'} <span className="chip-btn__t">{dark ? 'Light' : 'Dark'}</span>
     </button>
   );
 }

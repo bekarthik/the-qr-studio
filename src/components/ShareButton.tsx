@@ -30,7 +30,7 @@ export function ShareButton() {
       title="Copy a shareable link to this design (images not included)"
       onClick={onClick}
     >
-      {copied ? '✓ Copied' : '🔗 Share'}
+      {copied ? '✓' : '🔗'} <span className="btn-t">{copied ? 'Copied' : 'Share'}</span>
     </button>
   );
 }

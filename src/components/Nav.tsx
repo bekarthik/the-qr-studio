@@ -26,8 +26,10 @@ export function Nav() {
         </nav>
         <div className="nav__tools">
           <ThemeToggle />
-          <SupportButton className="chip-btn">☕ Support</SupportButton>
-          <button type="button" className="btn btn--sm" onClick={openStudio}>
+          <SupportButton className="chip-btn">
+            ☕ <span className="chip-btn__t">Support</span>
+          </SupportButton>
+          <button type="button" className="btn btn--sm nav__studio" onClick={openStudio}>
             Open studio ▸
           </button>
         </div>

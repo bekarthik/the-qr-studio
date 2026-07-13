@@ -13,7 +13,7 @@ export function ResetButton() {
         if (window.confirm('Reset everything to defaults? Your current code and styling will be cleared.')) reset();
       }}
     >
-      ↺ Reset
+      ↺ <span className="btn-t">Reset</span>
     </button>
   );
 }
