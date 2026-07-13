@@ -97,34 +97,39 @@ export function ImageSection() {
     update(patch);
   };
 
-  const roleCheck = (r: (typeof ROLES)[number]) => (
-    <label className="field field--check" key={r.onKey}>
-      <input type="checkbox" checked={cfg[r.onKey]} onChange={(e) => toggleRole(r.onKey, e.target.checked)} />
-      <span className="field__label">
-        <b>{r.label}</b> — <span className="img-role__desc">{r.desc}</span>
-      </span>
-    </label>
+  const roleChips = (
+    <div className="ws-chips" role="group" aria-label="Image roles">
+      {ROLES.map((r) => (
+        <button
+          key={r.onKey}
+          type="button"
+          aria-pressed={cfg[r.onKey]}
+          title={r.desc}
+          className={'ws-chip' + (cfg[r.onKey] ? ' on' : '')}
+          onClick={() => toggleRole(r.onKey, !cfg[r.onKey])}
+        >
+          {r.label}
+        </button>
+      ))}
+    </div>
   );
 
   return (
     <div className="image-block">
       <label className="upload">
         <input type="file" accept="image/*" multiple hidden onChange={onFiles} disabled={busy} />
-        <span className="upload__btn">{images.length ? '＋ Add image(s)' : 'Upload image(s) / logo'}</span>
+        <span className="upload__btn">{images.length ? '＋ Add image(s)' : '⤒ Upload image(s) / logo'}</span>
         {busy && <span className="upload__busy" role="status"><span className="spinner" aria-hidden="true" /> Processing…</span>}
       </label>
 
       {images.length === 0 && (
-        <>
-          <p className="img-hint">Upload an image to use it as a halftone, logo, or watermark. Add several to assign a different image to each.</p>
-          {ROLES.map(roleCheck)}
-        </>
+        <p className="img-hint">Use an image as a halftone, logo or watermark — add several to give each role its own image. Nothing is uploaded anywhere.</p>
       )}
 
       {single && (
         <div className="img-single">
           {tile(0)}
-          <div className="img-single__roles">{ROLES.map(roleCheck)}</div>
+          <div className="img-single__roles">{roleChips}</div>
         </div>
       )}
 

@@ -62,7 +62,7 @@ export function StudioSource() {
 
       <div className="ws-sec">
         <h4 className="ws-sec__h">
-          Image <span>optional</span>
+          Image <span className="ws-opt">optional</span>
         </h4>
         <ImageSection />
       </div>

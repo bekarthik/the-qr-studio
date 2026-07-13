@@ -3188,3 +3188,512 @@ footer {
     grid-template-columns: 1fr;
   }
 }
+
+/* ---- workstation controls: shared primitives + card pane + left-pane tidy --- */
+/* "optional" tag — one consistent pill across QR and Card panes */
+.ws-opt {
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  background: color-mix(in srgb, var(--ink) 7%, transparent);
+  border-radius: 5px;
+  padding: 1px 6px;
+  margin-left: 6px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.ws-sec__h .ws-opt {
+  letter-spacing: 0.04em;
+}
+
+/* styled colour input — a full-width swatch matching the ink chips */
+.ws-color,
+.ws-pane input[type='color'] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  background: var(--paper-2);
+  cursor: pointer;
+}
+.ws-pane input[type='color']::-webkit-color-swatch-wrapper {
+  padding: 3px;
+}
+.ws-pane input[type='color']::-webkit-color-swatch {
+  border: 0;
+  border-radius: 5px;
+}
+.ws-pane input[type='color']:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 3×3 position grid */
+.ws-posgrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  width: 84px;
+}
+.ws-posgrid__c {
+  aspect-ratio: 1;
+  border: 1px solid var(--line-2);
+  border-radius: 5px;
+  background: var(--paper-2);
+  cursor: pointer;
+  position: relative;
+}
+.ws-posgrid__c::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--line-2);
+}
+.ws-posgrid__c.is-sel {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.ws-posgrid__c.is-sel::after {
+  background: var(--accent);
+}
+.ws-posgrid__c:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* wrap-chips (show-on-card field toggles) */
+.ws-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.ws-chip {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-2);
+  background: var(--paper-2);
+  border: 1px solid var(--line-2);
+  border-radius: 7px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.ws-chip.on {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: transparent;
+}
+
+/* preset chip row */
+.ws-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.ws-preset {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--paper-2);
+  border: 1px solid var(--line-2);
+  border-radius: 7px;
+  padding: 6px 10px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.ws-preset:hover {
+  border-color: var(--ink-soft);
+}
+.ws-preset--custom {
+  padding: 0;
+  overflow: hidden;
+}
+.ws-preset--custom > button:first-child {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  padding: 6px 4px 6px 10px;
+  cursor: pointer;
+}
+.ws-preset__del {
+  border: 0;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  padding: 6px 8px 6px 2px;
+  font-size: 13px;
+}
+.ws-preset__del:hover {
+  color: var(--bad);
+}
+.ws-preset--ghost {
+  color: var(--ink-2);
+  border-style: dashed;
+}
+
+/* card sub-tabs (compact tabs layout) */
+.ws-subtabs {
+  display: flex;
+  gap: 2px;
+  background: var(--paper);
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  padding: 3px;
+  margin-bottom: 14px;
+}
+.ws-subtabs button {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: 11.5px;
+  font-weight: 600;
+  border: 0;
+  background: transparent;
+  color: var(--ink-2);
+  padding: 6px 4px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.ws-subtabs button.on {
+  background: var(--ink);
+  color: var(--paper-2);
+}
+
+/* live indicator in the canvas bar */
+.ws-zoom {
+  gap: 7px;
+}
+.ws-zoom::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 20%, transparent);
+}
+
+/* left pane: tidy the reused ImageSection into ws rhythm */
+.ws-pane .image-block {
+  margin: 0;
+}
+.ws-pane .upload__btn {
+  width: 100%;
+  font-size: 12.5px;
+  padding: 9px 11px;
+  border-radius: 8px;
+}
+.ws-pane .img-hint {
+  font-size: 11px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  margin: 8px 0 0;
+}
+.ws-pane .field--check {
+  margin-top: 10px;
+  font-size: 12px;
+  align-items: flex-start;
+  gap: 8px;
+}
+.ws-pane .field--check .field__label {
+  font-size: 12px;
+  color: var(--ink-2);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* labelled sub-group inside a tab — the categorisation unit */
+.ws-group {
+  margin-top: 16px;
+  padding-top: 13px;
+  border-top: 1px dashed var(--line-2);
+}
+.ws-group:first-of-type {
+  margin-top: 14px;
+}
+.ws-group__l {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 10px;
+}
+.ws-note {
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  margin: 12px 0 0;
+  padding: 9px 11px;
+  background: color-mix(in srgb, var(--ink) 4%, transparent);
+  border-radius: 8px;
+}
+
+/* ---- workstation chrome v2: editor-grade bar, stage sheet, export ---------- */
+/* panes: no stray divider after the final section */
+.ws-sec:last-child {
+  border-bottom: 0;
+}
+
+/* top bar: document actions live here (Share / Reset / Export / window) */
+.ws-bar__actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+/* the verified chip starts the right-hand cluster; actions sit flush after it */
+.ws-bar .ws-vchip {
+  margin-left: auto;
+}
+.ws-bar .ws-vchip + .ws-bar__actions {
+  margin-left: 0;
+}
+.ws-bar .share-btn,
+.ws-bar .reset-btn {
+  font-family: var(--font-display);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  background: var(--paper-2);
+  border: 1px solid var(--line-2);
+  border-radius: 7px;
+  padding: 7px 11px;
+  cursor: pointer;
+  box-shadow: none;
+  transition: color 0.15s, border-color 0.15s;
+}
+.ws-bar .share-btn:hover,
+.ws-bar .reset-btn:hover {
+  color: var(--ink);
+  border-color: var(--ink-soft);
+}
+.ws-exp:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: none;
+}
+.ws-full-btn {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--paper-2);
+  background: var(--ink);
+  border: 1px solid var(--ink);
+  border-radius: 7px;
+  padding: 7px 13px;
+  cursor: pointer;
+}
+.ws-full-btn:hover {
+  filter: brightness(1.15);
+}
+
+/* export dropdown */
+.ws-export {
+  position: relative;
+}
+.ws-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  min-width: 190px;
+  background: var(--paper-2);
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  box-shadow: var(--shadow-3);
+  padding: 5px;
+}
+.ws-menu button {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  border-radius: 7px;
+  padding: 8px 10px;
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+}
+.ws-menu button span {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+.ws-menu button:hover {
+  background: var(--paper-3);
+}
+
+/* zoom control (replaces the static "Live preview" pill) */
+.ws-zoom {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--paper-2);
+  border: 1px solid var(--line-2);
+  border-radius: 7px;
+  padding: 2px;
+  font-size: 11px;
+  color: var(--ink-2);
+}
+.ws-zoom::before {
+  content: none;
+}
+.ws-zoom button {
+  width: 22px;
+  height: 22px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-2);
+  border-radius: 5px;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+.ws-zoom button:hover {
+  background: var(--paper-3);
+  color: var(--ink);
+}
+.ws-zoom button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.ws-zoom span {
+  min-width: 38px;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* stage: white sheet with a floating verdict tag, dim spec line below */
+.ws-stage {
+  justify-content: safe center;
+}
+.ws-stage .ws-sheet {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--line-2);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--shadow-2);
+  margin-top: 14px;
+  width: calc(320px * var(--zoom, 1));
+  max-width: 100%;
+}
+.ws-stage .preview {
+  width: 100%;
+  max-width: none;
+}
+.ws-stage .qr {
+  border: 0;
+  border-radius: 4px;
+  box-shadow: none;
+  background: transparent;
+}
+.ws-stage .empty {
+  border: 0;
+  background: transparent;
+  min-height: 200px;
+}
+.ws-stage .badge {
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 92%;
+  margin: 0;
+  border-radius: 999px;
+  padding: 5px 13px;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: var(--shadow-1);
+}
+.ws-stage .badge--ok {
+  color: #fff;
+  background: var(--ok);
+}
+.ws-stage .badge--fail {
+  color: #fff;
+  background: var(--bad);
+}
+.ws-stage .badge--checking {
+  color: var(--ink-2);
+  background: var(--paper);
+  border: 1px solid var(--line-2);
+}
+.ws-stage .hint {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+  text-align: center;
+  max-width: 380px;
+  line-height: 1.6;
+  margin-top: 16px;
+}
+
+/* card artwork inside the sheet */
+.ws-stage .ws-sheet--card {
+  width: calc(430px * var(--zoom, 1));
+  padding: 14px;
+}
+.ws-stage .cardx__preview {
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  border: 0;
+  border-radius: 6px;
+  box-shadow: none;
+}
+.ws-stage__opts {
+  margin-top: 16px;
+}
+.ws-stage__opts .ws-toggle {
+  margin-top: 0;
+  gap: 10px;
+  font-size: 12px;
+}
+
+/* status bar: quick export actions on the right */
+.ws-status__actions button {
+  font-family: var(--font-display);
+  font-size: 10.5px;
+  font-weight: 700;
+  border: 1px solid var(--line-2);
+  background: var(--paper-2);
+  color: var(--ink);
+  border-radius: 6px;
+  padding: 5px 11px;
+  cursor: pointer;
+}
+.ws-status__actions button.p {
+  background: var(--ink);
+  color: var(--paper-2);
+  border-color: var(--ink);
+}
+.ws-status__actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
