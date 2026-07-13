@@ -3712,6 +3712,15 @@ footer {
 .ws-duo .ws-sheet--card {
   width: calc(290px * var(--zoom, 1));
 }
+/* stacked (landscape two-sided): a column of full-width-ish sheets */
+.ws-duo--stack {
+  flex-direction: column;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+.ws-duo--stack .ws-sheet--card {
+  width: calc(330px * var(--zoom, 1));
+}
 .ws-duo .ws-sheet--card.is-portrait {
   width: calc(225px * var(--zoom, 1));
 }

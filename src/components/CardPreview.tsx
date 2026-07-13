@@ -75,7 +75,9 @@ export function CardPreview({ registerExport }: { registerExport?: (api: ExportA
 
   return (
     <>
-      <div className="ws-duo">
+      {/* two-sided: wide landscape cards stack vertically; narrow portrait
+          cards sit side-by-side — whichever keeps both fully in view */}
+      <div className={'ws-duo' + (twoSided && !portrait ? ' ws-duo--stack' : '')}>
         {sides.map((s) => (
           <figure className={sheetCls} key={s.label || 'single'}>
             <img
