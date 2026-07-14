@@ -9,7 +9,9 @@ const openStudio = (e: MouseEvent) => {
 export function Hero() {
   return (
     <section className="hero">
-      <div className="wrap hero__solo">
+      {/* .wrap aligns with every other band; .hero__solo only caps line length */}
+      <div className="wrap">
+        <div className="hero__solo">
         <span className="eyebrow">Free QR code generator</span>
         <h1>
           This is the
@@ -30,6 +32,7 @@ export function Hero() {
             Start generating QR ▸
           </a>
           <span className="trust">no signup · no watermark · no expiry</span>
+        </div>
         </div>
       </div>
     </section>
