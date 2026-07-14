@@ -33,26 +33,40 @@ export function Hero() {
           </a>
           <span className="trust">no signup · no watermark · no expiry</span>
         </div>
+        <ul className="hero-ticks" aria-label="Why it works">
+          <li><i>⌁</i> High scan rate</li>
+          <li><i>⎙</i> Print ready</li>
+          <li><i>◈</i> Any surface</li>
+          <li><i>✓</i> Always verifiable</li>
+        </ul>
         </div>
 
-        {/* Decorative: real exports from the studio, on an isometric plane.
-            Desktop-only (hidden ≤1239px); never overlaps the copy — the art
-            column starts right of the painted text. */}
-        <div className="hero-art" aria-hidden="true">
-          <div className="iso">
-            <div className="iso__t iso__t--qr">
-              <span className="iso__tag">✓ Scanner-verified</span>
-              <img src="/hero/qr-dots.png" width={640} height={640} alt="" />
-            </div>
-            <div className="iso__t iso__t--doodle">
+        {/* Decorative: the studio's real exports as physical objects — a
+            hanging verified sign, a kraft table-tent, a round sticker and the
+            navy visiting card. Desktop-only (hidden ≤1239px); positioned so it
+            never intersects the painted hero copy. */}
+        <div className="hero-scene" aria-hidden="true">
+          <div className="hs-sign">
+            <span className="hs-hook hs-hook--l" />
+            <span className="hs-hook hs-hook--r" />
+            <div className="hs-label">Verified<br />QR code</div>
+            <img src="/hero/qr-dots.png" width={640} height={640} alt="" />
+            <div className="hs-scan">SCAN ME <i>✓</i></div>
+          </div>
+          <div className="hs-tent">
+            <div className="hs-plate">
+              <div className="hs-label">Verified QR</div>
               <img src="/hero/qr-lines.png" width={520} height={520} alt="" />
+              <div className="hs-scan">SCAN ME <i>✓</i></div>
             </div>
-            <div className="iso__t iso__t--front">
-              <img src="/hero/card-front.png" width={760} height={434} alt="" />
-            </div>
-            <div className="iso__t iso__t--back">
-              <img src="/hero/card-back.png" width={760} height={434} alt="" />
-            </div>
+          </div>
+          <div className="hs-stand">
+            <img src="/hero/card-back.png" width={760} height={434} alt="" />
+          </div>
+          <div className="hs-dot">
+            <div className="hs-label">Verified QR</div>
+            <img src="/hero/qr-dots.png" width={640} height={640} alt="" />
+            <div className="hs-scan">SCAN ME <i>✓</i></div>
           </div>
         </div>
       </div>

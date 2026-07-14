@@ -2882,58 +2882,6 @@ section {
   padding: 20px;
 }
 
-/* survive-the-print compare */
-.compare {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  margin-top: 34px;
-  max-width: 560px;
-}
-.compare .mk-card {
-  text-align: center;
-}
-.qbox {
-  background: var(--white);
-  border-radius: 8px;
-  padding: 16px;
-  display: flex;
-  justify-content: center;
-}
-.qbox img {
-  width: 150px;
-  height: 150px;
-}
-.mk-card.bad .qbox img {
-  filter: contrast(0.62) blur(0.6px) saturate(0.7);
-  opacity: 0.9;
-}
-.tag {
-  font-family: var(--font-display);
-  font-size: 12px;
-  font-weight: 700;
-  margin-top: 14px;
-  display: inline-flex;
-  gap: 0.4em;
-  align-items: center;
-  padding: 5px 11px;
-  border-radius: 999px;
-}
-.tag.no {
-  background: color-mix(in srgb, var(--ink) 8%, transparent);
-  color: var(--ink-soft);
-}
-.tag.yes {
-  background: var(--ok-soft);
-  color: var(--ok);
-}
-.mk-card small {
-  display: block;
-  color: var(--ink-2);
-  font-size: 13px;
-  margin-top: 8px;
-}
-
 /* category cards */
 .type-cards {
   display: grid;
@@ -3996,10 +3944,10 @@ figure.ws-sheet {
   }
 }
 
-/* ------------------------------------------------- hero art (isometric) --- */
-/* Real studio exports on a 3D-tilted plane. Decorative only (aria-hidden);
-   hidden below 1240px so tablet/mobile copy is untouched. Sized/positioned so
-   nothing intersects the painted hero text (verified in review). */
+/* -------------------------------------------- hero scene (physical set) --- */
+/* The studio's real exports staged as objects: hanging sign, kraft tent,
+   round sticker (front), navy card stand (behind it). Decorative, desktop-only,
+   never intersects the painted copy (verified 1240–1600px). */
 .hero {
   position: relative;
   overflow: visible;
@@ -4007,92 +3955,384 @@ figure.ws-sheet {
 .hero .wrap {
   position: relative;
 }
-.hero-art {
+.hero-scene {
   position: absolute;
-  top: -16px;
+  top: -24px;
   right: 0;
-  width: 500px;
-  height: 620px;
+  width: 520px;
+  height: 610px;
   pointer-events: none;
   z-index: 1;
-  perspective: 1400px;
+  font-family: var(--font-display);
 }
-.iso {
-  position: absolute;
-  inset: 0;
-  transform: rotateX(14deg) rotateY(-22deg) rotateZ(3deg);
-  transform-style: preserve-3d;
+.hs-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #3a3631;
+  text-align: center;
+  line-height: 1.35;
 }
-.iso__t {
-  position: absolute;
-  border-radius: 12px;
-  box-shadow: -18px 26px 44px -26px rgba(22, 19, 14, 0.5);
+.hs-scan {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #23221f;
 }
-.iso__t img {
-  width: 100%;
+.hs-scan i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--ok);
+  display: inline-grid;
+  place-items: center;
+  font-style: normal;
+  color: #fff;
+  font-size: 8px;
+}
+/* images are square exports (640/520) — width-driven, height auto, never skewed */
+.hero-scene img {
   height: auto;
+}
+
+/* hanging acrylic sign */
+.hs-sign {
+  position: absolute;
+  top: 44px;
+  left: 116px;
+  width: 248px;
+  background: color-mix(in srgb, #fff 90%, transparent);
+  border: 1px solid var(--line-2);
+  border-radius: 12px;
+  padding: 18px 22px 15px;
+  box-shadow: 0 24px 46px -30px rgba(22, 19, 14, 0.4);
+  backdrop-filter: blur(2px);
+}
+.hs-sign::before,
+.hs-sign::after {
+  content: '';
+  position: absolute;
+  top: -36px;
+  width: 1.5px;
+  height: 36px;
+  background: color-mix(in srgb, var(--ink) 34%, transparent);
+}
+.hs-sign::before {
+  left: 34px;
+}
+.hs-sign::after {
+  right: 34px;
+}
+.hs-hook {
+  position: absolute;
+  top: -43px;
+  width: 9px;
+  height: 9px;
+  border: 1.5px solid color-mix(in srgb, var(--ink) 45%, transparent);
+  border-radius: 50%;
+}
+.hs-hook--l {
+  left: 30px;
+}
+.hs-hook--r {
+  right: 30px;
+}
+.hs-sign img {
+  width: 100%;
+  display: block;
+  margin: 9px 0 7px;
+}
+
+/* kraft table tent */
+.hs-tent {
+  position: absolute;
+  top: 252px;
+  left: 0;
+  width: 170px;
+  height: 212px;
+  background: linear-gradient(160deg, #c79e6b, #a87e4e);
+  border-radius: 10px 12px 8px 8px;
+  transform: perspective(700px) rotateY(14deg) rotate(-1.5deg);
+  box-shadow: 14px 22px 40px -24px rgba(22, 19, 14, 0.55);
+}
+.hs-tent::before {
+  content: '';
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 58px;
+  height: 20px;
+  border: 4.5px solid #2c2621;
+  border-bottom: 0;
+  border-radius: 11px 11px 0 0;
+}
+.hs-tent::after {
+  content: '';
+  position: absolute;
+  left: 8%;
+  right: 4%;
+  bottom: -14px;
+  height: 14px;
+  background: radial-gradient(50% 100% at 50% 0, rgba(22, 19, 14, 0.3), transparent 70%);
+  filter: blur(3px);
+}
+.hs-plate {
+  position: absolute;
+  inset: 24px 17px auto 17px;
+  background: #fff;
+  border-radius: 8px;
+  padding: 10px 10px 8px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.14);
+}
+.hs-plate img {
+  width: 74%;
+  margin: 6px auto 5px;
+  display: block;
+}
+
+/* navy card stand (the real export) — sits BEHIND the sticker */
+.hs-stand {
+  position: absolute;
+  top: 332px;
+  right: 0;
+  width: 254px;
+  transform: perspective(800px) rotateY(-11deg) rotate(2deg);
+  border-radius: 12px;
+  box-shadow: -16px 26px 44px -26px rgba(22, 19, 14, 0.6);
+  z-index: 1;
+}
+.hs-stand img {
+  width: 100%;
   display: block;
   border-radius: 12px;
 }
-.iso__t--qr {
-  top: 6px;
-  right: 104px;
-  width: 266px;
-  background: #fff;
-  padding: 15px;
-  border: 1px solid var(--line-2);
-  transform: translateZ(70px);
-}
-.iso__t--doodle {
-  top: 92px;
-  right: -14px;
-  width: 208px;
-  background: #fff;
-  padding: 13px;
-  border: 1px solid var(--line-2);
-  transform: translateZ(20px);
-}
-.iso__t--front {
-  top: 330px;
-  right: 190px;
-  width: 282px;
-  transform: translateZ(46px);
-}
-.iso__t--back {
-  top: 442px;
-  right: -10px;
-  width: 282px;
-  transform: translateZ(90px);
-}
-.iso__tag {
+.hs-stand::after {
+  content: '';
   position: absolute;
-  top: -13px;
-  left: 24px;
-  transform: translateZ(1px);
-  white-space: nowrap;
-  font-size: 10.5px;
-  font-weight: 700;
-  color: #fff;
-  background: var(--ok);
-  border-radius: 999px;
-  padding: 4px 11px;
-  font-family: var(--font-display);
+  left: 10%;
+  right: 10%;
+  bottom: -14px;
+  height: 14px;
+  background: radial-gradient(50% 100% at 50% 0, rgba(22, 19, 14, 0.32), transparent 70%);
+  filter: blur(4px);
 }
-/* wider screens get the full off-edge drama */
+
+/* round sticker — in FRONT, overlapping the stand's corner */
+.hs-dot {
+  position: absolute;
+  top: 408px;
+  left: 152px;
+  width: 154px;
+  height: 154px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid var(--line-2);
+  box-shadow: 0 18px 34px -22px rgba(22, 19, 14, 0.5);
+  padding: 19px 14px 0;
+  transform: rotate(-6deg);
+  z-index: 2;
+}
+.hs-dot img {
+  width: 62%;
+  margin: 5px auto 4px;
+  display: block;
+}
+.hs-dot::after {
+  content: '';
+  position: absolute;
+  left: 16%;
+  right: 16%;
+  bottom: -12px;
+  height: 12px;
+  background: radial-gradient(50% 100% at 50% 0, rgba(22, 19, 14, 0.26), transparent 70%);
+  filter: blur(3px);
+  border-radius: 50%;
+}
+
+/* tick row under the CTA */
+.hero-ticks {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  margin: 26px 0 0;
+  padding: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.hero-ticks li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.hero-ticks i {
+  font-style: normal;
+  font-size: 12px;
+  color: var(--ok);
+}
+
 @media (min-width: 1420px) {
-  .hero-art {
-    right: -56px;
+  .hero-scene {
+    right: -40px;
   }
 }
-/* smaller desktops: scale the plane down a touch so it keeps clear of the copy */
 @media (max-width: 1339px) {
-  .hero-art {
+  .hero-scene {
     transform: scale(0.9);
     transform-origin: top right;
   }
 }
 @media (max-width: 1239px) {
-  .hero-art {
+  .hero-scene {
     display: none;
+  }
+}
+
+/* --------------------------------------- survives-the-print surface cards --- */
+.surfaces {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 34px;
+  max-width: 1020px;
+}
+.surf {
+  background: var(--paper-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.surf__scene {
+  position: relative;
+  height: 218px;
+  overflow: hidden;
+}
+.surf__scene img {
+  height: auto;
+}
+.surf__body {
+  padding: 15px 18px 17px;
+}
+.surf__body h3 {
+  font-size: 1.05rem;
+  margin: 0 0 5px;
+}
+.surf__body p {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 13.5px;
+}
+.sc-scan {
+  display: block;
+  margin-top: 4px;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #23221f;
+  text-align: center;
+  font-family: var(--font-display);
+}
+/* flex banner between poles */
+.sc-banner {
+  background: linear-gradient(165deg, #b9b4ab, #8f897e);
+}
+.sc-pole {
+  position: absolute;
+  top: 9%;
+  bottom: 9%;
+  width: 7px;
+  background: linear-gradient(90deg, #4c4741, #6e675e);
+  border-radius: 4px;
+}
+.sc-pole--l {
+  left: 9%;
+}
+.sc-pole--r {
+  right: 9%;
+}
+.sc-cloth {
+  position: absolute;
+  left: 13%;
+  right: 13%;
+  top: 16%;
+  bottom: 18%;
+  background: linear-gradient(175deg, #f7f4ec, #e8e2d4);
+  border-radius: 4px;
+  transform: rotate(-1deg);
+  box-shadow: 0 14px 26px -14px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.sc-cloth::before,
+.sc-cloth::after {
+  content: '';
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #8f897e;
+  box-shadow: 0 0 0 3px #d8d2c4;
+}
+.sc-cloth::before {
+  top: 7px;
+  left: 7px;
+}
+.sc-cloth::after {
+  top: 7px;
+  right: 7px;
+}
+.sc-cloth img {
+  width: 42%;
+  display: block;
+}
+/* paper sheet on a desk */
+.sc-paper {
+  background: linear-gradient(160deg, #e8e0cf, #d5cab4);
+}
+.sc-sheet {
+  position: absolute;
+  left: 15%;
+  right: 15%;
+  top: 12%;
+  bottom: -8%;
+  background: #fff;
+  border-radius: 5px;
+  transform: rotate(-7deg);
+  box-shadow: 0 18px 30px -18px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 24px;
+}
+.sc-sheet img {
+  width: 52%;
+  display: block;
+}
+/* the real navy card on a dark surface */
+.sc-card {
+  background: linear-gradient(160deg, #23282f, #101318);
+}
+.sc-card img {
+  position: absolute;
+  left: 11%;
+  top: 21%;
+  width: 78%;
+  border-radius: 10px;
+  transform: rotate(-4.5deg);
+  box-shadow: 0 22px 36px -18px rgba(0, 0, 0, 0.7);
+}
+@media (max-width: 900px) {
+  .surfaces {
+    grid-template-columns: 1fr;
+    max-width: 480px;
   }
 }
