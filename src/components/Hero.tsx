@@ -34,6 +34,27 @@ export function Hero() {
           <span className="trust">no signup · no watermark · no expiry</span>
         </div>
         </div>
+
+        {/* Decorative: real exports from the studio, on an isometric plane.
+            Desktop-only (hidden ≤1239px); never overlaps the copy — the art
+            column starts right of the painted text. */}
+        <div className="hero-art" aria-hidden="true">
+          <div className="iso">
+            <div className="iso__t iso__t--qr">
+              <span className="iso__tag">✓ Scanner-verified</span>
+              <img src="/hero/qr-dots.png" width={640} height={640} alt="" />
+            </div>
+            <div className="iso__t iso__t--doodle">
+              <img src="/hero/qr-lines.png" width={520} height={520} alt="" />
+            </div>
+            <div className="iso__t iso__t--front">
+              <img src="/hero/card-front.png" width={760} height={434} alt="" />
+            </div>
+            <div className="iso__t iso__t--back">
+              <img src="/hero/card-back.png" width={760} height={434} alt="" />
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );

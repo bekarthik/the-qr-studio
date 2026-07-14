@@ -3995,3 +3995,104 @@ figure.ws-sheet {
     padding: 6px 8px;
   }
 }
+
+/* ------------------------------------------------- hero art (isometric) --- */
+/* Real studio exports on a 3D-tilted plane. Decorative only (aria-hidden);
+   hidden below 1240px so tablet/mobile copy is untouched. Sized/positioned so
+   nothing intersects the painted hero text (verified in review). */
+.hero {
+  position: relative;
+  overflow: visible;
+}
+.hero .wrap {
+  position: relative;
+}
+.hero-art {
+  position: absolute;
+  top: -16px;
+  right: 0;
+  width: 500px;
+  height: 620px;
+  pointer-events: none;
+  z-index: 1;
+  perspective: 1400px;
+}
+.iso {
+  position: absolute;
+  inset: 0;
+  transform: rotateX(14deg) rotateY(-22deg) rotateZ(3deg);
+  transform-style: preserve-3d;
+}
+.iso__t {
+  position: absolute;
+  border-radius: 12px;
+  box-shadow: -18px 26px 44px -26px rgba(22, 19, 14, 0.5);
+}
+.iso__t img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 12px;
+}
+.iso__t--qr {
+  top: 6px;
+  right: 104px;
+  width: 266px;
+  background: #fff;
+  padding: 15px;
+  border: 1px solid var(--line-2);
+  transform: translateZ(70px);
+}
+.iso__t--doodle {
+  top: 92px;
+  right: -14px;
+  width: 208px;
+  background: #fff;
+  padding: 13px;
+  border: 1px solid var(--line-2);
+  transform: translateZ(20px);
+}
+.iso__t--front {
+  top: 330px;
+  right: 190px;
+  width: 282px;
+  transform: translateZ(46px);
+}
+.iso__t--back {
+  top: 442px;
+  right: -10px;
+  width: 282px;
+  transform: translateZ(90px);
+}
+.iso__tag {
+  position: absolute;
+  top: -13px;
+  left: 24px;
+  transform: translateZ(1px);
+  white-space: nowrap;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--ok);
+  border-radius: 999px;
+  padding: 4px 11px;
+  font-family: var(--font-display);
+}
+/* wider screens get the full off-edge drama */
+@media (min-width: 1420px) {
+  .hero-art {
+    right: -56px;
+  }
+}
+/* smaller desktops: scale the plane down a touch so it keeps clear of the copy */
+@media (max-width: 1339px) {
+  .hero-art {
+    transform: scale(0.9);
+    transform-origin: top right;
+  }
+}
+@media (max-width: 1239px) {
+  .hero-art {
+    display: none;
+  }
+}
