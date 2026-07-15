@@ -10,9 +10,10 @@ export type JsonLdKind = 'softwareApplication' | 'faqPage' | 'howTo' | 'breadcru
  * Semantic page category — what a Sightline `<Slot>`/rule set keys off, distinct
  * from `jsonLd` (the concrete schema types emitted). 'home' is the root landing
  * page; 'tool' is a per-use-case generator page; 'page' is a plain
- * non-generator page (e.g. /contact).
+ * non-generator page (e.g. /contact); 'legal' is a prose policy page
+ * (/terms, /privacy).
  */
-export type PageType = 'home' | 'tool' | 'page';
+export type PageType = 'home' | 'tool' | 'page' | 'legal';
 
 /**
  * One entry per public route. This is the single source of truth consumed by
@@ -424,6 +425,26 @@ export const ROUTES: RouteDef[] = [
     description:
       'Get in touch with QR Studio — support questions, bug reports, feature ideas or business enquiries. We read everything and reply by email.',
     canonical: 'https://theqr.studio/contact',
+    content: [],
+    jsonLd: ['breadcrumb'],
+  },
+  {
+    path: '/terms',
+    pageType: 'legal',
+    title: 'Terms & Conditions — QR Studio',
+    description:
+      'The terms for using QR Studio, a free in-browser QR code generator — acceptable use, user responsibility, disclaimers, limitation of liability and more.',
+    canonical: `${SITE_URL}/terms`,
+    content: [],
+    jsonLd: ['breadcrumb'],
+  },
+  {
+    path: '/privacy',
+    pageType: 'legal',
+    title: 'Privacy Policy — QR Studio',
+    description:
+      'How QR Studio handles your data: QR codes are generated in your browser and nothing is uploaded. What limited technical information may be collected, and your rights.',
+    canonical: `${SITE_URL}/privacy`,
     content: [],
     jsonLd: ['breadcrumb'],
   },

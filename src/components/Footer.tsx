@@ -23,10 +23,14 @@ export function Footer() {
           <Link to="/contact">Contact us</Link>
         </nav>
       </div>
-      <div className="wrap">
+      <div className="wrap foot__bottom">
         <p className="foot__spec">
           Stock: your browser · Inks: unlimited · Uploads: 0 · Expiry: never · © 2026 theqr.studio
         </p>
+        <nav className="foot__legal" aria-label="Legal">
+          <Link to="/terms">Terms</Link>
+          <Link to="/privacy">Privacy Policy</Link>
+        </nav>
       </div>
     </footer>
   );
