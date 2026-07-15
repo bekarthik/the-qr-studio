@@ -17,7 +17,7 @@ export function Footer() {
         </div>
         <nav className="foot__links" aria-label="Footer">
           <a href="/#studio">Generator</a>
-          <a href="/#print">Survives print</a>
+          <a href="/#types">Survives print</a>
           <a href="/#features">Privacy</a>
           <a href="/#faq">FAQ</a>
         </nav>
