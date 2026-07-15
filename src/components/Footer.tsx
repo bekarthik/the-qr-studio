@@ -20,7 +20,6 @@ export function Footer() {
           <a href="/#print">Survives print</a>
           <a href="/#features">Privacy</a>
           <a href="/#faq">FAQ</a>
-          <Link to="/contact">Contact us</Link>
         </nav>
       </div>
       <div className="wrap foot__bottom">
