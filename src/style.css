@@ -2968,12 +2968,12 @@ section {
   margin: 0 0 8px;
 }
 .geo__intro p {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: clamp(1.2rem, 2.4vw, 1.6rem);
-  line-height: 1.35;
-  color: var(--ink);
-  max-width: 34ch;
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+  max-width: 56ch;
   margin: 0;
 }
 .geo__grid {
