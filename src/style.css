@@ -3984,23 +3984,38 @@ figure.ws-sheet {
   text-transform: uppercase;
   color: #8ea6c8;
 }
-.sp-live {
+/* export-format toggle (decorative): shows the QR downloads as SVG or PNG */
+.sp-formats {
   margin-left: auto;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  color: #7ef0ac;
+  gap: 8px;
 }
-.sp-live::before {
-  content: "";
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #2fe08a;
-  box-shadow: 0 0 0 3px rgba(47, 224, 138, 0.22);
+.sp-dl {
+  font-style: normal;
+  font-size: 12px;
+  line-height: 1;
+  color: #7d93b3;
+}
+.sp-seg {
+  display: inline-flex;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  padding: 2px;
+}
+.sp-seg span {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 3px 9px;
+  border-radius: 999px;
+  color: #8ea6c8;
+}
+.sp-seg span.on {
+  background: #fff;
+  color: #0d1a2c;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 .sp-screen {
   position: relative;
@@ -4026,20 +4041,11 @@ figure.ws-sheet {
   position: absolute;
   left: 8px;
   right: 8px;
-  top: 20px;
+  top: 46%;
   height: 34px;
-  background: linear-gradient(180deg, transparent, rgba(47, 224, 138, 0.35), transparent);
-  border-top: 2px solid rgba(47, 224, 138, 0.9);
+  background: linear-gradient(180deg, transparent, rgba(47, 224, 138, 0.3), transparent);
+  border-top: 2px solid rgba(47, 224, 138, 0.85);
   border-radius: 4px;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .sp-beam { animation: sp-sweep 3.2s ease-in-out infinite; }
-}
-@keyframes sp-sweep {
-  0%, 100% { transform: translateY(0); opacity: 0.35; }
-  45% { opacity: 1; }
-  50% { transform: translateY(232px); opacity: 1; }
-  55% { opacity: 1; }
 }
 .sp-status {
   display: flex;

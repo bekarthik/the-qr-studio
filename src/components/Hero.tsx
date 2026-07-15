@@ -50,7 +50,10 @@ export function Hero() {
           <div className="sp">
             <div className="sp-bar">
               <b>Scanner</b>
-              <span className="sp-live">LIVE</span>
+              <span className="sp-formats">
+                <i className="sp-dl">⤓</i>
+                <span className="sp-seg"><span className="on">SVG</span><span>PNG</span></span>
+              </span>
             </div>
             <div className="sp-screen">
               <img src="/hero/qr-dots.png" width={640} height={640} alt="" />
