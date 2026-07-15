@@ -6,7 +6,6 @@ import { Nav } from './Nav';
 import { Hero } from './Hero';
 import { Footer } from './Footer';
 import { Workstation } from './Workstation';
-import { WholePoint } from './WholePoint';
 import { TypeCards } from './TypeCards';
 import { Features } from './Features';
 import { CtaBanner } from './CtaBanner';
@@ -14,10 +13,10 @@ import { ContentBlocks } from './ContentBlocks';
 
 /**
  * The landing page rendered at every route, initialised to that route's preset
- * source type. Structure follows the "previewinter" design: hero → studio band
- * (the functional <Workstation>) → survive-the-print → source types → features
- * → route GEO/FAQ → closing CTA. Only the initial source and the per-route
- * ContentBlocks differ between routes.
+ * source type. Structure: hero → studio band ("survive the print" heading over
+ * the functional <Workstation>) → source types (surface showcase + type grid)
+ * → features → route GEO/FAQ → closing CTA. Only the initial source and the
+ * per-route ContentBlocks differ between routes.
  */
 export function ToolPage({ route }: { route: RouteDef }) {
   // head.ts owns every <head> write for this route — title, meta, canonical,
@@ -34,17 +33,17 @@ export function ToolPage({ route }: { route: RouteDef }) {
 
         <section id="studio" className="band">
           <div className="wrap">
-            <span className="kicker">The studio</span>
-            <h2>Make your code. Verify it. Keep it.</h2>
+            <span className="kicker">theqr studio</span>
+            <h2>QR codes that survive the print.</h2>
             <p className="lead">
-              The whole studio, right on the page — hit <b>Open studio</b> to expand it to the full
-              browser window.
+              Codes that actually scan — not the cursed pixel blobs that die the moment someone
+              points a camera at them. From flex banners to business cards, every export is verified
+              before it leaves the studio, and the data is baked into the pattern so it works forever.
             </p>
             <Workstation />
           </div>
         </section>
 
-        <WholePoint />
         <TypeCards />
         <Features />
 
