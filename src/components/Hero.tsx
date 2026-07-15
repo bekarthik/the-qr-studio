@@ -41,32 +41,35 @@ export function Hero() {
         </ul>
         </div>
 
-        {/* Decorative: the studio's real exports as physical objects — a
-            hanging verified sign, a kraft table-tent, a round sticker and the
-            navy visiting card. Desktop-only (hidden ≤1239px); positioned so it
-            never intersects the painted hero copy. */}
+        {/* Decorative: the studio's real export inside a self-contained scanner
+            readout — corner brackets, a sweeping verify beam, a live status bar
+            and spec chips. Its own dark chrome reads the same in both themes.
+            Desktop-only (hidden ≤1239px); positioned so it never intersects the
+            painted hero copy. */}
         <div className="hero-scene" aria-hidden="true">
-          <div className="hs-sign">
-            <span className="hs-hook hs-hook--l" />
-            <span className="hs-hook hs-hook--r" />
-            <div className="hs-label">Verified<br />QR code</div>
-            <img src="/hero/qr-dots.png" width={640} height={640} alt="" />
-            <div className="hs-scan">SCAN ME <i>✓</i></div>
-          </div>
-          <div className="hs-tent">
-            <div className="hs-plate">
-              <div className="hs-label">Verified QR</div>
-              <img src="/hero/qr-lines.png" width={520} height={520} alt="" />
-              <div className="hs-scan">SCAN ME <i>✓</i></div>
+          <div className="sp">
+            <div className="sp-bar">
+              <b>Scanner</b>
+              <span className="sp-live">LIVE</span>
             </div>
-          </div>
-          <div className="hs-stand">
-            <img src="/hero/card-back.png" width={760} height={434} alt="" />
-          </div>
-          <div className="hs-dot">
-            <div className="hs-label">Verified QR</div>
-            <img src="/hero/qr-dots.png" width={640} height={640} alt="" />
-            <div className="hs-scan">SCAN ME <i>✓</i></div>
+            <div className="sp-screen">
+              <img src="/hero/qr-dots.png" width={640} height={640} alt="" />
+              <span className="br tl" />
+              <span className="br tr" />
+              <span className="br bl" />
+              <span className="br brr" />
+              <span className="sp-beam" />
+            </div>
+            <div className="sp-status">
+              <i>✓</i>
+              <b>Verified · scans first try</b>
+              <span>theqr.studio</span>
+            </div>
+            <div className="sp-metrics">
+              <div><small>Contrast</small><strong>High</strong></div>
+              <div><small>Print</small><strong>Ready</strong></div>
+              <div><small>Surface</small><strong>Any</strong></div>
+            </div>
           </div>
         </div>
       </div>
