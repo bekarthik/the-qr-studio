@@ -11,6 +11,9 @@ export function Footer() {
             A free QR code generator that runs entirely in your browser. Your colour, your logo, your
             data — never uploaded.
           </p>
+          <a className="foot__email" href="mailto:contact@theqr.studio">
+            contact@theqr.studio
+          </a>
         </div>
         <nav className="foot__links" aria-label="Footer">
           <a href="/#studio">Generator</a>
