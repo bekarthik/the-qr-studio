@@ -10,6 +10,12 @@ export function organization(): JsonLdObject {
     name: SITE_NAME,
     url: SITE_URL,
     logo: `${SITE_URL}/logo.png`,
+    email: 'contact@theqr.studio',
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'customer support',
+      email: 'contact@theqr.studio',
+    },
   };
 }
 

@@ -74,6 +74,10 @@ export function ContactPage({ route }: { route: RouteDef }) {
               by email. Your message goes straight to our inbox; nothing else about your visit is
               collected.
             </p>
+            <p className="contact-direct">
+              Prefer your own mail client? Write to us directly at{' '}
+              <a href="mailto:contact@theqr.studio">contact@theqr.studio</a>.
+            </p>
 
             <div className="contact-card">
               {state === 'sent' ? (
