@@ -31,6 +31,22 @@ const EXE_SUBPATHS =
       ? [join('chrome-mac', 'Chromium.app', 'Contents', 'MacOS', 'Chromium')]
       : [join('chrome-linux', 'chrome')];
 
+/** Headless-shell exe layout inside a chromium_headless_shell-<rev> folder. A
+ *  recent `playwright install chromium` may lay down ONLY the headless shell
+ *  (no full chromium) — it's fully sufficient for prerendering. The folder
+ *  name changed across Playwright versions (chrome-headless-shell-* on newer,
+ *  chrome-<platform>/headless_shell on older), so try both. */
+const SHELL_SUBPATHS =
+  process.platform === 'win32'
+    ? [join('chrome-headless-shell-win64', 'chrome-headless-shell.exe'), join('chrome-win', 'headless_shell.exe')]
+    : process.platform === 'darwin'
+      ? [
+          join('chrome-headless-shell-mac', 'chrome-headless-shell'),
+          join('chrome-headless-shell-mac-arm64', 'chrome-headless-shell'),
+          join('chrome-mac', 'headless_shell'),
+        ]
+      : [join('chrome-headless-shell-linux64', 'chrome-headless-shell'), join('chrome-linux', 'headless_shell')];
+
 /** Where `npx playwright install chromium` puts browsers by default. */
 function defaultBrowserRoots() {
   if (process.platform === 'win32') return [join(process.env.LOCALAPPDATA || join(homedir(), 'AppData', 'Local'), 'ms-playwright')];
@@ -44,13 +60,22 @@ function findChromium() {
   const roots = process.env.PLAYWRIGHT_BROWSERS_PATH
     ? [process.env.PLAYWRIGHT_BROWSERS_PATH]
     : defaultBrowserRoots();
-  for (const root of roots) {
-    if (!existsSync(root)) continue;
-    const dirs = readdirSync(root).filter((d) => d.startsWith('chromium-') && !d.includes('headless_shell'));
-    for (const d of dirs) {
-      for (const sub of EXE_SUBPATHS) {
-        const exe = join(root, d, sub);
-        if (existsSync(exe)) return exe;
+  // Prefer the full chromium build; fall back to the headless shell, which a
+  // recent `playwright install chromium` may install instead. The shell
+  // prerenders identically (playwright-core launches it via executablePath).
+  const candidates = [
+    { prefix: 'chromium-', exclude: 'headless_shell', subs: EXE_SUBPATHS },
+    { prefix: 'chromium_headless_shell-', exclude: null, subs: SHELL_SUBPATHS },
+  ];
+  for (const { prefix, exclude, subs } of candidates) {
+    for (const root of roots) {
+      if (!existsSync(root)) continue;
+      const dirs = readdirSync(root).filter((d) => d.startsWith(prefix) && (!exclude || !d.includes(exclude)));
+      for (const d of dirs) {
+        for (const sub of subs) {
+          const exe = join(root, d, sub);
+          if (existsSync(exe)) return exe;
+        }
       }
     }
   }
@@ -126,7 +151,7 @@ async function main() {
   const exe = findChromium();
   if (!exe) {
     skipOrFail(
-      'No Chromium found (checked $PLAYWRIGHT_CHROMIUM_PATH and $PLAYWRIGHT_BROWSERS_PATH/chromium-*)',
+      'No Chromium found (checked $PLAYWRIGHT_CHROMIUM_PATH and $PLAYWRIGHT_BROWSERS_PATH/{chromium-*,chromium_headless_shell-*})',
     );
     return;
   }
