@@ -8,8 +8,8 @@ const CARDS = [
 ];
 
 /** "One QR builder for everything" — the studio's real exports staged on the
- *  surfaces people print them on (the #print anchor lives here), followed by the
- *  full source-type overview. */
+ *  surfaces people print them on, followed by the full source-type overview.
+ *  The "Survives print" nav/footer links target this section (#types). */
 export function TypeCards() {
   return (
     <section id="types" className="band">
@@ -17,7 +17,7 @@ export function TypeCards() {
         <span className="kicker">Seventeen codes, one studio</span>
         <h2>One QR builder for everything.</h2>
 
-        <div className="surfaces" id="print">
+        <div className="surfaces">
           <article className="surf">
             <div className="surf__scene sc-banner" aria-hidden="true">
               <span className="sc-pole sc-pole--l" />

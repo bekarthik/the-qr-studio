@@ -418,16 +418,11 @@ export const ROUTES: RouteDef[] = [
     jsonLd: ['softwareApplication', 'faqPage', 'howTo', 'breadcrumb'],
   },
 
-  {
-    path: '/contact',
-    pageType: 'page',
-    title: 'Contact QR Studio — Support, Feedback & Business',
-    description:
-      'Get in touch with QR Studio — support questions, bug reports, feature ideas or business enquiries. We read everything and reply by email.',
-    canonical: 'https://theqr.studio/contact',
-    content: [],
-    jsonLd: ['breadcrumb'],
-  },
+  // NOTE: the /contact route is intentionally disabled — the ContactPage
+  // component, src/lib/contact.ts and the App.tsx 'page' branch are kept so it
+  // can be re-enabled by restoring this RouteDef:
+  // { path: '/contact', pageType: 'page', title: 'Contact QR Studio — Support, Feedback & Business',
+  //   description: 'Get in touch with QR Studio …', canonical: `${SITE_URL}/contact`, content: [], jsonLd: ['breadcrumb'] },
   {
     path: '/terms',
     pageType: 'legal',

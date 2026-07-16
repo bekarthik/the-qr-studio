@@ -20,7 +20,7 @@ export function Nav() {
         <Brand />
         <nav className="nav__links" aria-label="Primary">
           <a href="/#studio">Generator</a>
-          <a href="/#print">Survives print</a>
+          <a href="/#types">Survives print</a>
           <a href="/#features">Privacy</a>
           <a href="/#faq">FAQ</a>
         </nav>

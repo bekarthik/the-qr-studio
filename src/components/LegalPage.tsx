@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import type { RouteDef } from '../seo/routes';
 import { applyRouteHead } from '../seo/head';
 import { LEGAL } from '../content/legal';
@@ -52,8 +51,7 @@ export function LegalPage({ route }: { route: RouteDef }) {
             ))}
 
             <p className="legal__foot">
-              Questions? <Link to="/contact">Contact us</Link> or email{' '}
-              <a href="mailto:contact@theqr.studio">contact@theqr.studio</a>.
+              Questions? Email <a href="mailto:contact@theqr.studio">contact@theqr.studio</a>.
             </p>
           </div>
         </section>

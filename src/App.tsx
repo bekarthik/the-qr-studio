@@ -1,4 +1,5 @@
-import { Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { ROUTES } from './seo/routes';
 import { ToolPage } from './components/ToolPage';
 import { ContactPage } from './components/ContactPage';
@@ -11,13 +12,37 @@ function pageFor(route: (typeof ROUTES)[number]) {
   return <ToolPage route={route} />;
 }
 
+/**
+ * React Router keeps the previous scroll position across client-side
+ * navigations, so moving between pages (e.g. /terms ⇄ /privacy) would leave you
+ * mid-page. Reset to the top on every path change — but when the target has a
+ * hash, scroll to that element instead so in-page anchors still land right.
+ */
+function ScrollToTop() {
+  const { pathname, hash } = useLocation();
+  useEffect(() => {
+    if (hash) {
+      const el = document.getElementById(hash.slice(1));
+      if (el) {
+        el.scrollIntoView();
+        return;
+      }
+    }
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+  }, [pathname, hash]);
+  return null;
+}
+
 export function App() {
   return (
-    <Routes>
-      {ROUTES.map((route) => (
-        <Route key={route.path} path={route.path} element={pageFor(route)} />
-      ))}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <>
+      <ScrollToTop />
+      <Routes>
+        {ROUTES.map((route) => (
+          <Route key={route.path} path={route.path} element={pageFor(route)} />
+        ))}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </>
   );
 }
