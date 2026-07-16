@@ -1,0 +1,46 @@
+# Publish the npm client SDK (@theqr.studio/qr) to the npm registry.
+#
+# This is opt-in and separate from the site deploy. It runs on a `js-v*` tag
+# (e.g. `js-v0.1.0`) or a manual dispatch. Publishing requires an `NPM_TOKEN`
+# repo secret with publish rights to the @theqr.studio scope; without it the
+# job fails closed at the publish step rather than deploying anything partial.
+name: Publish npm SDK
+
+on:
+  push:
+    tags: ['js-v*']
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/js
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install
+        run: npm install
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Publish
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

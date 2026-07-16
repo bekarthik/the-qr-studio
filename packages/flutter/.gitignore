@@ -1,0 +1,9 @@
+# Dart / Flutter build artifacts
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# A library package should not commit its lockfile.
+pubspec.lock

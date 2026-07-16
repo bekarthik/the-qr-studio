@@ -1,0 +1,50 @@
+# Publish the Dart/Flutter client SDK (qr_studio) to pub.dev.
+#
+# Opt-in, separate from the site deploy. Runs on a `flutter-v*` tag
+# (e.g. `flutter-v0.1.0`) or a manual dispatch.
+#
+# Uses pub.dev's automated publishing (OIDC) — no long-lived credentials. You
+# must first configure the package on pub.dev as an "automated publishing"
+# package trusting this repo + a `flutter-v{{version}}` tag pattern. See
+# https://dart.dev/tools/pub/automated-publishing for the one-time setup.
+name: Publish Flutter SDK
+
+on:
+  push:
+    tags: ['flutter-v*']
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  # Required for pub.dev OIDC automated publishing.
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/flutter
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test
+
+      - name: Dry-run publish
+        run: flutter pub publish --dry-run
+
+      # Only publishes on a tag push (skipped for manual dispatch dry-runs).
+      - name: Publish
+        if: startsWith(github.ref, 'refs/tags/flutter-v')
+        run: flutter pub publish --force

@@ -1,0 +1,63 @@
+{
+  "name": "@theqr.studio/qr",
+  "version": "0.1.0",
+  "description": "Tiny, typed client for the QR Studio API — image-styled, server-verified scannable QR codes (PNG + SVG). Works in the browser and Node.",
+  "keywords": [
+    "qr",
+    "qrcode",
+    "qr-code",
+    "generator",
+    "svg",
+    "png",
+    "sdk",
+    "client"
+  ],
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test --experimental-strip-types \"test/*.test.ts\"",
+    "test:live": "node --test --experimental-strip-types test/live.test.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "license": "MIT",
+  "author": "QR Studio",
+  "homepage": "https://theqr.studio",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bekarthik/the-qr-studio.git",
+    "directory": "packages/js"
+  },
+  "bugs": {
+    "url": "https://github.com/bekarthik/the-qr-studio/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsup": "^8.3.0",
+    "typescript": "^6.0.3"
+  }
+}

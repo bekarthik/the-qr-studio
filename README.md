@@ -281,6 +281,36 @@ the check to pass.
 > phone struggles with a heavily-styled code, lower the **Image detail** or
 > **Logo size**, or keep **Protect alignment & timing patterns** enabled.
 
+## API & client SDKs
+
+Beyond the browser app, QR Studio ships an **HTTP API** — the Cloudflare Worker
+in [`worker/`](worker) (`GET`/`POST /qr`) — that renders the same
+image-styled, **server-verified** codes as PNG or SVG. Two thin client SDKs wrap
+it so you can generate QR codes from your own apps. Both require a deployed
+Worker base URL (there is no default host — deploy your own with
+`cd worker && npm run deploy`).
+
+| Package | Where | Install |
+| --- | --- | --- |
+| **`@theqr.studio/qr`** (JS/TS, browser + Node) | [`packages/js`](packages/js) | `npm install @theqr.studio/qr` |
+| **`qr_studio`** (Dart + Flutter widget) | [`packages/flutter`](packages/flutter) | `qr_studio: ^0.1.0` |
+
+```ts
+import { QrStudio } from '@theqr.studio/qr';
+const qr = new QrStudio({ baseUrl: 'https://qr.example.com' });
+const res = await qr.generate({ data: 'https://example.com', style: 'brand' });
+res.verified; // true | false | null  (server round-trip scan check)
+```
+
+```dart
+QrStudioImage(
+  baseUrl: 'https://qr.example.com',
+  options: const QrOptions(data: 'https://example.com', style: QrStyle.brand),
+)
+```
+
+See [`packages/`](packages) for full docs.
+
 ## Project layout
 
 ```

@@ -1,0 +1,7 @@
+# Publish only the built output + docs (see "files" in package.json).
+src
+test
+tsconfig.json
+tsup.config.ts
+*.tsbuildinfo
+.DS_Store

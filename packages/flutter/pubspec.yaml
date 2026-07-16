@@ -1,0 +1,28 @@
+name: qr_studio
+description: >-
+  Typed Dart client and Flutter widget for the QR Studio API — image-styled,
+  server-verified scannable QR codes (PNG + SVG).
+version: 0.1.0
+repository: https://github.com/bekarthik/the-qr-studio
+homepage: https://theqr.studio
+issue_tracker: https://github.com/bekarthik/the-qr-studio/issues
+topics:
+  - qr
+  - qrcode
+  - generator
+  - widget
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: '>=3.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^1.2.0
+  meta: ^1.9.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
