@@ -6,6 +6,7 @@ import { buildMatrix, type QrMatrix } from '../qr/matrix';
 import { sampleImage, extractBrandColor, type ImageSampler } from '../qr/halftone';
 import { renderQR } from '../qr/render';
 import { renderSVG } from '../qr/svg';
+import { track } from '../lib/analytics';
 
 const RES = 1600;
 export type BadgeState = 'hidden' | 'checking' | 'ok' | 'fail';
@@ -251,6 +252,8 @@ export function Preview({
     a.download = `qr-${cfg.type}.${ext}`;
     a.click();
     URL.revokeObjectURL(a.href);
+    // Category-level only (format + QR type) — never the encoded payload.
+    track('export', { format: ext, type: cfg.type });
   };
 
   const downloadPng = () => {

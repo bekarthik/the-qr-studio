@@ -1,5 +1,6 @@
 import { SOURCES, CATEGORY_ORDER, CATEGORY_META, SOURCE_CATEGORY } from '../ui/forms';
 import { useGen } from '../state/GeneratorContext';
+import { track } from '../lib/analytics';
 import { SourceForm } from './SourceForm';
 import { ImageSection } from './ImageSection';
 
@@ -13,10 +14,17 @@ export function StudioSource() {
   const currentCat = SOURCE_CATEGORY[cfg.type];
   const inCategory = SOURCES.filter((s) => SOURCE_CATEGORY[s.type] === currentCat);
 
+  // Every user-driven type pick funnels through here so it's tracked once.
+  // Category-level only (the type name) — never any field the user types.
+  const chooseType = (type: typeof cfg.type) => {
+    update({ type });
+    track('qr_type', { type });
+  };
+
   const pickCategory = (cat: (typeof CATEGORY_ORDER)[number]) => {
     if (cat === currentCat) return;
     const first = SOURCES.find((s) => SOURCE_CATEGORY[s.type] === cat);
-    if (first) update({ type: first.type });
+    if (first) chooseType(first.type);
   };
 
   return (
@@ -46,7 +54,7 @@ export function StudioSource() {
             <select
               className="ws-inp"
               value={cfg.type}
-              onChange={(e) => update({ type: e.target.value as typeof cfg.type })}
+              onChange={(e) => chooseType(e.target.value as typeof cfg.type)}
             >
               {inCategory.map((s) => (
                 <option key={s.type} value={s.type}>
