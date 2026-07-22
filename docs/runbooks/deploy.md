@@ -20,6 +20,10 @@ push to main ─▶ GitHub Actions ─▶ npm ci
 
 Workflow: [`.github/workflows/deploy.yml`](../../.github/workflows/deploy.yml).
 
+**Need to ship without Actions** (e.g. Actions minutes exhausted)? See
+[`deploy-manual.md`](./deploy-manual.md) — build locally and push `dist/` with
+the Netlify CLI by hand.
+
 ---
 
 ## One-time setup
