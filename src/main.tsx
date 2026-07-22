@@ -10,7 +10,7 @@ createRoot(document.getElementById('root')!).render(
   </BrowserRouter>,
 );
 
-// Cloudflare Web Analytics (prod + configured token + real visitors only).
+// Umami analytics (prod + configured website id + real visitors only).
 initAnalytics();
 
 // Offline support: register the service worker in production builds only

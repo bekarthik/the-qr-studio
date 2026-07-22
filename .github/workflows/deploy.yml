@@ -63,9 +63,9 @@ jobs:
           VITE_SUPPORT_PAYPAL: ${{ vars.VITE_SUPPORT_PAYPAL }}
           VITE_SUPPORT_UPI: ${{ vars.VITE_SUPPORT_UPI }}
           VITE_SUPPORT_STRIPE_URL: ${{ secrets.VITE_SUPPORT_STRIPE_URL }}
-          # Cloudflare Web Analytics beacon token (public — a repo variable, not
-          # a secret). Blank/unset simply disables analytics.
-          VITE_CF_BEACON_TOKEN: ${{ vars.VITE_CF_BEACON_TOKEN }}
+          # Umami Cloud website id (public — a repo variable, not a secret).
+          # Blank/unset simply disables analytics.
+          VITE_UMAMI_WEBSITE_ID: ${{ vars.VITE_UMAMI_WEBSITE_ID }}
 
       # Deploy gate: the QR engine must stay green (resvg + jsQR, no browser).
       - name: Verify QR engine (gate)

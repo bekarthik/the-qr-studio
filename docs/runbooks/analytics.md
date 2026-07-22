@@ -1,83 +1,67 @@
 # Analytics
 
-Privacy-first, cookieless, no PII. Two stages: **Cloudflare Web Analytics now**
-(traffic) and **Umami later** (custom "what did they build" events). The core
-rule everywhere: capture **category-level** signals only — never a QR payload
-(the URL / UPI VPA / Wi-Fi password / contact details a user types).
+Privacy-first, cookieless, no PII, via **Umami** (Umami Cloud). The core rule
+everywhere: capture **category-level** signals only — never a QR payload (the
+URL / UPI VPA / Wi-Fi password / contact details a user types).
 
-Code: `src/lib/analytics.ts` (`initAnalytics()` injects the Cloudflare beacon;
-`track()` is the Umami seam). Wired in `src/main.tsx`.
+Code: `src/lib/analytics.ts` — `initAnalytics()` injects the tracker;
+`track(event, props)` records custom events. Wired in `src/main.tsx`.
 
----
-
-## Stage 1 — Cloudflare Web Analytics (live)
-
-Free, cookieless, no consent banner. Reports **pageviews, unique visitors,
-locations, referrers, device/browser**, and auto-tracks client-side route
-changes — so the per-type pages (`/upi`, `/wifi`, `/vcard`, `/url`,
-`/whatsapp`) already show which type pages draw traffic.
-
-**Setup**
-
-1. Cloudflare Dashboard → **Web Analytics** → **Add a site** → enter
-   `theqr.studio`. You do **not** need Cloudflare DNS/CDN — the JS beacon works
-   on Netlify as-is.
-2. Copy the beacon **token** from the snippet (`data-cf-beacon='{"token":"…"}'`).
-3. In GitHub → repo **Settings → Secrets and variables → Actions → Variables**,
-   add a variable **`VITE_CF_BEACON_TOKEN`** = that token. (It's public by
-   design — a *variable*, not a secret. Blank/unset = analytics off.)
-4. Trigger a deploy. `initAnalytics()` injects the beacon for real visitors
-   only — never in dev, never during the prerender crawl (it skips
-   `navigator.webdriver`), so dev/CI never pollute the stats.
-5. Verify: load the live site, check the Network tab for
-   `static.cloudflareinsights.com/beacon.min.js`, and watch the Cloudflare
-   dashboard populate.
-
-**Limitation:** Cloudflare has no custom events, so the *precise* "which type
-did they build / which format did they export" is not captured here — that's
-Stage 2.
+Umami reports **pageviews, unique visitors, locations, referrers, devices**, and
+**custom events**, and auto-tracks client-side route changes (so `/upi`,
+`/wifi`, … are counted on SPA navigation too).
 
 ---
 
-## Stage 2 — Umami (planned: custom events for GTM)
+## Custom events (GTM: "what kind of QR do people build?")
 
-GTM's key question is **what kind of QR people generate**. Cloudflare only shows
-it by proxy (type-page traffic); Umami captures it exactly, cookieless, with a
-ready dashboard.
-
-### The events are already instrumented (no-op until Umami is on)
-
-`track()` is a no-op today but is **already called at the GTM-critical sites**,
-so enabling Umami is a one-file change, not a re-instrumentation:
+Already instrumented — no extra work needed:
 
 | Event | Props | Where it fires |
 |---|---|---|
 | `qr_type` | `{ type }` | `StudioSource.tsx` — `chooseType()` (category buttons + Type dropdown) |
 | `export` | `{ format, type }` | `Preview.tsx` — `save()` (PNG + SVG downloads) |
 
-Good next additions when Umami lands: `card_designed`, `verify_result`
-(`{ pass }`), `support_click`. Never add a prop that carries encoded content.
+In Umami these appear under **Events**; break `export` down by the `type`
+property to see which QR types actually get downloaded. Good future additions:
+`card_designed`, `verify_result` (`{ pass }`), `support_click`. Never add a prop
+that carries encoded content.
 
-### Hosting (no EC2 needed)
+---
 
-Umami = a Next.js app + a Postgres/MySQL DB. Pick one:
+## Setup
 
-- **Umami Cloud** free hobby tier — zero hosting/DB to manage. Fastest.
-- **Vercel (free) + the existing Supabase Postgres** — full ownership, reuses
-  the DB we already run; point Umami's `DATABASE_URL` at Supabase.
+1. **Create the website in Umami** (Umami Cloud → Add website → host
+   `theqr.studio`). Region US/EU only is fine — the data is anonymous and
+   cookieless (no PII), so residency rules don't apply and the deferred beacon
+   adds no visible latency.
+2. **Copy the Website ID** (Umami → the website → Settings). It's a UUID and is
+   **public** (it ships in the page).
+3. **Set it in CI:** GitHub → repo **Settings → Secrets and variables → Actions
+   → Variables** → add **`VITE_UMAMI_WEBSITE_ID`** = that UUID. (A *variable*,
+   not a secret. Blank/unset = analytics off.) For manual/local deploys, put the
+   same line in your `.env`.
+4. **Deploy.** `initAnalytics()` injects the tracker for real visitors only —
+   never in dev, never during the prerender crawl (it skips
+   `navigator.webdriver`), so the tag isn't baked into prerendered HTML and
+   dev/CI never pollute the stats.
+5. **Verify:** load the live site, check the Network tab for
+   `cloud.umami.is/script.js`, then confirm a pageview appears in Umami. Trigger
+   an export and confirm the `export` event shows up under Events. (Disable ad
+   blockers when testing — they block the tracker.)
 
-It cannot share this project's Netlify site (that's a prebuilt static deploy
-with builds disabled) — it would be a separate app.
+- **Self-hosting later** (full ownership): host Umami on Vercel's free tier
+  pointed at the existing Supabase Postgres — no EC2 needed. Set
+  `VITE_UMAMI_SRC` to your instance's `script.js` and use its website id. See
+  Umami docs.
 
-### Turning it on
+---
 
-1. Stand up Umami (above); create a website entry → get its **website id** +
-   **script src**.
-2. Add its loader script (env-gated, same pattern as the Cloudflare beacon) and
-   forward `track()` to `window.umami.track(event, props)` in
-   `src/lib/analytics.ts`.
-3. Set the Umami env vars (website id / host) as repo variables and add them to
-   `deploy.yml`. Deploy.
+## Privacy notes
 
-Cloudflare and Umami can run side by side — Cloudflare for traffic, Umami for
-product/GTM events — or drop Cloudflare once Umami covers pageviews too.
+- No cookies, no cross-site tracking, no persistent visitor id — Umami counts
+  uniques with a daily server-side hash, so nothing identifies a person.
+- We never send QR content. `track()` props are restricted to category values
+  (type, format) by convention — keep it that way.
+- The Privacy Policy (`/privacy`) already discloses "privacy-friendly analytics"
+  collecting "aggregated, non-identifiable" data, which matches this setup.
